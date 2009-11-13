@@ -1,0 +1,38 @@
+// This sample create two timer
+// Click the window to start the timer, and see the result after console is showing up.
+// Click the window again to kill all timers.
+
+var g_timer_started = false;
+var g_count = 0;
+var g_timer1, g_timer2;
+
+function print_to_console(msg) {
+	fb.trace("Timer test:", msg);
+}
+
+function on_mouse_lbtn_up() {
+	if (!g_timer_started) {
+		// Timer are created here
+		g_timer1 = window.CreateTimerTimeout(2000); // 2s - one shot
+		g_timer2 = window.CreateTimerInterval(500); // 500ms - period
+		g_timer_started = true;
+	} else {
+		// Kill all timers
+		window.KillTimer(g_timer1);
+		window.KillTimer(g_timer2);
+		g_timer_started = false;
+		g_count = 0;
+		print_to_console("Timers killed.");
+	}
+}
+
+function on_timer(id) {
+	if (g_timer1 && id == g_timer1.ID) {
+		// Print and show console
+		fb.ShowConsole();
+		print_to_console("g_timer1: Show console now.");
+	} else if (g_timer2 && id == g_timer2.ID) {
+		g_count++;
+		print_to_console("g_timer2: " + g_count + " time(s).");
+	}
+}

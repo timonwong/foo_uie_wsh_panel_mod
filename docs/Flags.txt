@@ -1,0 +1,191 @@
+// Flags, used with GdiDrawText()
+// For more information, see: http://msdn.microsoft.com/en-us/library/dd162498(VS.85).aspx
+DT_TOP = 0x00000000;
+DT_LEFT = 0x00000000;
+DT_CENTER = 0x00000001;
+DT_RIGHT = 0x00000002;
+DT_VCENTER = 0x00000004;
+DT_BOTTOM = 0x00000008;
+DT_WORDBREAK = 0x00000010;
+DT_SINGLELINE = 0x00000020;
+DT_EXPANDTABS = 0x00000040;
+DT_TABSTOP = 0x00000080;
+DT_NOCLIP = 0x00000100;
+DT_EXTERNALLEADING = 0x00000200;
+DT_CALCRECT = 0x00000400;
+DT_NOPREFIX = 0x00000800;
+DT_INTERNAL = 0x00001000;
+DT_EDITCONTROL = 0x00002000;
+DT_PATH_ELLIPSIS = 0x00004000;
+DT_END_ELLIPSIS = 0x00008000;
+DT_MODIFYSTRING = 0x00010000;
+DT_RTLREADING = 0x00020000;
+DT_WORD_ELLIPSIS = 0x00040000;
+DT_NOFULLWIDTHCHARBREAK = 0x00080000;
+DT_HIDEPREFIX = 0x00100000;
+DT_PREFIXONLY = 0x00200000;
+
+// Used in AppendMenu()
+// For more information, see: http://msdn.microsoft.com/en-us/library/ms647616(VS.85).aspx
+MF_SEPARATOR = 0x00000800;
+MF_ENABLED = 0x00000000;
+MF_GRAYED = 0x00000001;
+MF_DISABLED = 0x00000002;
+MF_UNCHECKED = 0x00000000;
+MF_CHECKED = 0x00000008;
+MF_STRING = 0x00000000;
+//MF_BITMAP = 0x00000004;  // do not use
+//MF_OWNERDRAW = 0x00000100;  // do not use
+MF_POPUP = 0x00000010;
+MF_MENUBARBREAK = 0x00000020;
+MF_MENUBREAK = 0x00000040;
+
+// Used in mouse callbacks, as mask, used in on_mouse_lbtn_up(), on_mouse_rbtn_up() and so on
+MK_LBUTTON  = 0x0001;
+MK_RBUTTON  = 0x0002;
+MK_SHIFT    = 0x0004; // The SHIFT key is down.
+MK_CONTROL  = 0x0008; // The CTRL key is down.
+MK_MBUTTON  = 0x0010;
+MK_XBUTTON1 = 0x0020;
+MK_XBUTTON2 = 0x0040;
+MK_SHIFT = 0x0004;  
+MK_CONTROL = 0x0008;  
+
+// Used in window.SetCursor()
+IDC_ARROW = 32512;
+IDC_IBEAM = 32513;
+IDC_WAIT = 32514;
+IDC_CROSS = 32515;
+IDC_UPARROW = 32516;
+IDC_SIZE = 32640;
+IDC_ICON = 32641;
+IDC_SIZENWSE = 32642;
+IDC_SIZENESW = 32643;
+IDC_SIZEWE = 32644;
+IDC_SIZENS = 32645;
+IDC_SIZEALL = 32646;
+IDC_NO = 32648;
+IDC_APPSTARTING = 32650;
+IDC_HAND = 32649;
+IDC_HELP = 32651;
+
+// Used in gdi.Font(), can be combined
+// For more information, see: http://msdn.microsoft.com/en-us/library/ms534124(VS.85).aspx
+FontStyle = {
+	Regular: 0,
+	Bold: 1,
+	Italic: 2,
+	BoldItalic: 3,
+	Underline: 4,
+	Strikeout: 8
+};
+
+// Used in SetTextRenderingHint()
+// For more information, see: http://msdn.microsoft.com/en-us/library/ms534404(VS.85).aspx
+TextRenderingHint = {
+	SystemDefault: 0,
+	SingleBitPerPixelGridFit: 1,
+	SingleBitPerPixel: 2,
+	AntiAliasGridFit: 3,
+	AntiAlias: 4,
+	ClearTypeGridFit: 5
+};
+
+// Used in SetSmoothingMode()
+// For more information, see: http://msdn.microsoft.com/en-us/library/ms534173(VS.85).aspx
+SmoothingMode = {
+	Invalid: -1,
+	Default: 0,
+	HighSpeed: 1,
+	HighQuality: 2,
+	None: 3,
+	AntiAlias: 4
+};
+
+// Used in SetInterpolationMode()
+// For more information, see: http://msdn.microsoft.com/en-us/library/ms534141(VS.85).aspx
+InterpolationMode = {
+	Invalid: -1,
+	Default: 0,
+	LowQuality: 1,
+	HighQuality: 2,
+	Bilinear: 3,
+	Bicubic: 4,
+	NearestNeighbor: 5,
+	HighQualityBilinear: 6,
+	HighQualityBicubic: 7
+};
+
+// Used in RotateFlip()
+// For more information, see: http://msdn.microsoft.com/en-us/library/ms534171(VS.85).aspx
+RotateFlipType = 
+{
+	RotateNoneFlipNone: 0,
+	Rotate90FlipNone: 1,
+	Rotate180FlipNone: 2,
+	Rotate270FlipNone: 3,
+
+	RotateNoneFlipX: 4,
+	Rotate90FlipX: 5,
+	Rotate180FlipX: 6,
+	Rotate270FlipX: 7,
+
+	RotateNoneFlipY: 6,
+	Rotate90FlipY: 7,
+	Rotate180FlipY: 4,
+	Rotate270FlipY: 5,
+
+	RotateNoneFlipXY: 2,
+	Rotate90FlipXY: 3,
+	Rotate180FlipXY: 0,
+	Rotate270FlipXY: 1
+};
+
+// h_align/v_align:
+// http://msdn.microsoft.com/en-us/library/ms534177(VS.85).aspx
+StringAlignment = {
+	Near: 0,
+	Center: 1,
+	Far: 2
+};
+
+// trimming:
+// http://msdn.microsoft.com/en-us/library/ms534403(VS.85).aspx
+StringTrimming = {
+	None: 0,
+	Character: 1,
+	Word: 2,
+	EllipsisCharacter: 3,
+	EllipsisWord: 4,
+	EllipsisPath: 5
+};
+
+// flags, can be combined of:
+// http://msdn.microsoft.com/en-us/library/ms534181(VS.85).aspx
+StringFormatFlags = {
+	DirectionRightToLeft: 0x00000001,
+	DirectionVertical: 0x00000002,
+	NoFitBlackBox: 0x00000004,
+	DisplayFormatControl: 0x00000020,
+	NoFontFallback: 0x00000400,
+	MeasureTrailingSpaces: 0x00000800,
+	NoWrap: 0x00001000,
+	LineLimit: 0x00002000,
+	NoClip: 0x00004000
+};
+
+// Used in utils.GetAlbumArt()
+AlbumArtId = {
+	front: 0,
+	back: 1,
+	disc: 2,
+	icon: 3,
+	artist: 4
+};
+
+// Used in fb.ShowPopupMessage()
+IconId = {
+	information: 0,
+	error: 1,
+	query: 2
+}

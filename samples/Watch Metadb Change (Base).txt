@@ -1,0 +1,18 @@
+// This is a demo show how on_metadb_changed(metadb, fromhook), 
+// window.WatchMetadb(metadb)  and window.UnWatchMetadb() works.
+
+// Get a handle from startup
+var g_handle = fb.GetFocusItem();
+
+// Watch the metadb
+window.WatchMetadb(g_handle);
+
+// Unwatch
+function on_mouse_lbtn_up(x, y, mask) {
+	window.UnWatchMetadb();
+}
+
+// Callback
+function on_metadb_changed(metadb, fromhook) {
+	fb.ShowPopupMessage("Get Notified");
+}

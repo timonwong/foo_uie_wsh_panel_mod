@@ -1,0 +1,342 @@
+﻿interface IGdiFont {
+Properties:
+	(readonly)int Height;
+Methods:
+	// [1.1.10] New:
+	void Dispose();
+}
+
+interface IGdiBitmap {
+Properties:
+	(readonly)int Width;
+	(readonly)int Height;
+	
+Methods:
+	IGdiBitmap Clone(x, y, w, h);
+	void RotateFlip(mode);
+	IGdiBitmap ApplyAlpha(alpha);
+	// [1.1.10] New: mask is the bitmap as in Photoshop
+	// Changes will be saved in current bitmap
+	boolean ApplyMask(IGdiBitmap);
+	IGdiRawBitmap CreateRawBitmap(); // Create a DDB bitmap from IGdiBitmap, which is used in GdiDrawBitmap()
+	IGdiGraphics GetGraphics();
+	void ReleaseGraphics(IGdiGraphics);
+	void BoxBlur(radius, iteration = 1);
+	// [1.1.10] New:
+	IGdiBitmap Resize(w, h);
+	// [1.1.10] New:
+	void Dispose();
+}
+    
+interface IGdiRawBitmap {
+Properties:
+	(readonly)int Width;
+	(readonly)int Height;
+Methods:
+	// [1.1.10] New:
+	void Dispose();
+}
+
+interface IGdiGraphics {
+Methods:
+	void FillSolidRect(x, y, w, h, color);
+	void FillGradRect(x, y, w, h, angle, color1, color2);
+	// [1.1.5] New:
+	void FillRoundRect(x, y, w, h, arc_width, arc_height, color);
+	// [1.1.5] New:
+	void FillEllipse(x, y, w, h, color);
+	void DrawLine(x1, y1, x2, y2, line_width, color);
+	void DrawRect(x, y, w, h, line_width, color);
+	// [1.1.5] New:
+	void DrawRoundRect(x, y, w, h, arc_width, arc_height, line_width, color);
+	// [1.1.5] New:
+	void DrawEllipse(x, y, w, h, line_width, color);
+	void DrawString(str, IGdiFont, color, x, y, w, h, flags = 0);
+	int GdiDrawText(str, IGdiFont, color, x, y, w, h, format = 0); // Always faster than DrawString and returns chars drawed
+	void DrawImage(IGdiBitmap, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH, angle = 0, alpha = 255);
+	void GdiDrawBitmap(IGdiRawBitmap, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH); // Always faster than DrawImage, do not support alpha channel
+	IMeasureStringInfo MeasureString(str, IGdiFont, x, y, w, h, flags = 0);
+	unsigned int CalcTextWidth(str, IGdiFont);
+	void SetTextRenderingHint(mode);
+	void SetSmoothingMode(mode);
+	void SetInterpolationMode(mode);
+	// [1.1.10] New:
+	void GdiAlphaBlend(IGdiRawBitmap, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH, alpha = 255);
+}
+
+
+interface IMeasureStringInfo {
+Properties:
+	(readonly)float x;
+	(readonly)float y;
+	(readonly)float Width;
+	(readonly)float Height;
+	(readonly)int lines;
+	(readonly)int chars;
+}
+
+
+interface IGdiUtils {
+Methods:
+	IGdiFont Font(name, ptSize, style = 0);
+	IGdiBitmap Image(path);
+	IGdiBitmap CreateImage(w, h); // Create an image. By default, this image is transparent
+}
+
+// [1.1.0] Updated:
+interface IFbFileInfo {
+Properties:
+	(readonly) int MetaCount;
+	(readonly) int InfoCount;
+
+Methods:
+	int MetaValueCount(idx);
+	// [1.1.5] New: return idx
+	int MetaFind(name);
+	// [1.1.5] New: return idx
+	int InfoFind(name);
+	String MetaName(idx);
+	String MetaValue(idx, vidx);
+	// [1.1.10] New:
+	void MetaRemoveField(name);
+	// [1.1.10] New: return idx
+	int MetaAdd(name, value);
+	// [1.1.10] New:
+	void MetaInsertValue(idx, vidx, value);
+	String InfoName(idx);
+	String InfoValue(idx);
+	// [1.1.0] New:
+	void MetaSet(name, value);
+	// [1.1.10] New:
+	void Dispose();
+}
+
+// [1.1.0] New
+interface IFbMetadbHandle {
+Properties:
+	(readonly) String Path;
+	(readonly) String RawPath;
+	(readonly) int SubSong;
+	(readonly) int64 FileSize;
+	(readonly) double Length;
+	
+Methods:
+	IFbFileInfo GetFileInfo();
+	// not recommended
+	void UpdateFileInfo(IFbFileInfo);
+	// It's recommended to use this method if you want to update tags
+	// if value is a empty string, field will be removed
+	// [Optional] multivalue_fields is a semicolon-separated list contains fields name which need to be treated as multivalue.
+	// Usage: meta.UpdateFileInfoSimple("ARTIST", "Enigma", "GENRE", "Downtempo;Ambient", "GENRE");
+	//     GENRE will be treated as a multivalue field. So GENRE[0] = "Downtempo", GENRE[1] = "Ambient
+	void UpdateFileInfoSimple(field1, value1 [, filed2, value2 [,...] ] [, multivalue_fields]);
+	// [1.1.10] New:
+	void Dispose();
+}
+
+interface IFbTitleFormat {
+Methods:
+	// [1.1.2] Updated:
+	// force: when true, Eval() will always return a value from a random handle
+	String Eval(force = false);
+	// [1.1.0] New:
+	String EvalWithMetadb(IFbMetadbHandle);
+	// [1.1.10] New:
+	void Dispose();
+}
+
+interface IMenuObj {
+Properties:
+	// [1.1.8] Fixed:
+	(readonly) unsigned int ID;
+Methods:
+	void AppendMenuItem(flags, item_id, text);
+	void AppendMenuSeparator();
+	void EnableMenuItem(item_id, enable);
+	void CheckMenuItem(item_id, check);
+	void CheckMenuRadioItem(first, last, check);
+	int TrackPopupMenu(x, y);
+	// [1.1.10] New:
+	void Dispose();
+}
+
+interface IContextMenuManager {
+Methods:
+	// [1.1.8] Added:
+	void InitContext(IFbMetadbHandle);
+	void InitNowPlaying();
+	void BuildMenu(IMenuObj, base_id, max_id);
+	void ExecuteByID(id);
+	// [1.1.10] New:
+	void Dispose();
+}
+
+interface IFbProfiler {
+Properties:
+	// [1.1.4] New:
+	double Time;
+	
+Methods:
+	void Reset();
+	void Print();
+}
+
+interface IFbUtils {
+Properties:
+	(readonly) String ComponentPath;
+	(readonly) String FoobarPath;
+	(readonly) String ProfilePath;
+	(readonly) boolean IsPlaying;
+	(readonly) double PlaybackLength;
+	(readonly) boolean IsPaused;
+	(read, write) double PlaybackTime;
+	(read, write) unsigned int PlaybackOrder;
+	// [1.0.2] New:
+	(read, write) boolean StopAfterCurrent;
+	// [1.1.1] New:
+	(read, write) boolean CursorFollowPlayback;
+	// [1.1.1] New:
+	(read, write) boolean PlaybackFollowCursor;
+	(read, write) float Volume;
+
+Methods:
+	// [1.1.4] Updated:
+	void trace(...);
+	// [1.0.4] New:
+	// iconid: See Flags.txt for more information
+	void ShowPopupMessage(msg, title = "WSH Panel Mod", iconid = 0);
+	IFbProfiler CreateProfiler(name = "");
+	IFbTitleFormat TitleFormat(expression);
+	// [1.1.0] Updated:
+	IFbMetadbHandle GetNowPlaying();
+	// [1.1.0] Updated:
+	IFbMetadbHandle GetFocusItem();
+	void Play();
+	void Stop();
+	void Pause();
+	void PlayOrPause();
+	void Next();
+	void Prev();
+	void Random();
+	void VolumeDown();
+	void VolumeUp();
+	void VolumeMute();
+	void AddDirectory();
+	void AddFiles();
+	void ShowConsole();
+	void ShowPreferences();
+	void ClearPlaylist();
+	void LoadPlaylist();
+	void SavePlaylist();
+	boolean RunMainMenuCommand(command);
+	boolean RunContextCommand(command);
+	// [1.1.2] New:
+	boolean RunContextCommandWithMetadb(command, IFbMetadbHandle);
+	IContextMenuManager CreateContextMenuManager();
+	// [1.1.7] New:
+	boolean IsMetadbInMediaLibrary(metadb);
+}
+
+interface ITimerObj {
+Properties:
+	(readonly) unsigned int ID;
+Methods:
+	// [1.1.10] New:
+	void Dispose();
+}
+
+// [1.1.5] New:
+interface IFbTooltip {
+Properties:
+	(read, write) Text; // Set tooltip text
+
+Methods:
+	void Activate();
+	void Deactivate();
+	// [1.1.6] New:
+	void SetMaxWidth(width);
+	// [1.1.10] New:
+	void Dispose();
+}
+
+interface IFbWindow {
+Properties:
+	// [1.1.10] New:
+	(readonly) unsigned int ID;
+	(readonly) int Width;
+	(readonly) int Height;
+
+Methods:
+	void Repaint(force = false);
+	void RepaintRect(x, y, w, h, force = false);
+	IMenuObj CreatePopupMenu();
+	ITimerObj CreateTimerTimeout(timeout); // One shot
+	ITimerObj CreateTimerInterval(delay); // Period
+	void KillTimer(ITimerObj);
+	// [1.1.1] New: Notify other wsh panels with specified info thru callback function on_notify_data(name, info).
+	// info MUST be strings, numbers, booleans
+	void NotifyOthers(name, info);
+	// [1.1.3] New: These two methods are in cooperation with callback on_metadb_changed().
+	void WatchMetadb(IFbMetadbHandle);
+	// [1.1.3] New:
+	void UnWatchMetadb();
+	// [1.1.5] New: Create a tooltip object
+	IFbTooltip CreateTooltip();
+	// [1.1.7] New: Show configuration window of current panel
+	void ShowConfigure();
+	// [1.1.7] New: Show properties window of current panel
+	void ShowProperties();
+	// [1.1.7] New: Get value of name from properties
+	// If no value is present, store the defaultval for the name and returns
+	variant GetProperty(name[, defaultval]);
+	// [1.1.7] New: Set property value, if val is invalid, the remove it from properties
+	// property values will be saved as per-instance config in CUI, and can be exported to FCLs.
+	void SetProperty(name, val);
+	// [1.1.10] New: Retrieve pseudo transparent bakground image.
+	IGdiBitmap GetBackgroundImage();
+	// [1.1.11] New: Set mouse cursor
+	// For standard cursors, see Flags.txt for more details.
+	void SetCursor(id);
+}
+
+// [1.1.0] New:
+interface IWSHUtils {
+Methods:
+	// [1.1.0] New: If is_dll is true, check component file name, for example: utils.CheckComponent("foo_uie_wsh_panel_mod", true);
+	boolean CheckComponent(name, is_dll = false);
+	// [1.1.0] New:
+	// name: can be either in english or in your localized name, such as: "Microsoft YaHei" and "微软雅黑"
+	boolean CheckFont(name);
+	// [1.1.0] New: For art_id, see Flags.txt: AlbumArtId
+	// need_stub: Determine whether querying for stub image to display when there's no album art to show
+	// this is set in "Advanced" page of fb2k preferences
+	// return NULL if failed
+	// NOTE: filename in rawpath, use IFbMetadbHandle.RawPath to retrieve that value
+	IGdiBitmap GetAlbumArt(rawpath, art_id = 0, need_stub = true);
+	// [1.1.7] New:
+	// Only read embedded album art
+	IGdiBitmap GetAlbumArtEmbedded(rawpath, art_id = 0);
+	// [1.1.10] New:
+	// HINT: window_id can be retrieved by window.ID
+	// NOTE: This function returns immediately, album art will be sent to on_get_album_art_done() callback as soon as album art is found
+	unsigned GetAlbumArtAsync(window_id, IFbMetadbHandle, art_id = 0, need_stub = true, only_embed = false);
+	// [1.1.4] New: A INI file should like this:
+	// [section]
+	// key=val
+	// NOTE: ReadINI() return up to 255 characters, more characters will be truncated, so use INI files to read/write simple values
+	String ReadINI(filename, section, key[, defaultval]);
+	// [1.1.4] New:
+	boolean WriteINI(filename, section, key, val);
+	// [1.1.7] New:
+	// For virtual key codes: http://msdn.microsoft.com/en-us/library/ms927178.aspx
+	boolean IsKeyPressed(vkey);
+	// [1.1.8] New:
+	// Using Microsoft MS-DOS wildcards match type.
+	boolean PathWildcardMatch(pattern, str);
+}
+
+// Global variables:
+// window - IFbWindow
+// gdi - IGdiUtils
+// fb - IFbUtils
+// utils - IWSHUtils

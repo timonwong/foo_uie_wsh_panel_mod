@@ -1,0 +1,20 @@
+# use glob syntax
+syntax: glob
+
+*.swp
+*.ncb
+*.suo
+*.user
+vc90.idl
+vc90.tlb
+*.aps
+
+dist/*
+
+Release/*
+Release SSE2/*
+Debug/*
+
+*/Release/*
+*/Release SSE2/*
+*/Debug/*
