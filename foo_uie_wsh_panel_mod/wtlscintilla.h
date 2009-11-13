@@ -2,7 +2,7 @@
 Modded by T.P Wang
 this is a trimed version
 
----Stolen Info---
+---Orig Info---
 Filename: AtlScintilla.h
 Version: 2.0
 Description: Defines an easy wrapper for the Scintilla control,to be used with ATL/WTL projects.

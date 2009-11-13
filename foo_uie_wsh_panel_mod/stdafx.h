@@ -20,6 +20,7 @@
 #include <uxtheme.h>
 
 // WTL
+#define _WTL_USE_CSTRING
 #include <atlbase.h>
 #include <atlapp.h>
 #include <atlwin.h>
@@ -30,6 +31,7 @@
 #include <atlddx.h>
 #include <atlcrack.h>
 #include <atltheme.h>
+#include <atlmisc.h>
 
 // Other controls
 #define PLAT_WIN 1

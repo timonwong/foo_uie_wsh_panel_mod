@@ -2,6 +2,7 @@ v1.1.11
 - ADD: window.SetCursor() method.
 - CHG: Improvements for ApplyMask.
 - CHG: Enhanced editor (autocompletion and calltips).
+- FIX: Stack overflow in property editor.
 - FIX: Fix crashes while trying to import invalid properties setting.
 - FIX: Fix crashes due to GDI+ bug.
 

@@ -393,13 +393,11 @@ public:
 				if (idx >= 0)
 				{
 					// Copy text from list to item
-					int len = m_wndList.GetTextLen(idx) + 1;
-					LPTSTR pstr = (LPTSTR)_malloca(len * sizeof(TCHAR));
-					m_wndList.GetText(idx, pstr);
-					SetWindowText(pstr);
+					CString text;
+					m_wndList.GetText(idx, text);
+					SetWindowText(text);
 					// Announce the new value
 					::SendMessage(GetParent(), WM_USER_PROP_UPDATEPROPERTY, 0, (LPARAM) m_hWnd);
-					free(pstr);
 				}
 			}
 			::SetFocus(GetParent());

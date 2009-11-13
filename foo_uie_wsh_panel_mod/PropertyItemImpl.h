@@ -167,16 +167,18 @@ public:
 	void DrawValue(PROPERTYDRAWINFO& di)
 	{
 		UINT cchMax = GetDisplayValueLength() + 1;
-		LPTSTR pszText = (LPTSTR) _malloca(cchMax * sizeof(TCHAR));
-		ATLASSERT(pszText);
-		if (!GetDisplayValue(pszText, cchMax)) return;
+		CString text;
+		int ret = GetDisplayValue(text.GetBuffer(cchMax), cchMax);
+		text.ReleaseBuffer();
+
+		if (!ret) return;
 		CDCHandle dc(di.hDC);
 		dc.SetBkMode(TRANSPARENT);
 		dc.SetTextColor((di.state & ODS_DISABLED) != 0 ? di.clrDisabled : di.clrText);
 		dc.SetBkColor(di.clrBack);
 		RECT rcText = di.rcItem;
 		rcText.left += PROP_TEXT_INDENT;
-		dc.DrawText(pszText, -1, &rcText, DT_LEFT | DT_SINGLELINE | DT_EDITCONTROL | DT_NOPREFIX | DT_END_ELLIPSIS | DT_VCENTER);
+		dc.DrawText(text, -1, &rcText, DT_LEFT | DT_SINGLELINE | DT_EDITCONTROL | DT_NOPREFIX | DT_END_ELLIPSIS | DT_VCENTER);
 	}
 	BOOL GetDisplayValue(LPTSTR pstr, UINT cchMax) const
 	{
@@ -238,14 +240,16 @@ public:
 	  {
 		  // Get default text
 		  UINT cchMax = GetDisplayValueLength() + 1;
-		  LPTSTR pszText = (LPTSTR) _malloca(cchMax * sizeof(TCHAR));
-		  ATLASSERT(pszText);
-		  if (!GetDisplayValue(pszText, cchMax)) return NULL;
+		  CString text;
+		  int ret = GetDisplayValue(text.GetBuffer(cchMax), cchMax);
+		  text.ReleaseBuffer();
+
+		  if (!ret) return NULL;
 		  // Create EDIT control
 		  CPropertyEditWindow* win = new CPropertyEditWindow();
 		  ATLASSERT(win);
 		  RECT rcWin = rc;
-		  m_hwndEdit = win->Create(hWnd, rcWin, pszText, WS_VISIBLE | WS_CHILD | ES_LEFT | ES_AUTOHSCROLL);
+		  m_hwndEdit = win->Create(hWnd, rcWin, text, WS_VISIBLE | WS_CHILD | ES_LEFT | ES_AUTOHSCROLL);
 		  ATLASSERT(::IsWindow(m_hwndEdit));
 		  // Simple hack to validate numbers
 		  switch (m_val.vt)
@@ -267,14 +271,18 @@ public:
 	  {
 		  ATLASSERT(::IsWindow(hWnd));
 		  int len = ::GetWindowTextLength(hWnd) + 1;
-		  LPTSTR pstr = (LPTSTR) _malloca(len * sizeof(TCHAR));
-		  ATLASSERT(pstr);
-		  if (::GetWindowText(hWnd, pstr, len) == 0)
+		  CString text;
+		  int ret = ::GetWindowText(hWnd, text.GetBuffer(len), len);
+		  text.ReleaseBuffer();
+
+		  if (!ret)
 		  {
 			  // Bah, an empty string *and* an error causes the same return code!
-			  if (::GetLastError() != ERROR_SUCCESS) return FALSE;
+			  if (::GetLastError() != ERROR_SUCCESS)
+				  return FALSE;
 		  }
-		  return SetValue(CComVariant(pstr));
+
+		  return SetValue(CComVariant(text));
 	  }
 	  BOOL Activate(UINT action, LPARAM /*lParam*/)
 	  {
@@ -329,14 +337,16 @@ public:
 	  {
 		  // Get default text
 		  UINT cchMax = GetDisplayValueLength() + 1;
-		  LPTSTR pszText = (LPTSTR) _malloca(cchMax * sizeof(TCHAR));
-		  ATLASSERT(pszText);
-		  if (!GetDisplayValue(pszText, cchMax)) return NULL;
+		  CString text;
+		  int ret = GetDisplayValue(text.GetBuffer(cchMax), cchMax);
+		  text.ReleaseBuffer();
+
+		  if (!ret) return NULL;
 		  // Create 'faked' DropDown control
 		  CPropertyListWindow* win = new CPropertyListWindow();
 		  ATLASSERT(win);
 		  RECT rcWin = rc;
-		  m_hwndCombo = win->Create(hWnd, rcWin, pszText);
+		  m_hwndCombo = win->Create(hWnd, rcWin, text);
 		  ATLASSERT(win->IsWindow());
 		  // Add to list
 		  USES_CONVERSION;
@@ -416,14 +426,19 @@ public:
 	  {
 		  ATLASSERT(::IsWindow(hWnd));
 		  int len = ::GetWindowTextLength(hWnd) + 1;
-		  LPTSTR pstr = (LPTSTR)_malloca(len * sizeof(TCHAR));
-		  ATLASSERT(pstr);
-		  if (!::GetWindowText(hWnd, pstr, len))
+		  CString text;	  
+		  int ret = ::GetWindowText(hWnd, text.GetBuffer(len), len);
+		  text.ReleaseBuffer();
+
+		  if (!ret)
 		  {
 			  if (::GetLastError() != ERROR_SUCCESS)
+			  {
 				  return FALSE;
+			  }
 		  }
-		  return SetValue(CComVariant(pstr));
+
+		  return SetValue(CComVariant(text));
 	  }
 	  void SetList(LPCTSTR* ppList)
 	  {
@@ -473,16 +488,8 @@ public:
 
 	VOID _InitBooleanList()
 	{
-#ifdef IDS_TRUE
-		TCHAR szBuffer[32] = { 0 };
-		::LoadString(_Module.GetResourceInstance(), IDS_FALSE, szBuffer, (sizeof(szBuffer) / sizeof(TCHAR)) - 1);
-		AddListItem(szBuffer);
-		::LoadString(_Module.GetResourceInstance(), IDS_TRUE, szBuffer, (sizeof(szBuffer) / sizeof(TCHAR)) - 1);
-		AddListItem(szBuffer);
-#else
 		AddListItem(_T("False"));
 		AddListItem(_T("True"));
-#endif  // IDS_TRUE
 	}
 };
 
