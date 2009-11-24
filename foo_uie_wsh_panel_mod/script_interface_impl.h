@@ -604,6 +604,7 @@ public:
 	STDMETHODIMP WriteINI(BSTR filename, BSTR section, BSTR key, VARIANT val, VARIANT_BOOL * p);
 	STDMETHODIMP IsKeyPressed(UINT vkey, VARIANT_BOOL * p);
 	STDMETHODIMP PathWildcardMatch(BSTR pattern, BSTR str, VARIANT_BOOL * p);
+	STDMETHODIMP ReadTextFile(BSTR filename, BSTR * pp);
 };
 
 class FbTooltip : public IDisposableImpl4<IFbTooltip>

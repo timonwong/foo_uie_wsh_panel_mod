@@ -1,3 +1,9 @@
+v1.2.0
+- ADD: Preprocessor directive "@import", See Preprocessors.txt for more details.
+- ADD: Preprocessor sample.
+- ADD: utils.ReadTextFile()
+- FIX: Misc bugs and crashes fixed.
+
 v1.1.11
 - ADD: window.SetCursor() method.
 - CHG: Improvements for ApplyMask.

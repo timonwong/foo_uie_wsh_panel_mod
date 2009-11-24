@@ -211,6 +211,7 @@ Methods:
 	IFbMetadbHandle GetNowPlaying();
 	// [1.1.0] Updated:
 	IFbMetadbHandle GetFocusItem();
+	void Exit();
 	void Play();
 	void Stop();
 	void Pause();
@@ -333,6 +334,10 @@ Methods:
 	// [1.1.8] New:
 	// Using Microsoft MS-DOS wildcards match type.
 	boolean PathWildcardMatch(pattern, str);
+	// [1.2.0] New:
+	// If file doesn't exist, return null if file cannot be read.
+    // Text file can be either: UTF-16 with BOM, UTF-8 with BOM and ANSI.
+	String ReadTextFile(filename);
 }
 
 // Global variables:

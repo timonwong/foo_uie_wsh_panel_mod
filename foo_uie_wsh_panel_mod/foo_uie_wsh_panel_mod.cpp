@@ -11,7 +11,7 @@
 // TODO: Change Version Number Every Time
 DECLARE_COMPONENT_VERSION(
 	"WSH Panel Mod" COMPONENT_NAME_SUFFIX,
-	"1.1.11",
+	"1.2.0 Alpha 2",
 	"Windows Scripting Host Panel\n"
 	"Modded by T.P. Wang\n\n"
 	"Build: "  __TIME__ ", " __DATE__ "\n"

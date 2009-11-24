@@ -945,12 +945,8 @@ void CScriptEditorCtrl::Init()
 	AutoCSetIgnoreCase(true);
 
 	// Set embeded properties
-	pfc::string8 dir;
-	uGetModuleFileName(NULL, dir);
-	dir = pfc::string_directory(dir);
-	SetProperty("dir.base", dir);
-	dir << "\\components\\";
-	SetProperty("dir.component", dir);
+	SetProperty("dir.base", helpers::get_fb2k_path());
+	SetProperty("dir.component", helpers::get_fb2k_component_path());
 
 	// Load properties
 	LoadProperties(g_sci_prop_sets.val());

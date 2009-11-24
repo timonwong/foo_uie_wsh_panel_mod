@@ -88,6 +88,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(TargetPath) D:\foobar2000\components\"
 			/>
 		</Configuration>
 		<Configuration
@@ -328,6 +329,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\script_preprocessor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -398,7 +403,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\deelx.h"
+				>
+			</File>
+			<File
 				RelativePath=".\editorctrl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\global_callback_guard.h"
 				>
 			</File>
 			<File
@@ -450,6 +463,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\script_preprocessor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
@@ -496,15 +513,15 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath=".\default.js"
+				>
+			</File>
+			<File
 				RelativePath=".\Margin.cur"
 				>
 			</File>
 			<File
 				RelativePath=".\resource.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\default.js"
 				>
 			</File>
 		</Filter>

@@ -1,0 +1,72 @@
+window.ID
+window.Width
+window.Height
+window.Repaint([force])
+window.RepaintRect(x, y, w, h[, force])
+window.CreatePopupMenu()
+window.CreateTimerTimeout(timeout)
+window.CreateTimerInterval(delay)
+window.KillTimer(ITimerObj)
+window.NotifyOthers(name, info)
+window.WatchMetadb(IFbMetadbHandle)
+window.UnWatchMetadb()
+window.CreateTooltip()
+window.ShowConfigure()
+window.ShowProperties()
+window.GetProperty(name[, defaultval])
+window.SetProperty(name, val)
+window.GetBackgroundImage()
+window.SetCursor(id)
+
+fb.ComponentPath
+fb.FoobarPath
+fb.ProfilePath
+fb.IsPlaying
+fb.PlaybackLength
+fb.IsPaused
+fb.PlaybackTime
+fb.PlaybackOrder
+fb.StopAfterCurrent
+fb.CursorFollowPlayback
+fb.PlaybackFollowCursor
+fb.Volume
+fb.trace(...)
+fb.ShowPopupMessage(msg[, title, iconid])
+fb.CreateProfiler([name])
+fb.TitleFormat(expression)
+fb.GetNowPlaying()
+fb.GetFocusItem()
+fb.Exit()
+fb.Play()
+fb.Stop()
+fb.Pause()
+fb.PlayOrPause()
+fb.Next()
+fb.Prev()
+fb.Random()
+fb.VolumeDown()
+fb.VolumeUp()
+fb.VolumeMute()
+fb.AddDirectory()
+fb.AddFiles()
+fb.ShowConsole()
+fb.ShowPreferences()
+fb.ClearPlaylist()
+fb.LoadPlaylist()
+fb.SavePlaylist()
+fb.RunMainMenuCommand(command)
+fb.RunContextCommand(command)
+fb.RunContextCommandWithMetadb(command, IFbMetadbHandle)
+fb.CreateContextMenuManager()
+fb.IsMetadbInMediaLibrary(metadb)
+
+utils.CheckComponent(name[, is_dll])
+utils.CheckFont(name)
+utils.GetAlbumArt(rawpath[, art_id, need_stub])
+utils.GetAlbumArtEmbedded(rawpath[, art_id])
+utils.GetAlbumArtAsync(window_id, IFbMetadbHandle[, art_id, need_stub, only_embed])
+utils.ReadINI(filename, section, key[, defaultval])
+utils.WriteINI(filename, section, key, val)
+utils.IsKeyPressed(vkey)
+utils.PathWildcardMatch(pattern, str)
+utils.ReadTextFile(filename)

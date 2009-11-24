@@ -1,0 +1,35 @@
+All preprocessors is started with "// ==PREPROCESSOR==" and ended with "// ==/PREPROCESSOR==":
+  VBSCRIPT:
+    ' // ==PREPROCESSOR==
+    ' ...
+    ' // ==/PREPROCESSOR==
+
+  JScript:
+    // ==PREPROCESSOR==
+    // ...
+    // ==PREPROCESSOR==
+
+NOTE: All preprocessors (directives) are case *sensitive*.
+
+== Directives ==
+  Directives should be started with "// @"
+
+* import "path"
+  Usage: @import must placed in a single comment:
+    VBScript:
+    ' // ==PREPROCESSOR==
+    ' // @import "path"
+    ' // ==/PREPROCESSOR==
+
+    JScript:
+    // ==PREPROCESSOR==
+    // @import "path"
+    // ==PREPROCESSOR==
+
+  Remarks:
+    You can place %fb2k_path%, %fb2k_component_path% and %fb2k_profile_path% into "path", they will be expanded while parsing.
+
+  Known Issues:
+    Length of "path" cannot exceed 260.
+    Including double-quote(") in path is object to "path" syntax.
+

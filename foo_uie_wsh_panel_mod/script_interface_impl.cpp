@@ -3,6 +3,7 @@
 #include "helpers.h"
 #include "boxblurfilter.h"
 #include "user_message.h"
+#include "global_callback_guard.h"
 
 
 STDMETHODIMP GdiFont::get_HFont(UINT* p)
@@ -992,7 +993,8 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfo(IFbFileInfo * p)
 
 	if (m_handle.is_empty()) return E_NOINTERFACE;
 	if (!p) return E_INVALIDARG;
-	if (!core_api::is_main_thread()) return E_ABORT;
+	if (!core_api::is_main_thread()) return E_ACCESSDENIED;
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	static_api_ptr_t<metadb_io_v2> io;
 	file_info_impl * info_ptr = NULL;
@@ -1014,7 +1016,8 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 
 	if (m_handle.is_empty()) return E_NOINTERFACE;
 	if (!p) return E_INVALIDARG;
-	if (!core_api::is_main_thread()) return E_ABORT;
+	if (!core_api::is_main_thread()) return E_ACCESSDENIED;
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	helpers::file_info_pairs_filter::t_field_value_map field_value_map;
 	pfc::stringcvt::string_utf8_from_wide ufield, uvalue, umultival;
@@ -1244,20 +1247,9 @@ STDMETHODIMP FbUtils::get_ComponentPath(BSTR* pp)
 {
 	TRACK_FUNCTION();
 
-	static WCHAR basedir[MAX_PATH] = { 0 };
+	static pfc::stringcvt::string_wide_from_utf8 path(helpers::get_fb2k_component_path());
 
-	if (!basedir[0])
-	{
-		pfc::string8_fast path;
-		pfc::stringcvt::string_wide_from_utf8_fast s;
-
-		uGetModuleFileName(NULL, path);
-		s.convert(pfc::string_directory(path));
-		StringCchCopy(basedir, MAX_PATH, s);
-		StringCchCat(basedir, MAX_PATH, _T("\\components\\"));
-	}
-
-	(*pp) = SysAllocString(basedir);
+	(*pp) = SysAllocString(path.get_ptr());
 	return S_OK;
 }
 
@@ -1267,20 +1259,9 @@ STDMETHODIMP FbUtils::get_FoobarPath(BSTR* pp)
 
 	if (!pp) return E_POINTER;
 
-	static WCHAR basedir [MAX_PATH] = { 0 };
+	static pfc::stringcvt::string_wide_from_utf8 path(helpers::get_fb2k_path());
 
-	if (!basedir[0])
-	{
-		pfc::string8_fast path;
-		pfc::stringcvt::string_wide_from_utf8_fast s;
-
-		uGetModuleFileName(NULL, path);
-		s.convert(pfc::string_directory(path));
-		StringCchCopy(basedir, MAX_PATH, s);
-		StringCchCat(basedir, MAX_PATH, _T("\\"));
-	}
-
-	(*pp) = SysAllocString(basedir);
+	(*pp) = SysAllocString(path.get_ptr());
 	return S_OK;
 }
 
@@ -1290,17 +1271,9 @@ STDMETHODIMP FbUtils::get_ProfilePath(BSTR* pp)
 
 	if (!pp) return E_POINTER;
 
-	static WCHAR basedir [MAX_PATH] = { 0 };
+	static pfc::stringcvt::string_wide_from_utf8 path(helpers::get_fb2k_path());
 
-	if (!basedir[0])
-	{
-		pfc::string8_fast path = file_path_display(core_api::get_profile_path());
-
-		path.fix_dir_separator('\\');
-		StringCchCopy(basedir, MAX_PATH, pfc::stringcvt::string_wide_from_utf8_fast(path));
-	}
-
-	(*pp) = SysAllocString(basedir);
+	(*pp) = SysAllocString(path.get_ptr());
 	return S_OK;
 }
 
@@ -1455,6 +1428,8 @@ STDMETHODIMP FbUtils::Play()
 {
 	TRACK_FUNCTION();
 
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
+
 	standard_commands::main_play();
 	return S_OK;
 }
@@ -1462,6 +1437,8 @@ STDMETHODIMP FbUtils::Play()
 STDMETHODIMP FbUtils::Stop()
 {
 	TRACK_FUNCTION();
+
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_stop();
 	return S_OK;
@@ -1471,6 +1448,8 @@ STDMETHODIMP FbUtils::Pause()
 {
 	TRACK_FUNCTION();
 
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
+
 	standard_commands::main_pause();
 	return S_OK;
 }
@@ -1478,6 +1457,8 @@ STDMETHODIMP FbUtils::Pause()
 STDMETHODIMP FbUtils::PlayOrPause()
 {
 	TRACK_FUNCTION();
+
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_play_or_pause();
 	return S_OK;
@@ -1487,6 +1468,8 @@ STDMETHODIMP FbUtils::Next()
 {
 	TRACK_FUNCTION();
 
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
+
 	standard_commands::main_next();
 	return S_OK;
 }
@@ -1494,6 +1477,8 @@ STDMETHODIMP FbUtils::Next()
 STDMETHODIMP FbUtils::Prev()
 {
 	TRACK_FUNCTION();
+
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_previous();
 	return S_OK;
@@ -1503,6 +1488,8 @@ STDMETHODIMP FbUtils::Random()
 {
 	TRACK_FUNCTION();
 
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
+
 	standard_commands::main_random();
 	return S_OK;
 }
@@ -1510,6 +1497,8 @@ STDMETHODIMP FbUtils::Random()
 STDMETHODIMP FbUtils::VolumeDown()
 {
 	TRACK_FUNCTION();
+
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_volume_down();
 	return S_OK;
@@ -1519,6 +1508,8 @@ STDMETHODIMP FbUtils::VolumeUp()
 {
 	TRACK_FUNCTION();
 
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
+
 	standard_commands::main_volume_up();
 	return S_OK;
 }
@@ -1527,6 +1518,8 @@ STDMETHODIMP FbUtils::VolumeMute()
 {
 	TRACK_FUNCTION();
 
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
+	
 	standard_commands::main_volume_mute();
 	return S_OK;
 }
@@ -1534,6 +1527,8 @@ STDMETHODIMP FbUtils::VolumeMute()
 STDMETHODIMP FbUtils::AddDirectory()
 {
 	TRACK_FUNCTION();
+
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_add_directory();
 	return S_OK;
@@ -1543,6 +1538,8 @@ STDMETHODIMP FbUtils::AddFiles()
 {
 	TRACK_FUNCTION();
 
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
+	
 	standard_commands::main_add_files();
 	return S_OK;
 }
@@ -1551,7 +1548,7 @@ STDMETHODIMP FbUtils::ShowConsole()
 {
 	TRACK_FUNCTION();
 
-	// HACK: This doesn't work
+	// HACK: This command won't work
 	//standard_commands::main_show_console();
 
 	// {5B652D25-CE44-4737-99BB-A3CF2AEB35CC}
@@ -1574,6 +1571,8 @@ STDMETHODIMP FbUtils::ClearPlaylist()
 {
 	TRACK_FUNCTION();
 
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
+
 	standard_commands::main_clear_playlist();
 	return S_OK;
 }
@@ -1582,6 +1581,8 @@ STDMETHODIMP FbUtils::LoadPlaylist()
 {
 	TRACK_FUNCTION();
 
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
+
 	standard_commands::main_load_playlist();
 	return S_OK;
 }
@@ -1589,6 +1590,8 @@ STDMETHODIMP FbUtils::LoadPlaylist()
 STDMETHODIMP FbUtils::SavePlaylist()
 {
 	TRACK_FUNCTION();
+
+	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_save_playlist();
 	return S_OK;
@@ -2129,6 +2132,20 @@ STDMETHODIMP WSHUtils::PathWildcardMatch(BSTR pattern, BSTR str, VARIANT_BOOL * 
 	if (!p) return E_POINTER;
 
 	*p = TO_VARIANT_BOOL(PathMatchSpec(str, pattern));
+	return S_OK;
+}
+
+STDMETHODIMP WSHUtils::ReadTextFile(BSTR filename, BSTR * pp)
+{
+	pfc::array_t<wchar_t> content;
+
+	*pp = NULL;
+
+	if (helpers::read_file_wide(filename, content))
+	{
+		*pp = SysAllocString(content.get_ptr());
+	}
+
 	return S_OK;
 }
 

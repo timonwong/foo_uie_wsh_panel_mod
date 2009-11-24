@@ -445,6 +445,92 @@ namespace helpers
 		return status;
 	}
 
+	bool read_file_wide(const wchar_t * path, pfc::array_t<wchar_t> & content)
+	{
+		HANDLE hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, 
+			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			return false;
+		}
+
+		HANDLE hFileMapping = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+
+		if (hFileMapping == NULL)
+		{
+			CloseHandle(hFile);
+			return false;
+		}
+
+		// 
+		DWORD dwFileSize;
+		dwFileSize = GetFileSize(hFile, NULL);
+
+		LPCBYTE pAddr = (LPCBYTE)MapViewOfFile(hFileMapping, FILE_MAP_READ, 0, 0, 0);
+
+		if (pAddr == NULL)
+		{
+			CloseHandle(hFileMapping);
+			CloseHandle(hFile);
+			return false;
+		}
+
+		if (dwFileSize == INVALID_FILE_SIZE)
+		{
+			UnmapViewOfFile(pAddr);
+			CloseHandle(hFileMapping);
+			CloseHandle(hFile);
+			return false;
+		}
+
+		// Okay, now it's time to read
+		bool status = false;
+
+		if (dwFileSize > 3)
+		{
+			// UTF16 LE
+			if (pAddr[0] == 0xFF && pAddr[1] == 0xFE)
+			{
+				const wchar_t * pSource = (const wchar_t *)(pAddr + 2);
+				t_size len = (dwFileSize - 2) >> 1;
+
+				content.set_size(len + 1);
+				pfc::__unsafe__memcpy_t(content.get_ptr(), pSource, len);
+				content[len] = 0;
+				status = true;
+			}
+			// UTF8?
+			else if (pAddr[0] == 0xEF && pAddr[1] == 0xBB && pAddr[2] == 0xBF)
+			{
+				const char * pSource = (const char *)(pAddr + 3);
+				t_size pSourceSize = dwFileSize - 3;
+
+				const t_size size = pfc::stringcvt::estimate_utf8_to_wide_quick(pSource, pSourceSize);
+				content.set_size(size);
+				pfc::stringcvt::convert_utf8_to_wide(content.get_ptr(), size, pSource, pSourceSize);
+				status = true;
+			}
+		}
+
+		// ANSI?
+		if (!status)
+		{
+			const char * pSource = (const char *)(pAddr);
+			t_size pSourceSize = dwFileSize;
+
+			const t_size size = pfc::stringcvt::estimate_ansi_to_wide(pSource, pSourceSize);
+			content.set_size(size);
+			pfc::stringcvt::convert_ansi_to_wide(content.get_ptr(), size, pSource, pSourceSize);
+			status = true;
+		}
+
+		UnmapViewOfFile(pAddr);
+		CloseHandle(hFileMapping);
+		CloseHandle(hFile);
+		return status;
+	}
+
 	bool write_file(const char * path, const pfc::string_base & content)
 	{
 		HANDLE hFile = uCreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);

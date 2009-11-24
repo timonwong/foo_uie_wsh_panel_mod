@@ -72,10 +72,29 @@ function on_playback_follow_cursor_change(state) {}
 // name and info is the same as in NotifyOthers()
 function on_notify_data(name, info) {}
 
+// [1.1.10] New:
+// Get called while thread created by GetAlbumArtAsync() is done.
+function on_get_album_art_done(metadb, art_id, image) {}
+
+// [1.1.10] New: 
+// NOTE 1: Always call window.GetBackgroundImage() during this callback
+// NOTE 2: DO NOT call window.Repaint()
+function on_refresh_background_done() {}
+
+// [1.1.10] New: 
+// Called when at least 60s of the track has been played, or the track has reached its end after at least 1/3 
+//    of it has been played through.
+function on_item_played(metadb) {}
+
 // =====================================================================
 //                                WARNING
 //   Following callbacks are called global callbacks, so avoid updating
 // tags in these callbacks.
+//
+// [1.1.12]
+//   DO NOT try to use playback control methods such as fb.Play(), 
+// fb.Next(), fb.Stop() and fb.RunMainMenuCommand("Play") in global 
+// callbacks or you will make foobar2000 crash!
 // =====================================================================
 
 // cmd: (integer, begin with 0): default, play, next, prev, settrack, rand, resume
@@ -123,17 +142,3 @@ function on_item_focus_change() {}
 // fromhook: boolean, set to true when actual file contents haven't changed but one of metadb_display_field_provider 
 //   implementations requested an update so output of metadb_handle::format_title() etc has changed.
 function on_metadb_changed(metadb, fromhook) {}
-
-// [1.1.10] New:
-// Get called while thread created by GetAlbumArtAsync() is done.
-function on_get_album_art_done(metadb, art_id, image) {}
-
-// [1.1.10] New: 
-// NOTE 1: Always call window.GetBackgroundImage() during this callback
-// NOTE 2: DO NOT call window.Repaint()
-function on_refresh_background_done() {}
-
-// [1.1.10] New: 
-// Called when at least 60s of the track has been played, or the track has reached its end after at least 1/3 
-//    of it has been played through.
-function on_item_played(metadb) {}

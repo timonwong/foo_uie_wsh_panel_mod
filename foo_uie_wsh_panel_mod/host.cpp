@@ -7,12 +7,11 @@
 #include "ui_conf.h"
 #include "ui_property.h"
 #include "user_message.h"
-
+#include "global_callback_guard.h"
+#include "script_preprocessor.h"
 
 // Panel
 static ui_extension::window_factory<uie_win> g_uie_win;
-
-//#define ALMOST_SUCCEEDED(hr) (SUCCEEDED(hr) || hr == OLESCRIPT_E_SYNTAX)
 
 
 HostComm::HostComm() 
@@ -622,6 +621,9 @@ HRESULT uie_win::_script_init()
 	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
 	if (SUCCEEDED(hr)) hr = parser->InitNew();
 
+	// Load preprocessor module
+	script_preprocessor preprocessor(parser, get_config_guid());
+
 	if (g_cfg_safe_mode)
 	{
 		_COM_SMARTPTR_TYPEDEF(IObjectSafety, IID_IObjectSafety);
@@ -638,7 +640,11 @@ HRESULT uie_win::_script_init()
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
-	if (SUCCEEDED(hr)) hr = parser->ParseScriptText(wcode.get_ptr(), NULL, NULL, NULL, NULL, 0, 0, NULL, NULL);
+
+	// Preprocessor
+	if (SUCCEEDED(hr)) hr = preprocessor.preprocess(wcode.get_ptr());
+
+	if (SUCCEEDED(hr)) hr = parser->ParseScriptText(wcode.get_ptr(), NULL, NULL, NULL, NULL, 0, SCRIPTTEXT_ISVISIBLE, NULL, NULL);
 
 	return hr;
 }
@@ -682,7 +688,7 @@ bool uie_win::script_init()
 			<< pfc::print_guid(get_config_guid()) << ", CODE: 0x" 
 			<< pfc::format_hex_lowercase((unsigned)hr);
 
-		if (hr != E_UNEXPECTED)
+		if (hr != E_UNEXPECTED || hr != OLESCRIPT_E_SYNTAX)
 		{
 			msg_formatter << "): " << win32_error_msg;
 		}
@@ -760,13 +766,13 @@ HRESULT uie_win::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARIANTARG * 
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("Error: WSH Panel Mod (GUID: %s): %s", guid.get_ptr(), e.what());
+			console::printf("Fatal Error: WSH Panel Mod (GUID: %s): %s", guid.get_ptr(), e.what());
 		}
 		catch (_com_error & e)
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("Error: WSH Panel Mod (GUID: %s): Code: 0x%08x", guid.get_ptr(), e.Error());
+			console::printf("Fatal COM Error: WSH Panel Mod (GUID: %s): Code: 0x%08x", guid.get_ptr(), e.Error());
 		}
 
 		pdisp->Release();
@@ -1414,6 +1420,7 @@ void uie_win::on_playback_starting(play_control::t_track_command cmd, bool pause
 {
 	TRACK_FUNCTION();
 
+	global_callback_guard guard;
 	VARIANTARG args[2];
 
 	args[0].vt = VT_BOOL;
@@ -1427,6 +1434,7 @@ void uie_win::on_playback_new_track(metadb_handle_ptr track)
 {
 	TRACK_FUNCTION();
 
+	global_callback_guard guard;
 	VARIANTARG args[1];
 	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(track);
 	
@@ -1441,6 +1449,7 @@ void uie_win::on_playback_stop(play_control::t_stop_reason reason)
 {
 	TRACK_FUNCTION();
 
+	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_I4;
@@ -1452,6 +1461,7 @@ void uie_win::on_playback_seek(double time)
 {
 	TRACK_FUNCTION();
 
+	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R8;
@@ -1463,6 +1473,7 @@ void uie_win::on_playback_pause(bool state)
 {
 	TRACK_FUNCTION();
 
+	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_BOOL;
@@ -1474,12 +1485,16 @@ void uie_win::on_playback_edited(metadb_handle_ptr track)
 {
 	TRACK_FUNCTION();
 
+	global_callback_guard guard;
+
 	script_invoke_v(L"on_playback_edited");
 }
 
 void uie_win::on_playback_dynamic_info(const file_info& info)
 {
 	TRACK_FUNCTION();
+
+	global_callback_guard guard;
 
 	script_invoke_v(L"on_playback_dynamic_info");
 }
@@ -1488,6 +1503,8 @@ void uie_win::on_playback_dynamic_info_track(const file_info& info)
 {
 	TRACK_FUNCTION();
 
+	global_callback_guard guard;
+
 	script_invoke_v(L"on_playback_dynamic_info_track");
 }
 
@@ -1495,6 +1512,7 @@ void uie_win::on_playback_time(double time)
 {
 	TRACK_FUNCTION();
 
+	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R8;
@@ -1506,6 +1524,7 @@ void uie_win::on_volume_change(float newval)
 {
 	TRACK_FUNCTION();
 
+	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R4;
@@ -1517,6 +1536,7 @@ void uie_win::on_playback_order_changed(t_size p_new_index)
 {
 	TRACK_FUNCTION();
 
+	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_I4;

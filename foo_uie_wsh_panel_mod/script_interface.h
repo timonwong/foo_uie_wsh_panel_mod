@@ -292,6 +292,7 @@ __interface IFbUtils: IDispatch
 	[propget] STDMETHOD(Volume)([out,retval] float* p);
 	[propput] STDMETHOD(Volume)(float value);
 	//
+	STDMETHOD(Exit)();
 	STDMETHOD(Play)();
 	STDMETHOD(Stop)();
 	STDMETHOD(Pause)();
@@ -398,5 +399,6 @@ __interface IWSHUtils: IDispatch
 	STDMETHOD(WriteINI)(BSTR filename, BSTR section, BSTR key, VARIANT val, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(IsKeyPressed)(UINT vkey, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(PathWildcardMatch)(BSTR pattern, BSTR str, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(ReadTextFile)(BSTR filename, [out,retval] BSTR * pp);
 };
 _COM_SMARTPTR_TYPEDEF(IWSHUtils, __uuidof(IWSHUtils));

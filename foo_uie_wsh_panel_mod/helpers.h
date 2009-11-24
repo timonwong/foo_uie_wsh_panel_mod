@@ -33,10 +33,45 @@ namespace helpers
 	HRESULT get_album_art(BSTR rawpath, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub);
 	HRESULT get_album_art_embedded(BSTR rawpath, IGdiBitmap ** pp, int art_id);
 
+	static pfc::string8_fast get_fb2k_path()
+	{
+		pfc::string8_fast path;
+
+		uGetModuleFileName(NULL, path);
+		path = pfc::string_directory(path);
+		path.add_string("\\");
+
+		return path;
+	}
+
+	static pfc::string8_fast get_fb2k_component_path()
+	{
+		pfc::string8_fast path;
+
+		uGetModuleFileName(NULL, path);
+		path = pfc::string_directory(path);
+		path.add_string("\\components\\");
+
+		return path;
+	}
+
+	static pfc::string8_fast get_profile_path()
+	{
+		pfc::string8_fast path;
+
+		path = file_path_display(core_api::get_profile_path());
+		path.fix_dir_separator('\\');
+
+		return path;
+	}
+
 	// File r/w
 	bool read_file(const char * path, pfc::string_base & content);
+	bool read_file_wide(const wchar_t * path, pfc::array_t<wchar_t> & content);
 	// Always save as UTF8 BOM
 	bool write_file(const char * path, const pfc::string_base & content);
+
+
 	class file_info_pairs_filter : public file_info_filter
 	{
 	public:
