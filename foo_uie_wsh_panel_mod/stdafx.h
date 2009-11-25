@@ -62,5 +62,3 @@
 
 #define _TO_STRING(_String) #_String
 #define TO_STRING(_String) _TO_STRING(_String)
-
-extern bool is_vista_or_later;

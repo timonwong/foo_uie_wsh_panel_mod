@@ -615,14 +615,13 @@ HRESULT uie_win::_script_init()
 	IActiveScriptParsePtr parser;
 	pfc::stringcvt::string_wide_from_utf8_fast wname(get_script_name());
 	pfc::stringcvt::string_wide_from_utf8_fast wcode(get_script_code());
+	// Load preprocessor module
+	script_preprocessor preprocessor(wcode.get_ptr(), get_config_guid());
 
 	if (SUCCEEDED(hr)) hr = m_script_engine.CreateInstance(wname.get_ptr(), NULL, CLSCTX_INPROC_SERVER);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptSite(&m_script_site);
 	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
 	if (SUCCEEDED(hr)) hr = parser->InitNew();
-
-	// Load preprocessor module
-	script_preprocessor preprocessor(parser, get_config_guid());
 
 	if (g_cfg_safe_mode)
 	{
@@ -640,10 +639,8 @@ HRESULT uie_win::_script_init()
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
-
-	// Preprocessor
-	if (SUCCEEDED(hr)) hr = preprocessor.preprocess(wcode.get_ptr());
-
+	// @import
+	if (SUCCEEDED(hr)) hr = preprocessor.process_import(parser);
 	if (SUCCEEDED(hr)) hr = parser->ParseScriptText(wcode.get_ptr(), NULL, NULL, NULL, NULL, 0, SCRIPTTEXT_ISVISIBLE, NULL, NULL);
 
 	return hr;
@@ -766,13 +763,13 @@ HRESULT uie_win::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARIANTARG * 
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("Fatal Error: WSH Panel Mod (GUID: %s): %s", guid.get_ptr(), e.what());
+			console::printf("WSH Panel Mod (GUID: %s): Fatal Error: %s", guid.get_ptr(), e.what());
 		}
 		catch (_com_error & e)
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("Fatal COM Error: WSH Panel Mod (GUID: %s): Code: 0x%08x", guid.get_ptr(), e.Error());
+			console::printf("WSH Panel Mod (GUID: %s): Fatal COM Error: Code: 0x%08x", guid.get_ptr(), e.Error());
 		}
 
 		pdisp->Release();

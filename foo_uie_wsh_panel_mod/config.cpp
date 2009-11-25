@@ -34,8 +34,9 @@ void wsh_panel_vars::load_config(stream_reader * reader, t_size size, abort_call
 
 	if (size > sizeof(unsigned))
 	{
-		unsigned ver;
-
+		bool have_read_config = false;
+		unsigned ver = 0;
+		
 		try
 		{
 			// Read version
@@ -66,12 +67,20 @@ void wsh_panel_vars::load_config(stream_reader * reader, t_size size, abort_call
 				reader->read_string(m_script_name, abort);
 				reader->read_string(m_script_code, abort);
 				reader->read_object_t(m_pseudo_transparent, abort);
+				have_read_config = true;
 				break;
 			}
 		}
 		catch (std::exception &)
 		{
+			have_read_config = false;
 			reset_config();
+		}
+
+		if (!have_read_config)
+		{
+			// Configuration corruputed or config version dismatch.
+			console::info("WSH Panel Mod: Error: Configuration need newer version of WSH Panel Mod or corrupted");
 		}
 	}
 }

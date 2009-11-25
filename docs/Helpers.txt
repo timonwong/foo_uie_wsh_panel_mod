@@ -1,4 +1,4 @@
-// Convert Point size to Pixel size (always used in gdi.Font())
+// Convert Point size to Pixel size (Useful in gdi.Font() and such)
 function Point2Pixel(pt, dpi) {
 	return (pt * dpi / 72);
 }
@@ -44,7 +44,7 @@ function setBlue(color, b) {
 	return ((color & 0xffffff00) | b);
 }
 
-// Helper function for DrawString()/MeasureString()
+// Helper function for DrawString() and MeasureString()
 // args: h_align, v_align, trimming, flags
 function StringFormat() {
 	var h_align = 0, v_align = 0, trimming = 0, flags = 0;
@@ -71,12 +71,12 @@ function StringFormat() {
 // return a value value: -100 <= vol <= 0
 function pos2vol(pos) {
      return (50 * Math.log(0.99 * p + 0.01) / Math.LN10);
-};
+}
 
-// Inverse function
+// Inverse function of pos2vol()
 function vol2pos(v){
      return (Math.round(((Math.pow(10, v / 50) - 0.01) / 0.99)));
-};
+}
 
 // pre-calculated colors 
 Colors = {

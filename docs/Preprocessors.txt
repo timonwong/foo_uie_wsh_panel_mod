@@ -1,4 +1,4 @@
-All preprocessors is started with "// ==PREPROCESSOR==" and ended with "// ==/PREPROCESSOR==":
+All preprocessors is started with "==PREPROCESSOR==" and ended with "==/PREPROCESSOR==":
   VBSCRIPT:
     ' // ==PREPROCESSOR==
     ' ...
@@ -9,13 +9,14 @@ All preprocessors is started with "// ==PREPROCESSOR==" and ended with "// ==/PR
     // ...
     // ==PREPROCESSOR==
 
-NOTE: All preprocessors (directives) are case *sensitive*.
+And be aware that all preprocessors (directives) are case *sensitive*.
 
 == Directives ==
-  Directives should be started with "// @"
+  Directives should be started with "@", and placed into a single comment.
 
-* import "path"
-  Usage: @import must placed in a single comment:
+* @import "path"
+----------------
+  Usage:
     VBScript:
     ' // ==PREPROCESSOR==
     ' // @import "path"
@@ -28,8 +29,5 @@ NOTE: All preprocessors (directives) are case *sensitive*.
 
   Remarks:
     You can place %fb2k_path%, %fb2k_component_path% and %fb2k_profile_path% into "path", they will be expanded while parsing.
-
-  Known Issues:
-    Length of "path" cannot exceed 260.
-    Including double-quote(") in path is object to "path" syntax.
+    Escape one double quote (") with two double quotes ("") if path includes double quote(") character. eg: @import "D:\""Something"""
 

@@ -68,13 +68,13 @@ static bool IsSymIncludes(const StyleAndWords & symbols, const SString value)
 	else if (isalpha(symbols.words[0])) 
 	{
 		// Set of symbols separated by spaces
-		size_t lenVal = value.length();
+		t_size lenVal = value.length();
 		const char *symbol = symbols.words.c_str();
 
 		while (symbol) 
 		{
 			const char *symbolEnd = strchr(symbol, ' ');
-			size_t lenSymbol = strlen(symbol);
+			t_size lenSymbol = strlen(symbol);
 
 			if (symbolEnd)
 				lenSymbol = symbolEnd - symbol;
@@ -1252,7 +1252,8 @@ void CScriptEditorCtrl::ReadAPI()
 {
 	m_apis.remove_all();
 
-	pfc::string8 propname, propval;
+	pfc::string8 propname;
+	pfc::array_t<char> propval;
 	int lexer = GetLexer();
 
 	switch (lexer)
@@ -1271,14 +1272,20 @@ void CScriptEditorCtrl::ReadAPI()
 
 	int len = GetPropertyExpanded(propname, 0);
 	if (!len) return;
-	GetPropertyExpanded(propname, propval.lock_buffer(len));
-	propval.unlock_buffer();
-	propval.replace_char(';', 0);
+	propval.set_size(len + 1);
+	GetPropertyExpanded(propname, propval.get_ptr());
+	propval[len] = 0;
+
+	// Replace ';' to 'zero'
+	for (t_size i = 0; i < len; ++i)
+	{
+		if (propval[i] == ';')
+			propval[i] = 0;
+	}
 
 	const char * api_filename = propval.get_ptr();
 	const char * api_endfilename = api_filename + len;
 	pfc::string8_fast content;
-	content.prealloc(512);
 
 	while (api_filename < api_endfilename)
 	{

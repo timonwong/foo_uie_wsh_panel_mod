@@ -33,6 +33,24 @@ namespace helpers
 	HRESULT get_album_art(BSTR rawpath, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub);
 	HRESULT get_album_art_embedded(BSTR rawpath, IGdiBitmap ** pp, int art_id);
 
+	static bool get_is_vista_or_later()
+	{
+		// Get OS version
+		static DWORD dwMajorVersion = 0;
+
+		if (!dwMajorVersion)
+		{
+			OSVERSIONINFO osvi = { 0 };
+
+			osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+			
+			if (GetVersionEx(&osvi))
+				dwMajorVersion = osvi.dwMajorVersion;
+		}
+
+		return (dwMajorVersion >= 6);
+	}
+
 	static pfc::string8_fast get_fb2k_path()
 	{
 		pfc::string8_fast path;

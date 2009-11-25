@@ -6,5 +6,5 @@
 // @import "%fb2k_path%scripts\includeme.js"
 // ==/PREPROCESSOR==
 
-// Only print some message using jquery to the console
+// Only print one message to the console
 print_to_console("Hello, world!");

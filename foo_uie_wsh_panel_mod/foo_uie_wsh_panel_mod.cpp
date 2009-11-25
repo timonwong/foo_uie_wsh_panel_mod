@@ -11,7 +11,7 @@
 // TODO: Change Version Number Every Time
 DECLARE_COMPONENT_VERSION(
 	"WSH Panel Mod" COMPONENT_NAME_SUFFIX,
-	"1.2.0 Alpha 2",
+	"1.2.0 Beta 1",
 	"Windows Scripting Host Panel\n"
 	"Modded by T.P. Wang\n\n"
 	"Build: "  __TIME__ ", " __DATE__ "\n"
@@ -29,7 +29,6 @@ enum t_load_status_error
 
 // Script TypeLib
 ITypeLibPtr g_typelib;
-bool is_vista_or_later = false;
 static int g_load_status = E_OK;
 
 class wsh_initquit : public initquit
@@ -94,12 +93,6 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE ins, DWORD reason, LPVOID lp)
 
 			// WTL
 			_Module.Init(NULL, ins);
-
-			// Get OS version
-			OSVERSIONINFO osvi = { 0 };
-
-			GetVersionEx(&osvi);
-			is_vista_or_later = (osvi.dwMajorVersion >= 6);
 		}
 		break;
 

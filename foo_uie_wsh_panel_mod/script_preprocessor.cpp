@@ -1,79 +1,190 @@
 #include "stdafx.h"
 #include "script_preprocessor.h"
 #include "helpers.h"
-#include "deelx.h"
 
 
-HRESULT script_preprocessor::preprocess(const wchar_t * script)
+HRESULT script_preprocessor::process_import(IActiveScriptParse * parser)
 {
-	HRESULT hr = S_OK;	
-	int block_begin = 0;
-	int block_end = 0;
+	HRESULT hr = S_OK;
 
-	if (!extract_preprocessor_block(script, block_begin, block_end))
+	if (!m_is_ok || !parser) return hr;
+
+	for (t_size i = 0; i < m_directive_value_list.get_count(); ++i)
 	{
-		return hr;
-	}
+		t_directive_value & v = m_directive_value_list[i];
 
-	const wchar_t regex_str[] = L"^\\s*'?\\s*//\\s*@import\\s*\"([^\"]+)\"";
-	CRegexpT<wchar_t> regex(regex_str, MULTILINE);
-	CContext * pcontext = regex.PrepareMatch(script, block_end, block_begin);
-	MatchResult result = regex.Match(pcontext);
-	
-	while (result.IsMatched())
-	{
-		int start, end;
-		pfc::array_t<wchar_t> path_buffer;
-
-		// path
-		start = result.GetGroupStart(1);
-		end = result.GetGroupEnd(1);
-
-		if (start >= 0)
+		if (wcscmp(v.directive.get_ptr(), L"import") == 0)
 		{
-			path_buffer.set_size(end - start + 1);
-			pfc::__unsafe__memcpy_t(path_buffer.get_ptr(), script + start, end - start);
-			path_buffer[end - start] = 0;
-		}
-		else
-		{
-			path_buffer.force_reset();
-		}
-
-		// Try parse
-		{
-			expand_path(path_buffer);
+			// Try parse
+			expand_path(v.value);
 
 			pfc::array_t<wchar_t> code;
-			bool is_file_read = helpers::read_file_wide(path_buffer.get_ptr(), code);
+			bool is_file_read = helpers::read_file_wide(v.value.get_ptr(), code);
 			pfc::string_formatter msg;
 
 			msg << "WSH Panel Mod (GUID: " << m_guidstr << "): "
-				<< "Parsing file \"" << pfc::stringcvt::string_utf8_from_wide(path_buffer.get_ptr())
+				<< "Parsing file \"" << pfc::stringcvt::string_utf8_from_wide(v.value.get_ptr())
 				<< "\"";
 
 			if (!is_file_read)
 			{
 				msg << ": Failed to load";
 			}
-			
+
 			console::formatter() << msg;
 
 			if (is_file_read)
 			{
-				hr = m_parser->ParseScriptText(code.get_ptr(), NULL, NULL, NULL, NULL, 0,
+				hr = parser->ParseScriptText(code.get_ptr(), NULL, NULL, NULL, NULL, 0,
 					SCRIPTTEXT_ISPERSISTENT | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
 
 				if (FAILED(hr))
 					break;
 			}
 		}
-
-		// Next
-		result = regex.Match(pcontext);
 	}
 
 	return hr;
+}
+
+bool script_preprocessor::preprocess(const wchar_t * script)
+{	
+	int block_begin = 0;
+	int block_end = 0;
+
+	if (!extract_preprocessor_block(script, block_begin, block_end))
+		return false;
+
+	const wchar_t * p = script + block_begin;
+	const wchar_t * pend = script + block_end;
+
+	while (*p && p < pend)
+	{
+		while (*p == ' ' || *p == '\t' || *p == '\'')
+			++p;
+
+		if (wcsncmp(p, L"//", 2) == 0)
+		{
+			p += 2;
+
+			// Skip blank chars
+			while (*p == ' ' || *p == '\t')
+				++p;
+
+			if (scan_directive_and_value(p, pend))
+			{
+				// Put in the directive_value list
+				m_directive_value_list.add_item(t_directive_value(m_directive_buffer, m_value_buffer));
+			}
+		}
+
+		// Jump to the next line
+		while (*p && *p != '\n')
+			++p;
+
+		if (*p == '\n')
+			++p;
+	}
+
+	return true;
+}
+
+bool script_preprocessor::scan_directive_and_value(const wchar_t *& p, const wchar_t * pend)
+{
+	m_directive_buffer.force_reset();
+
+	if (*p == '@')
+	{
+		++p;
+
+		const wchar_t * pdirective_begin = 0;
+		const wchar_t * pdirective_end = 0;
+
+		if (isalpha(*p))
+		{
+			pdirective_begin = p;
+			++p;
+
+			while (isalnum(*p) || *p == '_')
+				++p;
+
+			// We may get a directive now
+			pdirective_end = p;
+
+			// Scan value
+			if (scan_value(p, pend))
+			{
+				// We may get a value now, set the directive
+				m_directive_buffer.set_size(pdirective_end - pdirective_begin + 1);
+				pfc::__unsafe__memcpy_t(m_directive_buffer.get_ptr(), pdirective_begin, pdirective_end - pdirective_begin);
+				m_directive_buffer[pdirective_end - pdirective_begin] = 0;
+			}
+		}
+	}
+
+	return (m_directive_buffer.get_size() > 0 && m_value_buffer.get_size() > 0);
+}
+
+bool script_preprocessor::scan_value(const wchar_t *& p, const wchar_t * pend)
+{
+	const t_size delta = 32;
+
+	m_value_buffer.set_size(MAX_PATH + 1);
+
+	wchar_t * pvalue = m_value_buffer.get_ptr();
+
+	while (*p == ' ' || *p == '\t')
+		++p;
+
+	if (*p == '"')
+	{
+		++p;
+
+		while (*p && (p < pend) && *p != '\r' && *p != '\n')
+		{
+			const wchar_t * p2 = p + 1;
+
+			if (pvalue >= m_value_buffer.get_ptr() + m_value_buffer.get_size())
+			{
+				// Store the current pos
+				t_size pos = pvalue - m_value_buffer.get_ptr();
+
+				// Increase buffer size
+				m_value_buffer.increase_size(delta);
+				pvalue = m_value_buffer.get_ptr() + pos;
+			}
+
+			// Escape (")
+			if (*p == '"')
+			{
+				if (*p2 == '"')
+				{
+					*pvalue = *p2;
+					++pvalue;
+
+					p = p2 + 1;
+					continue;
+				}
+				else
+				{
+					// Add trailing 'zero'
+					*pvalue = 0;
+
+					return true;
+				}
+			}
+			else
+			{
+				*pvalue = *p;
+				++pvalue;
+
+				++p;
+			}
+		}
+	}
+
+	m_value_buffer.force_reset();
+	return false;
 }
 
 bool script_preprocessor::expand_path(pfc::array_t<wchar_t> & out)
@@ -91,15 +202,14 @@ bool script_preprocessor::expand_path(pfc::array_t<wchar_t> & out)
 
 	pfc::array_t<wchar_t> buffer;
 	buffer.set_size(MAX_PATH + 1);
-	//buffer.fill_null(); // Just in case
 
 	wchar_t * p = out.get_ptr();
 	wchar_t * pend = p + wcslen(p);
 
 	wchar_t * pbuffer = buffer.get_ptr();
-	wchar_t * pbuffer_max = pbuffer + MAX_PATH;
+	const t_size delta = 32;
 
-	while ((p < pend) && (pbuffer < pbuffer_max))
+	while (p < pend)
 	{
 		if (*p != '%')
 		{
@@ -107,31 +217,60 @@ bool script_preprocessor::expand_path(pfc::array_t<wchar_t> & out)
 		}
 		else
 		{
-			for (size_t i = 0; i < _countof(expand_table); ++i)
+			bool found = false;
+
+			for (t_size i = 0; i < _countof(expand_table); ++i)
 			{
-				size_t expand_which_size = wcslen(expand_table[i].which);
+				t_size expand_which_size = wcslen(expand_table[i].which);
 
 				if (_wcsnicmp(p, expand_table[i].which, expand_which_size) == 0)
 				{
-					pfc::stringcvt::string_wide_from_utf8 expanded(expand_table[i].func());
-					size_t expanded_size = expanded.length();
+					pfc::stringcvt::string_wide_from_utf8_fast expanded(expand_table[i].func());
+					t_size expanded_size = expanded.length();
 
-					if (pbuffer + expanded_size > pbuffer_max)
-						return false;
+					if (pbuffer + expanded_size >= buffer.get_ptr() + buffer.get_size())
+					{
+						// Increase buffer size
+						do
+						{
+							// Store the current pos
+							t_size pos = pbuffer - buffer.get_ptr();
+
+							buffer.increase_size(delta);
+							pbuffer = buffer.get_ptr() + pos;
+						} while (pbuffer >= buffer.get_ptr() + expanded_size);
+					}
 
 					pfc::__unsafe__memcpy_t(pbuffer, expanded.get_ptr(), expanded_size);
-					pbuffer += expanded_size;
-					p += expand_which_size;
-					continue;
+					pbuffer += expanded_size - 1;
+					p += expand_which_size - 1;
+					found = true;
+					break;
 				}
 			}
 
-			// No luck
-			*pbuffer = *p;
+			if (!found)
+			{
+				// No luck
+				*pbuffer = *p;
+			}
 		}
 
 		++pbuffer;
 		++p;
+
+		// Increase buffer size
+		if (!buffer.is_owned(pbuffer))
+		{
+			do
+			{
+				// Store the current pos
+				t_size pos = pbuffer - buffer.get_ptr();
+
+				buffer.increase_size(delta);
+				pbuffer = buffer.get_ptr() + pos;
+			} while (pbuffer >= buffer.get_ptr() + buffer.get_size());
+		}
 	}
 
 	// trailing 'zero'
@@ -143,10 +282,13 @@ bool script_preprocessor::expand_path(pfc::array_t<wchar_t> & out)
 
 bool script_preprocessor::extract_preprocessor_block(const wchar_t * script, int & block_begin, int & block_end)
 {
+	block_begin = 0;
+	block_end = 0;
+
 	if (!script) return false;
 
-	const wchar_t preprocessor_begin[] = L"// ==PREPROCESSOR==";
-	const wchar_t preprocessor_end[] = L"// ==/PREPROCESSOR==";
+	const wchar_t preprocessor_begin[] = L"==PREPROCESSOR==";
+	const wchar_t preprocessor_end[] = L"==/PREPROCESSOR==";
 
 	const wchar_t * pblock_begin = wcsstr(script, preprocessor_begin);
 
@@ -154,6 +296,7 @@ bool script_preprocessor::extract_preprocessor_block(const wchar_t * script, int
 
 	pblock_begin += _countof(preprocessor_begin) - 1;
 
+	// to next line
 	while (*pblock_begin && (*pblock_begin != '\n'))
 		++pblock_begin;
 
@@ -161,11 +304,15 @@ bool script_preprocessor::extract_preprocessor_block(const wchar_t * script, int
 
 	if (!pblock_end) return false;
 
-	while ((pblock_end > pblock_begin + 1) && (*pblock_end != '\n'))
+	// to prev line
+	while ((pblock_end > script) && (*pblock_end != '\n'))
 		--pblock_end;
 
 	if (*pblock_end == '\r')
 		--pblock_end;
+
+	if (pblock_end <= pblock_begin)
+		return false;
 
 	block_begin = pblock_begin - script;
 	block_end = pblock_end - script;

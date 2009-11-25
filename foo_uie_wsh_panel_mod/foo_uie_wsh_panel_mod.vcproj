@@ -403,10 +403,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\deelx.h"
-				>
-			</File>
-			<File
 				RelativePath=".\editorctrl.h"
 				>
 			</File>
