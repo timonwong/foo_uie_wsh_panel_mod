@@ -92,9 +92,9 @@ function on_item_played(metadb) {}
 // tags in these callbacks.
 //
 // [1.1.12]
-//   DO NOT try to use playback control methods such as fb.Play(), 
-// fb.Next(), fb.Stop() and fb.RunMainMenuCommand("Play") in global 
-// callbacks or you will make foobar2000 crash!
+//   DO NOT try to use playback control methods such as 
+// fb.RunMainMenuCommand("Play") abd fb.RunMainMenuCommand("Next") in 
+// global callbacks, or you may make foobar2000 crash.
 // =====================================================================
 
 // cmd: (integer, begin with 0): default, play, next, prev, settrack, rand, resume

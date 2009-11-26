@@ -360,6 +360,14 @@ __interface IFbWindow: IDispatch
 	[propget] STDMETHOD(ID)([out,retval] UINT* p);
 	[propget] STDMETHOD(Width)([out,retval] UINT* p);
 	[propget] STDMETHOD(Height)([out,retval] UINT* p);
+	[propget] STDMETHOD(MaxWidth)([out,retval] UINT* p);
+	[propput] STDMETHOD(MaxWidth)(UINT width);
+	[propget] STDMETHOD(MaxHeight)([out,retval] UINT* p);
+	[propput] STDMETHOD(MaxHeight)(UINT height);
+	[propget] STDMETHOD(MinWidth)([out,retval] UINT* p);
+	[propput] STDMETHOD(MinWidth)(UINT width);
+	[propget] STDMETHOD(MinHeight)([out,retval] UINT* p);
+	[propput] STDMETHOD(MinHeight)(UINT height);
 	STDMETHOD(Repaint)([defaultvalue(0)] VARIANT_BOOL force);
 	STDMETHOD(RepaintRect)(UINT x, UINT y, UINT w, UINT h, [defaultvalue(0)] VARIANT_BOOL force);
 	STDMETHOD(CreatePopupMenu)([out,retval] IMenuObj ** pp);

@@ -263,9 +263,17 @@ Methods:
 interface IFbWindow {
 Properties:
 	// [1.1.10] New:
-	(readonly) unsigned int ID;
+	(readonly) int ID;
 	(readonly) int Width;
 	(readonly) int Height;
+	// [1.2.0] New:
+	(read, write) int MaxWidth;
+	// [1.2.0] New:
+	(read, write) int MaxHeight;
+	// [1.2.0] New:
+	(read, write) int MinWidth;
+	// [1.2.0] New:
+	(read, write) int MinHeight;
 
 Methods:
 	void Repaint(force = false);

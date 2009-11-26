@@ -1,7 +1,9 @@
 v1.2.0
 - ADD: Preprocessor directive "@import", See Preprocessors.txt for more details.
+- ADD: window.MaxWidth, window.MaxHeight, window.MinWidth and window.MinHeight properties.
 - ADD: Preprocessor sample.
-- ADD: utils.ReadTextFile()
+- ADD: utils.ReadTextFile().
+- ADD: Basic prevent executing playback control methods in global callbacks.
 - FIX: Misc bugs and crashes fixed.
 
 v1.1.11

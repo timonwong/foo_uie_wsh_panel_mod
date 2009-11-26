@@ -24,6 +24,12 @@ HostComm::HostComm()
 , m_paint_pending(false)
 , m_accuracy(0)
 {
+	m_max_size.x = INT_MAX;
+	m_max_size.y = INT_MAX;
+
+	m_min_size.x = 0;
+	m_min_size.y = 0;
+
 	TIMECAPS tc;
 
 	if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) == TIMERR_NOERROR)
@@ -60,6 +66,16 @@ UINT HostComm::GetWidth()
 UINT HostComm::GetHeight()
 {
 	return m_height;
+}
+
+POINT & HostComm::GetMaxSize()
+{
+	return m_max_size;
+}
+
+POINT & HostComm::GetMinSize()
+{
+	return m_min_size;
 }
 
 void HostComm::Redraw()
@@ -245,6 +261,82 @@ STDMETHODIMP FbWindow::get_Height(UINT* p)
 	if (!p) return E_POINTER;
 
 	*p = m_host->GetHeight();
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::get_MaxWidth(UINT* p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = m_host->GetMaxSize().x;
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::put_MaxWidth(UINT width)
+{
+	TRACK_FUNCTION();
+
+	m_host->GetMaxSize().x = width;
+	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, ui_extension::size_limit_maximum_width);
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::get_MaxHeight(UINT* p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = m_host->GetMaxSize().y;
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::put_MaxHeight(UINT height)
+{
+	TRACK_FUNCTION();
+
+	m_host->GetMaxSize().y = height;
+	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, ui_extension::size_limit_maximum_height);
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::get_MinWidth(UINT* p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = m_host->GetMinSize().x;
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::put_MinWidth(UINT width)
+{
+	TRACK_FUNCTION();
+
+	m_host->GetMinSize().x = width;
+	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, ui_extension::size_limit_minimum_width);
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::get_MinHeight(UINT* p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = m_host->GetMinSize().y;
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::put_MinHeight(UINT height)
+{
+	TRACK_FUNCTION();
+
+	m_host->GetMinSize().y = height;
+	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, ui_extension::size_limit_minimum_height);
 	return S_OK;
 }
 
@@ -664,6 +756,13 @@ bool uie_win::script_init()
 		SetWindowPos(m_hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 	}
 
+	// Set something to default
+	m_max_size.x = INT_MAX;
+	m_max_size.y = INT_MAX;
+	m_min_size.x = 0;
+	m_min_size.x = 0;
+	PostMessage(m_hwnd, UWM_SIZELIMITECHANGED, 0, ui_extension::size_limit_all);
+
 	m_watched_handle.release();
 
 	if (get_disabled())
@@ -685,7 +784,7 @@ bool uie_win::script_init()
 			<< pfc::print_guid(get_config_guid()) << ", CODE: 0x" 
 			<< pfc::format_hex_lowercase((unsigned)hr);
 
-		if (hr != E_UNEXPECTED || hr != OLESCRIPT_E_SYNTAX)
+		if (hr != E_UNEXPECTED && hr != OLESCRIPT_E_SYNTAX)
 		{
 			msg_formatter << "): " << win32_error_msg;
 		}
@@ -989,6 +1088,15 @@ LRESULT uie_win::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		else
 			Repaint();
 
+		return 0;
+
+	case WM_GETMINMAXINFO:
+		{
+			LPMINMAXINFO pmmi = reinterpret_cast<LPMINMAXINFO>(lp);
+
+			memcpy(&pmmi->ptMaxTrackSize, &GetMaxSize(), sizeof(POINT));
+			memcpy(&pmmi->ptMinTrackSize, &GetMinSize(), sizeof(POINT));
+		}
 		return 0;
 
 	case WM_LBUTTONDOWN:
@@ -1314,8 +1422,14 @@ LRESULT uie_win::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case UWM_GETCONFIGGUID:
-		GUID * guid_ptr = reinterpret_cast<GUID *>(lp);
-		memcpy(guid_ptr, &get_config_guid(), sizeof(GUID));
+		{
+			GUID * guid_ptr = reinterpret_cast<GUID *>(lp);
+			memcpy(guid_ptr, &get_config_guid(), sizeof(GUID));
+		}
+		return 0;
+
+	case UWM_SIZELIMITECHANGED:
+		get_host()->on_size_limit_change(m_hwnd, lp);
 		return 0;
 	}
 

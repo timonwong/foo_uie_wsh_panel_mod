@@ -1,6 +1,10 @@
 window.ID
 window.Width
 window.Height
+window.MinWidth
+window.MinHeight
+window.MaxWidth
+window.MaxHeight
 window.Repaint([force])
 window.RepaintRect(x, y, w, h[, force])
 window.CreatePopupMenu()

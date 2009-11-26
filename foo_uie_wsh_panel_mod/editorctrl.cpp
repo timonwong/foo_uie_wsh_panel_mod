@@ -1277,7 +1277,7 @@ void CScriptEditorCtrl::ReadAPI()
 	propval[len] = 0;
 
 	// Replace ';' to 'zero'
-	for (t_size i = 0; i < len; ++i)
+	for (int i = 0; i < len; ++i)
 	{
 		if (propval[i] == ';')
 			propval[i] = 0;

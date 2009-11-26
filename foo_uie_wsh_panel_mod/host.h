@@ -11,6 +11,8 @@ protected:
 	HWND m_hwnd;
 	UINT m_width;
 	UINT m_height;
+	POINT m_max_size;
+	POINT m_min_size;
 	HDC  m_hdc;
 	HBITMAP  m_gr_bmp;
 	HBITMAP  m_gr_bmp_bk;
@@ -27,6 +29,8 @@ public:
 	HWND GetHWND();
 	UINT GetWidth();
 	UINT GetHeight();
+	POINT & GetMaxSize();
+	POINT & GetMinSize();
 	void Redraw();
 	void Repaint(bool force = false);
 	void RepaintRect(UINT x, UINT y, UINT w, UINT h, bool force = false);
@@ -53,6 +57,14 @@ public:
 	STDMETHODIMP get_ID(UINT* p);
 	STDMETHODIMP get_Width(UINT* p);
 	STDMETHODIMP get_Height(UINT* p);
+	STDMETHODIMP get_MaxWidth(UINT* p);
+	STDMETHODIMP put_MaxWidth(UINT width);
+	STDMETHODIMP get_MaxHeight(UINT* p);
+	STDMETHODIMP put_MaxHeight(UINT height);
+	STDMETHODIMP get_MinWidth(UINT* p);
+	STDMETHODIMP put_MinWidth(UINT width);
+	STDMETHODIMP get_MinHeight(UINT* p);
+	STDMETHODIMP put_MinHeight(UINT height);
 	STDMETHODIMP Repaint(VARIANT_BOOL force);
 	STDMETHODIMP RepaintRect(UINT x, UINT y, UINT w, UINT h, VARIANT_BOOL force);
 	STDMETHODIMP CreatePopupMenu(IMenuObj ** pp);
@@ -203,7 +215,7 @@ public:
 	void on_paint(HDC dc, LPRECT lpUpdateRect);
 	void on_timer(UINT timer_id);
 
-	//playback_callback
+	// playback_callback
 	void on_playback_starting(play_control::t_track_command cmd, bool paused);
 	void on_playback_new_track(metadb_handle_ptr track);
 	void on_playback_stop(play_control::t_stop_reason reason);
@@ -215,7 +227,7 @@ public:
 	void on_playback_time(double time);
 	void on_volume_change(float newval);
 
-	//playlist_callback
+	// playlist_callback
 	void on_items_added(t_size p_playlist,t_size p_start, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection){}
 	void on_items_reordered(t_size p_playlist,const t_size * p_order,t_size p_count){}
 	void on_items_removing(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count){}

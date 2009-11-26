@@ -105,7 +105,7 @@ bool script_preprocessor::scan_directive_and_value(const wchar_t *& p, const wch
 			pdirective_begin = p;
 			++p;
 
-			while (isalnum(*p) || *p == '_')
+			while (isalnum(*p) || *p == '_' || *p == '-' || *p == '.')
 				++p;
 
 			// We may get a directive now

@@ -10,4 +10,4 @@
 10. jsbeautifier.org is a good site for formatting your JScript files.
 11. Don't forget that error handling (JScript, VBScript) helps to create more stable scripts.
 12. Consider using Dispose() method instead of CollectGarbage() function.
-13. DO NOT try to call playback control methods such as fb.Play(), fb.Next() and fb.RunMainMenuCommand("Stop"), or you will make foobar2000 crash.
+13. DO NOT try to call playback control methods such as fb.RunMainMenuCommand("Next") and fb.RunMainMenuCommand("Stop"), or you may make foobar2000 crash.
