@@ -4,7 +4,7 @@
 #include "resource.h"
 
 // Forward declarations
-class uie_win;
+class wsh_panel_window;
 class CDialogFind;
 class CDialogReplace;
 
@@ -17,11 +17,11 @@ private:
 	CScriptEditorCtrl m_editorctrl;
 	CDialogFind * m_dlgfind;
 	CDialogReplace * m_dlgreplace;
-	uie_win * m_parent;
+	wsh_panel_window * m_parent;
 	pfc::string8 m_caption;
 
 public:
-	CDialogConf(uie_win * p_parent) 
+	CDialogConf(wsh_panel_window * p_parent) 
 		: m_parent(p_parent)
 		, m_dlgfind(NULL)
 		, m_dlgreplace(NULL)
@@ -43,7 +43,7 @@ public:
 	BEGIN_MSG_MAP(CDialogConf)
 		MSG_WM_INITDIALOG(OnInitDialog)
 		MSG_WM_NOTIFY(OnNotify)
-		MESSAGE_HANDLER(SCN_KEYDOWN, OnScnKeyDown)
+		MESSAGE_HANDLER(UWM_SCN_KEYDOWN, OnScnKeyDown)
 		COMMAND_RANGE_HANDLER_EX(IDOK, IDCANCEL, OnCloseCmd)
 		COMMAND_ID_HANDLER_EX(IDAPPLY, OnCloseCmd)
 		COMMAND_HANDLER_EX(IDC_SCRIPT_ENGINE, CBN_SELENDOK, OnScriptEngineCbnSelEndOk)

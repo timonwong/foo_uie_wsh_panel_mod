@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simple_thread.h"
 #include "script_interface.h"
 
 #define TO_VARIANT_BOOL(v) ((v) ? (VARIANT_TRUE) : (VARIANT_FALSE))
@@ -104,70 +105,6 @@ namespace helpers
 		file_info_pairs_filter(const metadb_handle_ptr & p_handle, const t_field_value_map & p_field_value_map, const char * p_multivalue_field = NULL);
 
 		bool apply_filter(metadb_handle_ptr p_location,t_filestats p_stats,file_info & p_info);
-	};
-
-	class simple_thread_manager;
-	extern simple_thread_manager g_simple_thread_manager;
-
-	// Taken from pfc::thread, with self destruction
-	class simple_thread 
-	{
-	public:
-		simple_thread() : m_thread(NULL), m_tid(0) {}
-
-		virtual ~simple_thread() { close(); }
-
-		void start();
-
-		void close();
-
-		inline bool is_active() const
-		{
-			return (m_thread != NULL);
-		}
-
-		inline unsigned get_tid() const
-		{
-			return m_tid;
-		}
-
-	protected:
-		virtual void thread_proc() = 0;
-
-	private:
-		static unsigned int CALLBACK g_entry(void* p_instance);
-
-		HANDLE m_thread;
-		unsigned m_tid;
-
-		PFC_CLASS_NOT_COPYABLE_EX(simple_thread)
-	};
-
-	class simple_thread_manager
-	{
-	public:
-		typedef pfc::chain_list_v2_t<simple_thread *> t_thread_list;
-
-		void add(simple_thread * p_thread)
-		{
-			m_list.add_item(p_thread);
-		}
-
-		void remove(simple_thread * p_thread)
-		{
-			m_list.remove_item(p_thread);
-		}
-
-		void remove_all()
-		{
-			for (t_thread_list::iterator iter = m_list.first(); iter.is_valid(); ++iter)
-			{
-				(*iter)->close();
-			}
-		}
-
-	private:
-		t_thread_list m_list;
 	};
 
 	class album_art_async : public simple_thread

@@ -20,38 +20,27 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
-		Release SSE2|Win32 = Release SSE2|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}.Debug|Win32.ActiveCfg = Debug|Win32
 		{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}.Debug|Win32.Build.0 = Debug|Win32
-		{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}.Release SSE2|Win32.ActiveCfg = Release|Win32
-		{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}.Release SSE2|Win32.Build.0 = Release|Win32
 		{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}.Release|Win32.ActiveCfg = Release|Win32
 		{EBFFFB4E-261D-44D3-B89C-957B31A0BF9C}.Release|Win32.Build.0 = Release|Win32
 		{E8091321-D79D-4575-86EF-064EA1A4A20D}.Debug|Win32.ActiveCfg = Debug|Win32
 		{E8091321-D79D-4575-86EF-064EA1A4A20D}.Debug|Win32.Build.0 = Debug|Win32
-		{E8091321-D79D-4575-86EF-064EA1A4A20D}.Release SSE2|Win32.ActiveCfg = Release|Win32
-		{E8091321-D79D-4575-86EF-064EA1A4A20D}.Release SSE2|Win32.Build.0 = Release|Win32
 		{E8091321-D79D-4575-86EF-064EA1A4A20D}.Release|Win32.ActiveCfg = Release|Win32
 		{E8091321-D79D-4575-86EF-064EA1A4A20D}.Release|Win32.Build.0 = Release|Win32
 		{71AD2674-065B-48F5-B8B0-E1F9D3892081}.Debug|Win32.ActiveCfg = Debug|Win32
 		{71AD2674-065B-48F5-B8B0-E1F9D3892081}.Debug|Win32.Build.0 = Debug|Win32
-		{71AD2674-065B-48F5-B8B0-E1F9D3892081}.Release SSE2|Win32.ActiveCfg = Release|Win32
-		{71AD2674-065B-48F5-B8B0-E1F9D3892081}.Release SSE2|Win32.Build.0 = Release|Win32
 		{71AD2674-065B-48F5-B8B0-E1F9D3892081}.Release|Win32.ActiveCfg = Release|Win32
 		{71AD2674-065B-48F5-B8B0-E1F9D3892081}.Release|Win32.Build.0 = Release|Win32
 		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Debug|Win32.ActiveCfg = Debug|Win32
 		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Debug|Win32.Build.0 = Debug|Win32
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release SSE2|Win32.ActiveCfg = Release staticlink|Win32
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release SSE2|Win32.Build.0 = Release staticlink|Win32
 		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release|Win32.ActiveCfg = Release staticlink|Win32
 		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release|Win32.Build.0 = Release staticlink|Win32
 		{43DF6037-DBE4-4468-9A50-4311495F3C86}.Debug|Win32.ActiveCfg = Debug|Win32
 		{43DF6037-DBE4-4468-9A50-4311495F3C86}.Debug|Win32.Build.0 = Debug|Win32
-		{43DF6037-DBE4-4468-9A50-4311495F3C86}.Release SSE2|Win32.ActiveCfg = Release SSE2|Win32
-		{43DF6037-DBE4-4468-9A50-4311495F3C86}.Release SSE2|Win32.Build.0 = Release SSE2|Win32
 		{43DF6037-DBE4-4468-9A50-4311495F3C86}.Release|Win32.ActiveCfg = Release|Win32
 		{43DF6037-DBE4-4468-9A50-4311495F3C86}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection

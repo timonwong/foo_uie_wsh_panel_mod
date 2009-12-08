@@ -2,16 +2,10 @@
 #include "helpers.h"
 
 
-#if _M_IX86_FP == 0
-  #define COMPONENT_NAME_SUFFIX ""
-#else
-  #define COMPONENT_NAME_SUFFIX " (SSE" TO_STRING(_M_IX86_FP) ")"
-#endif
-
 // TODO: Change Version Number Every Time
 DECLARE_COMPONENT_VERSION(
-	"WSH Panel Mod" COMPONENT_NAME_SUFFIX,
-	"1.2.0",
+	"WSH Panel Mod",
+	"1.2.1 Beta 1",
 	"Windows Scripting Host Panel\n"
 	"Modded by T.P. Wang\n\n"
 	"Build: "  __TIME__ ", " __DATE__ "\n"
@@ -58,7 +52,7 @@ public:
 
 	void on_quit()
 	{
-		helpers::g_simple_thread_manager.remove_all();
+		simple_thread_manager::instance().remove_all();
 	}
 };
 

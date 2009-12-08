@@ -7,14 +7,22 @@
 	public:\
 		STDMETHOD(QueryInterface)(REFIID riid, void** pp) { \
 			if (!pp) return E_INVALIDARG; \
-			IUnknown * temp = NULL;\
-			if (riid == __uuidof(IUnknown)) temp = reinterpret_cast<IUnknown*>(this);
+			IUnknown * temp = NULL;
 
-#define COM_QI_INTERFACE_ENTRY(type) \
-			else if (riid == __uuidof(type)) temp = static_cast<type*>(this);
+// C2594: ambiguous conversions
+#define COM_QI_ENTRY_MULTI(Ibase, Iimpl) \
+		if (riid == __uuidof(Ibase)) { \
+			temp = static_cast<Ibase *>(static_cast<Iimpl *>(this)); \
+			goto qi_entry_done; \
+		}
+
+#define COM_QI_ENTRY(Iimpl) \
+			COM_QI_ENTRY_MULTI(Iimpl, Iimpl);
 
 #define END_COM_QI_IMPL() \
-			else { *pp = NULL; return E_NOINTERFACE; } \
+			*pp = NULL; \
+			return E_NOINTERFACE; \
+		qi_entry_done: \
 			if (temp) temp->AddRef(); \
 			*pp = temp; \
 			return S_OK; \
@@ -132,8 +140,9 @@ template<class T>
 class IDispatchImpl3: public MyIDispatchImpl<T>
 {
 	BEGIN_COM_QI_IMPL()
-		COM_QI_INTERFACE_ENTRY(T)
-		COM_QI_INTERFACE_ENTRY(IDispatch)
+		COM_QI_ENTRY_MULTI(IUnknown, IDispatch)
+		COM_QI_ENTRY(T)
+		COM_QI_ENTRY(IDispatch)
 	END_COM_QI_IMPL()
 
 protected:
@@ -147,9 +156,10 @@ template<class T>
 class IDisposableImpl4: public MyIDispatchImpl<T>
 {
 	BEGIN_COM_QI_IMPL()
-		COM_QI_INTERFACE_ENTRY(T)
-		COM_QI_INTERFACE_ENTRY(IDisposable)
-		COM_QI_INTERFACE_ENTRY(IDispatch)
+		COM_QI_ENTRY_MULTI(IUnknown, IDispatch)
+		COM_QI_ENTRY(T)
+		COM_QI_ENTRY(IDisposable)
+		COM_QI_ENTRY(IDispatch)
 	END_COM_QI_IMPL()
 
 protected:
@@ -165,24 +175,25 @@ public:
 	}
 };
 
-template<class T1, class T2>
-class GdiObj : public MyIDispatchImpl<T1>
+template<class T, class T2>
+class GdiObj : public MyIDispatchImpl<T>
 {
 	BEGIN_COM_QI_IMPL()
-		COM_QI_INTERFACE_ENTRY(T1)
-		COM_QI_INTERFACE_ENTRY(IGdiObj)
-		COM_QI_INTERFACE_ENTRY(IDisposable)
-		COM_QI_INTERFACE_ENTRY(IDispatch)
+		COM_QI_ENTRY_MULTI(IUnknown, IDispatch)
+		COM_QI_ENTRY(T)
+		COM_QI_ENTRY(IGdiObj)
+		COM_QI_ENTRY(IDisposable)
+		COM_QI_ENTRY(IDispatch)
 	END_COM_QI_IMPL()
 
 protected:
 	T2 * m_ptr;
 
-	GdiObj<T1, T2>(T2* p) : m_ptr(p)
+	GdiObj<T, T2>(T2* p) : m_ptr(p)
 	{
 	}
 
-	virtual ~GdiObj<T1, T2>() { }
+	virtual ~GdiObj<T, T2>() { }
 
 	virtual void FinalRelease()
 	{

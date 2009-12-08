@@ -7,11 +7,10 @@
 #include "ui_conf.h"
 #include "ui_property.h"
 #include "user_message.h"
-#include "global_callback_guard.h"
 #include "script_preprocessor.h"
 
 // Panel
-static ui_extension::window_factory<uie_win> g_uie_win;
+static ui_extension::window_factory<wsh_panel_window> g_uie_win;
 
 
 HostComm::HostComm() 
@@ -23,6 +22,8 @@ HostComm::HostComm()
 , m_bk_updating(false)
 , m_paint_pending(false)
 , m_accuracy(0)
+, m_sstate(SCRIPTSTATE_UNINITIALIZED)
+, m_query_continue(false)
 {
 	m_max_size.x = INT_MAX;
 	m_max_size.y = INT_MAX;
@@ -216,13 +217,12 @@ IGdiBitmap * HostComm::GetBackgroundImage()
 
 		if (!helpers::check_gdiplus_object(bitmap))
 		{
-			delete bitmap;
+			if (bitmap) delete bitmap;
 			bitmap = NULL;
 		}
 	}
 
-	if (bitmap)
-		ret = new com_object_impl_t<GdiBitmap>(bitmap);
+	if (bitmap) ret = new com_object_impl_t<GdiBitmap>(bitmap);
 
 	return ret;
 }
@@ -231,7 +231,17 @@ void CALLBACK HostComm::g_timer_proc(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser,
 {
 	HostComm * p = (HostComm *)dwUser;
 
-	PostMessage(p->m_hwnd, UWM_TIMER, uTimerID, 0);
+	SendMessage(p->m_hwnd, UWM_TIMER, uTimerID, 0);
+}
+
+SCRIPTSTATE & HostComm::GetScriptState()
+{
+	return m_sstate;
+}
+
+bool & HostComm::GetQueryContinue()
+{
+	return m_query_continue;
 }
 
 STDMETHODIMP FbWindow::get_ID(UINT* p)
@@ -424,7 +434,7 @@ STDMETHODIMP FbWindow::NotifyOthers(BSTR name, BSTR info)
 
 	notify_callback * callback_ptr = new notify_callback(name, info);
 
-	g_get_panel_notifier().notify_others_callback(m_host->GetHWND(), UWM_NOTIFY_DATA, 
+	panel_notifier_manager::instance().post_msg_to_others_callback(m_host->GetHWND(), CALLBACK_UWM_NOTIFY_DATA, 
 		(WPARAM)callback_ptr->m_name, 
 		(LPARAM)callback_ptr->m_info, 
 		callback_ptr);
@@ -595,7 +605,7 @@ STDMETHODIMP ScriptSite::OnScriptTerminate(const VARIANT* result, const EXCEPINF
 
 STDMETHODIMP ScriptSite::OnStateChange(SCRIPTSTATE state)
 {
-	m_sstate = state;
+	m_host->GetScriptState() = state;
 	return S_OK;
 }
 
@@ -667,7 +677,7 @@ STDMETHODIMP ScriptSite::EnableModeless(BOOL fEnable)
 
 STDMETHODIMP ScriptSite::QueryContinue()
 {
-	if (m_bQueryContinue)
+	if (m_host->GetQueryContinue())
 	{
 		unsigned timeout = g_cfg_timeout * 1000;
 		unsigned delta = GetTickCount() - m_dwStartTime;
@@ -682,14 +692,13 @@ STDMETHODIMP ScriptSite::QueryContinue()
 	return S_OK;
 }
 
-uie_win::uie_win() 
+wsh_panel_window::wsh_panel_window() 
 : m_ismousetracked(false)
 , m_script_site(this)
 {
-
 }
 
-void uie_win::on_update_script(const char* name, const char* code)
+void wsh_panel_window::on_update_script(const char* name, const char* code)
 {
 	get_script_name() = name;
 	get_script_code() = code;
@@ -697,7 +706,7 @@ void uie_win::on_update_script(const char* name, const char* code)
 	script_init();
 }
 
-HRESULT uie_win::_script_init()
+HRESULT wsh_panel_window::_script_init()
 {
 	_COM_SMARTPTR_TYPEDEF(IActiveScriptParse, IID_IActiveScriptParse);
 
@@ -738,7 +747,7 @@ HRESULT uie_win::_script_init()
 	return hr;
 }
 
-bool uie_win::script_init()
+bool wsh_panel_window::script_init()
 {
 	TRACK_FUNCTION();
 
@@ -814,7 +823,7 @@ bool uie_win::script_init()
 	return true;
 }
 
-void uie_win::script_stop()
+void wsh_panel_window::script_stop()
 {
 	if (m_script_engine)
 	{
@@ -822,7 +831,7 @@ void uie_win::script_stop()
 	}
 }
 
-void uie_win::script_term()
+void wsh_panel_window::script_term()
 {
 	script_stop();
 
@@ -837,9 +846,9 @@ void uie_win::script_term()
 	}
 }
 
-HRESULT uie_win::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARIANTARG * argv /*= NULL*/, VARIANT * ret /*= NULL*/)
+HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARIANTARG * argv /*= NULL*/, VARIANT * ret /*= NULL*/)
 {
-	if (!m_script_site.IsAvailable()) return E_NOINTERFACE;
+	if (GetScriptState() != SCRIPTSTATE_CONNECTED) return E_NOINTERFACE;
 	if (!m_script_root || !m_script_engine) return E_NOINTERFACE;
 	if (!name) return E_INVALIDARG;
 
@@ -877,7 +886,7 @@ HRESULT uie_win::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARIANTARG * 
 	return hr;
 }
 
-void uie_win::create_context()
+void wsh_panel_window::create_context()
 {
 	if (m_gr_bmp || m_gr_bmp_bk)
 		delete_context();
@@ -890,7 +899,7 @@ void uie_win::create_context()
 	}
 }
 
-void uie_win::delete_context()
+void wsh_panel_window::delete_context()
 {
 	if (m_gr_bmp)
 	{
@@ -905,7 +914,7 @@ void uie_win::delete_context()
 	}
 }
 
-const GUID& uie_win::get_extension_guid() const
+const GUID& wsh_panel_window::get_extension_guid() const
 {
 	// {75A7B642-786C-4f24-9B52-17D737DEA09A}
 	static const GUID ext_guid =
@@ -914,22 +923,22 @@ const GUID& uie_win::get_extension_guid() const
 	return ext_guid;
 }
 
-void uie_win::get_name(pfc::string_base& out) const
+void wsh_panel_window::get_name(pfc::string_base& out) const
 {
 	out = "WSH Panel Mod";
 }
 
-void uie_win::get_category(pfc::string_base& out) const
+void wsh_panel_window::get_category(pfc::string_base& out) const
 {
 	out = "Panels";
 }
 
-unsigned uie_win::get_type() const
+unsigned wsh_panel_window::get_type() const
 {
 	return ui_extension::type_toolbar | ui_extension::type_panel;
 }
 
-ui_helpers::container_window::class_data & uie_win::get_class_data() const
+ui_helpers::container_window::class_data & wsh_panel_window::get_class_data() const
 {
 	static ui_helpers::container_window::class_data my_class_data =
 	{
@@ -948,40 +957,40 @@ ui_helpers::container_window::class_data & uie_win::get_class_data() const
 	return my_class_data;
 }
 
-void uie_win::set_config(stream_reader * reader, t_size size, abort_callback & abort)
+void wsh_panel_window::set_config(stream_reader * reader, t_size size, abort_callback & abort)
 {
 	load_config(reader, size, abort);
 }
 
-void uie_win::get_config(stream_writer * writer, abort_callback & abort) const
+void wsh_panel_window::get_config(stream_writer * writer, abort_callback & abort) const
 {
 	save_config(writer, abort);
 }
 
-void uie_win::get_menu_items(ui_extension::menu_hook_t& hook)
+void wsh_panel_window::get_menu_items(ui_extension::menu_hook_t& hook)
 {
 	hook.add_node(new menu_node_properties(this));
 	hook.add_node(new ui_extension::menu_node_configure(this));
 }
 
-bool uie_win::have_config_popup() const
+bool wsh_panel_window::have_config_popup() const
 {
 	return true;
 }
 
-bool uie_win::show_config_popup(HWND parent)
+bool wsh_panel_window::show_config_popup(HWND parent)
 {
 	CDialogConf dlg(this);
 	return (dlg.DoModal(parent) == IDOK);
 }
 
-bool uie_win::show_property_popup(HWND parent)
+bool wsh_panel_window::show_property_popup(HWND parent)
 {
 	CDialogProperty dlg(this);
 	return (dlg.DoModal(parent) == IDOK);
 }
 
-LRESULT uie_win::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	TRACK_CALL_TEXT_FORMAT("uie_win::on_message(hwnd=0x%x,msg=%u,wp=%d,lp=%d)", m_hwnd, msg, wp, lp);
 
@@ -999,12 +1008,7 @@ LRESULT uie_win::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			// Interfaces
 			m_gr_wrap.Attach(new com_object_impl_t<GdiGraphics>(), false);
 
-			// Callbacks
-			static_api_ptr_t<play_callback_manager>()->register_callback(this, play_callback::flag_on_playback_all | play_callback::flag_on_volume_change, true);
-			static_api_ptr_t<playlist_manager>()->register_callback(this, playlist_callback::flag_on_playback_order_changed | playlist_callback::flag_on_item_focus_change);
-			static_api_ptr_t<metadb_io_v3>()->register_callback(this);
-
-			g_get_panel_notifier().add_window(m_hwnd);
+			panel_notifier_manager::instance().add_window(m_hwnd);
 
 			script_init();
 		}
@@ -1014,12 +1018,7 @@ LRESULT uie_win::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		// Term script
 		script_term();
 
-		g_get_panel_notifier().remove_window(m_hwnd);
-
-		// Callbacks
-		static_api_ptr_t<play_callback_manager>()->unregister_callback(this);
-		static_api_ptr_t<playlist_manager>()->unregister_callback(this);
-		static_api_ptr_t<metadb_io_v3>()->unregister_callback(this);
+		panel_notifier_manager::instance().remove_window(m_hwnd);
 
 		if (m_gr_wrap)
 			m_gr_wrap.Release();
@@ -1256,7 +1255,7 @@ LRESULT uie_win::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		break;
 
 	case WM_SETCURSOR:
-		return true;
+		return 1;
 
 	case WM_KEYDOWN:
 		{
@@ -1335,48 +1334,6 @@ LRESULT uie_win::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		on_timer(wp);
 		return 0;
 
-	case UWM_PLAYLIST_STOP_AFTER_CURRENT:
-		{
-			VARIANTARG args[1];
-
-			args[0].vt = VT_BOOL;
-			args[0].boolVal = TO_VARIANT_BOOL(wp);
-			script_invoke_v(L"on_playlist_stop_after_current_changed", 1, args);
-		}
-		return 0;
-
-	case UWM_CURSOR_FOLLOW_PLAYBACK:
-		{
-			VARIANTARG args[1];
-
-			args[0].vt = VT_BOOL;
-			args[0].boolVal = TO_VARIANT_BOOL(wp);
-			script_invoke_v(L"on_cursor_follow_playback_changed", 1, args);
-		}
-		return 0;
-
-	case UWM_PLAYBACK_FOLLOW_CURSOR:
-		{
-			VARIANTARG args[1];
-
-			args[0].vt = VT_BOOL;
-			args[0].boolVal = TO_VARIANT_BOOL(wp);
-			script_invoke_v(L"on_playback_follow_cursor_changed", 1, args);
-		}
-		return 0;
-
-	case UWM_NOTIFY_DATA:
-		{
-			VARIANTARG args[2];
-
-			args[0].vt = VT_BSTR;
-			args[0].bstrVal = (BSTR)lp;
-			args[1].vt = VT_BSTR;
-			args[1].bstrVal = (BSTR)wp;
-			script_invoke_v(L"on_notify_data", 2, args);
-		}
-		return 0;
-
 	case UWM_SHOWCONFIGURE:
 		show_config_popup(m_hwnd);
 		return 0;
@@ -1385,40 +1342,8 @@ LRESULT uie_win::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		show_property_popup(m_hwnd);
 		return 0;
 
-	case UWM_GETALBUMARTASYNCDONE:
-		{
-			using namespace helpers;
-			album_art_async::t_param * param = reinterpret_cast<album_art_async::t_param *>(lp);
-			VARIANTARG args[3];
-
-			args[0].vt = VT_DISPATCH;
-			args[0].pdispVal = param->bitmap;
-			args[1].vt = VT_I4;
-			args[1].lVal = param->art_id;
-			args[2].vt = VT_DISPATCH;
-			args[2].pdispVal = param->handle;
-			script_invoke_v(L"on_get_album_art_done", 3, args);
-			// Release
-			delete param;
-		}
-		return 0;
-
-	case UWM_ON_ITEM_PLAYED:
-		{
-			metadb_handle * meta = reinterpret_cast<metadb_handle *>(lp);
-			FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(meta);
-			VARIANTARG args[1];
-			
-			args[0].vt = VT_DISPATCH;
-			args[0].pdispVal = handle;
-			script_invoke_v(L"on_item_played", 1, args);
-
-			handle->Release();
-		}
-		return 0;
-
 	case UWM_TOGGLEQUERYCONTINUE:
-		m_script_site.ToggleQueryContinue(!!wp);
+		GetQueryContinue() = (wp != 0);
 		return 0;
 
 	case UWM_GETCONFIGGUID:
@@ -1431,12 +1356,88 @@ LRESULT uie_win::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case UWM_SIZELIMITECHANGED:
 		get_host()->on_size_limit_change(m_hwnd, lp);
 		return 0;
+
+	case CALLBACK_UWM_PLAYLIST_STOP_AFTER_CURRENT:
+		on_playlist_stop_after_current_changed(wp);
+		return 0;
+
+	case CALLBACK_UWM_CURSOR_FOLLOW_PLAYBACK:
+		on_cursor_follow_playback_changed(wp);
+		return 0;
+
+	case CALLBACK_UWM_PLAYBACK_FOLLOW_CURSOR:
+		on_playback_follow_cursor_changed(wp);
+		return 0;
+
+	case CALLBACK_UWM_NOTIFY_DATA:
+		on_notify_data(lp, wp);
+		return 0;
+
+	case CALLBACK_UWM_GETALBUMARTASYNCDONE:
+		on_get_album_art_done(lp);
+		return 0;
+
+	case CALLBACK_UWM_ON_ITEM_PLAYED:
+		on_item_played(wp);
+		return 0;
+
+	case CALLBACK_UWM_ON_CHANGED_SORTED:
+		on_changed_sorted(*reinterpret_cast<metadb_handle_list *>(wp), lp != 0);
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYBACK_STARTING:
+		on_playback_starting((playback_control::t_track_command)wp, lp != 0);
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYBACK_NEW_TRACK:
+		on_playback_new_track(*reinterpret_cast<metadb_handle_ptr *>(wp));
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYBACK_STOP:
+		on_playback_stop((playback_control::t_stop_reason)wp);
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYBACK_SEEK:
+		on_playback_seek(*reinterpret_cast<double *>(wp));
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYBACK_PAUSE:
+		on_playback_pause(wp != 0);
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYBACK_EDITED:
+		on_playback_edited();
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYBACK_DYNAMIC_INFO:
+		on_playback_dynamic_info();
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYBACK_DYNAMIC_INFO_TRACK:
+		on_playback_dynamic_info_track();
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYBACK_TIME:
+		on_playback_time(*reinterpret_cast<double *>(wp));
+		return 0;
+
+	case CALLBACK_UWM_ON_VOLUME_CHANGE:
+		on_volume_change((float)wp);
+		return 0;
+
+	case CALLBACK_UWM_ON_ITEM_FOCUS_CHANGE:
+		on_item_focus_change();
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYBACK_ORDER_CHANGED:
+		on_playback_order_changed((t_size)wp);
+		return 0;
 	}
 
 	return uDefWindowProc(hwnd, msg, wp, lp);
 }
 
-void uie_win::on_size(int w, int h)
+void wsh_panel_window::on_size(int w, int h)
 {
 	TRACK_FUNCTION();
 
@@ -1449,7 +1450,7 @@ void uie_win::on_size(int w, int h)
 	script_invoke_v(L"on_size");
 }
 
-void uie_win::on_paint(HDC dc, LPRECT lpUpdateRect)
+void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
 {
 	TRACK_FUNCTION();
 
@@ -1459,7 +1460,7 @@ void uie_win::on_paint(HDC dc, LPRECT lpUpdateRect)
 	HDC memdc = CreateCompatibleDC(dc);
 	HBITMAP oldbmp = SelectBitmap(memdc, m_gr_bmp);
 	
-	if (m_script_site.IsAvailable())
+	if (GetScriptState() == SCRIPTSTATE_CONNECTED)
 	{
 		if (get_pseudo_transparent())
 		{
@@ -1516,7 +1517,7 @@ void uie_win::on_paint(HDC dc, LPRECT lpUpdateRect)
 	DeleteDC(memdc);
 }
 
-void uie_win::on_timer(UINT timer_id)
+void wsh_panel_window::on_timer(UINT timer_id)
 {
 	TRACK_FUNCTION();
 
@@ -1527,11 +1528,86 @@ void uie_win::on_timer(UINT timer_id)
 	script_invoke_v(L"on_timer", 1, args);
 }
 
-void uie_win::on_playback_starting(play_control::t_track_command cmd, bool paused)
+void wsh_panel_window::on_item_played(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	global_callback_guard guard;
+	metadb_handle_ptr * meta = reinterpret_cast<metadb_handle_ptr *>(wp);
+	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(*meta);
+	VARIANTARG args[1];
+
+	args[0].vt = VT_DISPATCH;
+	args[0].pdispVal = handle;
+	script_invoke_v(L"on_item_played", 1, args);
+
+	handle->Release();
+}
+
+void wsh_panel_window::on_get_album_art_done(LPARAM lp)
+{
+	TRACK_FUNCTION();
+
+	using namespace helpers;
+	album_art_async::t_param * param = reinterpret_cast<album_art_async::t_param *>(lp);
+	VARIANTARG args[3];
+
+	args[0].vt = VT_DISPATCH;
+	args[0].pdispVal = param->bitmap;
+	args[1].vt = VT_I4;
+	args[1].lVal = param->art_id;
+	args[2].vt = VT_DISPATCH;
+	args[2].pdispVal = param->handle;
+	script_invoke_v(L"on_get_album_art_done", 3, args);
+}
+
+void wsh_panel_window::on_playlist_stop_after_current_changed(WPARAM wp)
+{
+	TRACK_FUNCTION();
+
+	VARIANTARG args[1];
+
+	args[0].vt = VT_BOOL;
+	args[0].boolVal = TO_VARIANT_BOOL(wp);
+	script_invoke_v(L"on_playlist_stop_after_current_changed", 1, args);
+}
+
+void wsh_panel_window::on_cursor_follow_playback_changed(WPARAM wp)
+{
+	TRACK_FUNCTION();
+
+	VARIANTARG args[1];
+
+	args[0].vt = VT_BOOL;
+	args[0].boolVal = TO_VARIANT_BOOL(wp);
+	script_invoke_v(L"on_cursor_follow_playback_changed", 1, args);
+}
+
+void wsh_panel_window::on_playback_follow_cursor_changed(WPARAM wp)
+{
+	TRACK_FUNCTION();
+
+	VARIANTARG args[1];
+
+	args[0].vt = VT_BOOL;
+	args[0].boolVal = TO_VARIANT_BOOL(wp);
+	script_invoke_v(L"on_playback_follow_cursor_changed", 1, args);
+}
+
+void wsh_panel_window::on_notify_data(LPARAM lp, WPARAM wp)
+{
+	VARIANTARG args[2];
+
+	args[0].vt = VT_BSTR;
+	args[0].bstrVal = (BSTR)lp;
+	args[1].vt = VT_BSTR;
+	args[1].bstrVal = (BSTR)wp;
+	script_invoke_v(L"on_notify_data", 2, args);
+}
+
+void wsh_panel_window::on_playback_starting(play_control::t_track_command cmd, bool paused)
+{
+	TRACK_FUNCTION();
+
 	VARIANTARG args[2];
 
 	args[0].vt = VT_BOOL;
@@ -1541,11 +1617,10 @@ void uie_win::on_playback_starting(play_control::t_track_command cmd, bool pause
 	script_invoke_v(L"on_playback_starting", 2, args);
 }
 
-void uie_win::on_playback_new_track(metadb_handle_ptr track)
+void wsh_panel_window::on_playback_new_track(metadb_handle_ptr track)
 {
 	TRACK_FUNCTION();
 
-	global_callback_guard guard;
 	VARIANTARG args[1];
 	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(track);
 	
@@ -1556,11 +1631,10 @@ void uie_win::on_playback_new_track(metadb_handle_ptr track)
 	handle->Release();
 }
 
-void uie_win::on_playback_stop(play_control::t_stop_reason reason)
+void wsh_panel_window::on_playback_stop(play_control::t_stop_reason reason)
 {
 	TRACK_FUNCTION();
 
-	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_I4;
@@ -1568,11 +1642,10 @@ void uie_win::on_playback_stop(play_control::t_stop_reason reason)
 	script_invoke_v(L"on_playback_stop", 1, args);
 }
 
-void uie_win::on_playback_seek(double time)
+void wsh_panel_window::on_playback_seek(double time)
 {
 	TRACK_FUNCTION();
 
-	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R8;
@@ -1580,11 +1653,10 @@ void uie_win::on_playback_seek(double time)
 	script_invoke_v(L"on_playback_seek", 1, args);
 }
 
-void uie_win::on_playback_pause(bool state)
+void wsh_panel_window::on_playback_pause(bool state)
 {
 	TRACK_FUNCTION();
 
-	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_BOOL;
@@ -1592,38 +1664,31 @@ void uie_win::on_playback_pause(bool state)
 	script_invoke_v(L"on_playback_pause", 1, args);
 }
 
-void uie_win::on_playback_edited(metadb_handle_ptr track)
+void wsh_panel_window::on_playback_edited()
 {
 	TRACK_FUNCTION();
-
-	global_callback_guard guard;
 
 	script_invoke_v(L"on_playback_edited");
 }
 
-void uie_win::on_playback_dynamic_info(const file_info& info)
+void wsh_panel_window::on_playback_dynamic_info()
 {
 	TRACK_FUNCTION();
-
-	global_callback_guard guard;
 
 	script_invoke_v(L"on_playback_dynamic_info");
 }
 
-void uie_win::on_playback_dynamic_info_track(const file_info& info)
+void wsh_panel_window::on_playback_dynamic_info_track()
 {
 	TRACK_FUNCTION();
-
-	global_callback_guard guard;
 
 	script_invoke_v(L"on_playback_dynamic_info_track");
 }
 
-void uie_win::on_playback_time(double time)
+void wsh_panel_window::on_playback_time(double time)
 {
 	TRACK_FUNCTION();
 
-	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R8;
@@ -1631,11 +1696,10 @@ void uie_win::on_playback_time(double time)
 	script_invoke_v(L"on_playback_time", 1, args);
 }
 
-void uie_win::on_volume_change(float newval)
+void wsh_panel_window::on_volume_change(float newval)
 {
 	TRACK_FUNCTION();
 
-	global_callback_guard guard;
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R4;
@@ -1643,11 +1707,17 @@ void uie_win::on_volume_change(float newval)
 	script_invoke_v(L"on_volume_change", 1, args);
 }
 
-void uie_win::on_playback_order_changed(t_size p_new_index)
+void wsh_panel_window::on_item_focus_change()
 {
 	TRACK_FUNCTION();
 
-	global_callback_guard guard;
+	script_invoke_v(L"on_item_focus_change");
+}
+
+void wsh_panel_window::on_playback_order_changed(t_size p_new_index)
+{
+	TRACK_FUNCTION();
+
 	VARIANTARG args[1];
 
 	args[0].vt = VT_I4;
@@ -1655,14 +1725,7 @@ void uie_win::on_playback_order_changed(t_size p_new_index)
 	script_invoke_v(L"on_playback_order_changed", 1, args);
 }
 
-void uie_win::on_item_focus_change(t_size p_playlist,t_size p_from,t_size p_to)
-{
-	TRACK_FUNCTION();
-
-	script_invoke_v(L"on_item_focus_change");
-}
-
-void uie_win::on_changed_sorted(metadb_handle_list_cref p_items_sorted, bool p_fromhook)
+void wsh_panel_window::on_changed_sorted(metadb_handle_list_cref p_items_sorted, bool p_fromhook)
 {
 	TRACK_FUNCTION();
 

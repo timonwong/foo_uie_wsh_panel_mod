@@ -17,6 +17,7 @@ LRESULT CDialogProperty::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 
 	// Subclassing
 	m_properties.SubclassWindow(GetDlgItem(IDC_LIST_PROPERTIES));
+	m_properties.ModifyStyle(0, LBS_SORT | LBS_HASSTRINGS);
 	m_properties.SetExtendedListStyle(PLS_EX_SORTED | PLS_EX_XPLOOK);
 
 	LoadProperties();

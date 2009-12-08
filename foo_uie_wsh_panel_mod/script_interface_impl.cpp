@@ -3,7 +3,6 @@
 #include "helpers.h"
 #include "boxblurfilter.h"
 #include "user_message.h"
-#include "global_callback_guard.h"
 
 
 STDMETHODIMP GdiFont::get_HFont(UINT* p)
@@ -64,7 +63,7 @@ STDMETHODIMP GdiBitmap::Clone(float x, float y, float w, float h, IGdiBitmap** p
 	
 	if (!helpers::check_gdiplus_object(img))
 	{
-		delete img;
+		if (img) delete img;
 		(*pp) = NULL;
 		return S_OK;
 	}
@@ -207,7 +206,7 @@ STDMETHODIMP GdiBitmap::ReleaseGraphics(IGdiGraphics * p)
 		Gdiplus::Graphics * g = NULL;
 		p->get__ptr((void**)&g);
 		p->put__ptr(NULL);
-		delete g;
+		if (g) delete g;
 	}
 
 	return S_OK;
@@ -652,11 +651,11 @@ STDMETHODIMP GdiUtils::Font(BSTR name, float pxSize, int style, IGdiFont** pp)
 	if (!name) return E_INVALIDARG;
 	if (!pp) return E_POINTER;
 
-	Gdiplus::Font * raw = new Gdiplus::Font(name, pxSize, style, Gdiplus::UnitPixel);
+	Gdiplus::Font * font = new Gdiplus::Font(name, pxSize, style, Gdiplus::UnitPixel);
 
-	if (!helpers::check_gdiplus_object(raw))
+	if (!helpers::check_gdiplus_object(font))
 	{
-		delete raw;
+		if (font) delete font;
 		(*pp) = NULL;
 		return S_OK;
 	}
@@ -667,9 +666,9 @@ STDMETHODIMP GdiUtils::Font(BSTR name, float pxSize, int style, IGdiFont** pp)
 	LOGFONT logfont = { 0 };
 	HFONT hFont = NULL;
 
-	raw->GetLogFontW(&g, &logfont);
+	font->GetLogFontW(&g, &logfont);
 	hFont = CreateFontIndirect(&logfont);
-	(*pp) = new com_object_impl_t<GdiFont>(raw, hFont);
+	(*pp) = new com_object_impl_t<GdiFont>(font, hFont);
 	return S_OK;
 }
 
@@ -684,7 +683,7 @@ STDMETHODIMP GdiUtils::Image(BSTR path, IGdiBitmap** pp)
 	
 	if (!helpers::check_gdiplus_object(img))
 	{
-		delete img;
+		if (img) delete img;
 		(*pp) = NULL;
 		return S_OK;
 	}
@@ -705,7 +704,7 @@ STDMETHODIMP GdiUtils::CreateImage(int w, int h, IGdiBitmap ** pp)
 
 	if (!helpers::check_gdiplus_object(img))
 	{
-		delete img;
+		if (img) delete img;
 		(*pp) = NULL;
 		return S_OK;
 	}
@@ -994,7 +993,6 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfo(IFbFileInfo * p)
 	if (m_handle.is_empty()) return E_NOINTERFACE;
 	if (!p) return E_INVALIDARG;
 	if (!core_api::is_main_thread()) return E_ACCESSDENIED;
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	static_api_ptr_t<metadb_io_v2> io;
 	file_info_impl * info_ptr = NULL;
@@ -1017,7 +1015,6 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 	if (m_handle.is_empty()) return E_NOINTERFACE;
 	if (!p) return E_INVALIDARG;
 	if (!core_api::is_main_thread()) return E_ACCESSDENIED;
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	helpers::file_info_pairs_filter::t_field_value_map field_value_map;
 	pfc::stringcvt::string_utf8_from_wide ufield, uvalue, umultival;
@@ -1271,7 +1268,7 @@ STDMETHODIMP FbUtils::get_ProfilePath(BSTR* pp)
 
 	if (!pp) return E_POINTER;
 
-	static pfc::stringcvt::string_wide_from_utf8 path(helpers::get_fb2k_path());
+	static pfc::stringcvt::string_wide_from_utf8 path(helpers::get_profile_path());
 
 	(*pp) = SysAllocString(path.get_ptr());
 	return S_OK;
@@ -1428,8 +1425,6 @@ STDMETHODIMP FbUtils::Play()
 {
 	TRACK_FUNCTION();
 
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
-
 	standard_commands::main_play();
 	return S_OK;
 }
@@ -1437,8 +1432,6 @@ STDMETHODIMP FbUtils::Play()
 STDMETHODIMP FbUtils::Stop()
 {
 	TRACK_FUNCTION();
-
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_stop();
 	return S_OK;
@@ -1448,8 +1441,6 @@ STDMETHODIMP FbUtils::Pause()
 {
 	TRACK_FUNCTION();
 
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
-
 	standard_commands::main_pause();
 	return S_OK;
 }
@@ -1457,8 +1448,6 @@ STDMETHODIMP FbUtils::Pause()
 STDMETHODIMP FbUtils::PlayOrPause()
 {
 	TRACK_FUNCTION();
-
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_play_or_pause();
 	return S_OK;
@@ -1468,8 +1457,6 @@ STDMETHODIMP FbUtils::Next()
 {
 	TRACK_FUNCTION();
 
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
-
 	standard_commands::main_next();
 	return S_OK;
 }
@@ -1477,8 +1464,6 @@ STDMETHODIMP FbUtils::Next()
 STDMETHODIMP FbUtils::Prev()
 {
 	TRACK_FUNCTION();
-
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_previous();
 	return S_OK;
@@ -1488,8 +1473,6 @@ STDMETHODIMP FbUtils::Random()
 {
 	TRACK_FUNCTION();
 
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
-
 	standard_commands::main_random();
 	return S_OK;
 }
@@ -1497,8 +1480,6 @@ STDMETHODIMP FbUtils::Random()
 STDMETHODIMP FbUtils::VolumeDown()
 {
 	TRACK_FUNCTION();
-
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_volume_down();
 	return S_OK;
@@ -1508,8 +1489,6 @@ STDMETHODIMP FbUtils::VolumeUp()
 {
 	TRACK_FUNCTION();
 
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
-
 	standard_commands::main_volume_up();
 	return S_OK;
 }
@@ -1518,8 +1497,6 @@ STDMETHODIMP FbUtils::VolumeMute()
 {
 	TRACK_FUNCTION();
 
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
-	
 	standard_commands::main_volume_mute();
 	return S_OK;
 }
@@ -1527,8 +1504,6 @@ STDMETHODIMP FbUtils::VolumeMute()
 STDMETHODIMP FbUtils::AddDirectory()
 {
 	TRACK_FUNCTION();
-
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_add_directory();
 	return S_OK;
@@ -1538,8 +1513,6 @@ STDMETHODIMP FbUtils::AddFiles()
 {
 	TRACK_FUNCTION();
 
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
-	
 	standard_commands::main_add_files();
 	return S_OK;
 }
@@ -1571,8 +1544,6 @@ STDMETHODIMP FbUtils::ClearPlaylist()
 {
 	TRACK_FUNCTION();
 
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
-
 	standard_commands::main_clear_playlist();
 	return S_OK;
 }
@@ -1581,8 +1552,6 @@ STDMETHODIMP FbUtils::LoadPlaylist()
 {
 	TRACK_FUNCTION();
 
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
-
 	standard_commands::main_load_playlist();
 	return S_OK;
 }
@@ -1590,8 +1559,6 @@ STDMETHODIMP FbUtils::LoadPlaylist()
 STDMETHODIMP FbUtils::SavePlaylist()
 {
 	TRACK_FUNCTION();
-
-	RETURN_IF_GLOBAL_CALLBACK_NOT_SAFE(E_ACCESSDENIED);
 
 	standard_commands::main_save_playlist();
 	return S_OK;

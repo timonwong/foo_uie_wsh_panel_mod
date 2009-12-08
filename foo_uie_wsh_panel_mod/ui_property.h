@@ -6,7 +6,7 @@
 
 
 // Forward declarations
-class uie_win;
+class wsh_panel_window;
 
 
 class CDialogProperty
@@ -14,12 +14,12 @@ class CDialogProperty
 	, public CDialogResize<CDialogProperty>
 {
 private:
-	uie_win * m_parent;
+	wsh_panel_window * m_parent;
 	CPropertyListCtrl m_properties;
 	sci_prop_config::t_map m_dup_prop_map;
 
 public:
-	CDialogProperty(uie_win * p_parent) : m_parent(p_parent)
+	CDialogProperty(wsh_panel_window * p_parent) : m_parent(p_parent)
 	{
 	}
 
@@ -67,10 +67,10 @@ public:
 class menu_node_properties : public ui_extension::menu_node_command_t
 {
 private:
-	uie_win * p_this;
+	wsh_panel_window * p_this;
 
 public:
-	menu_node_properties(uie_win * wnd) : p_this(wnd) {};
+	menu_node_properties(wsh_panel_window * wnd) : p_this(wnd) {};
 
 	bool get_display_data(pfc::string_base & p_out,unsigned & p_displayflags) const
 	{

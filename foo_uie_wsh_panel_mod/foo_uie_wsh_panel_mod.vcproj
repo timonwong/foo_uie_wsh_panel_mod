@@ -18,8 +18,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)bin\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)build\$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			>
@@ -45,7 +45,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;FOO_UIE_WSH_PANEL_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GdiPlus.lib shared.lib shlwapi.lib WinMM.lib SciLexer.lib Imm32.lib uxtheme.lib"
+				AdditionalDependencies="GdiPlus.lib shared.lib shlwapi.lib WinMM.lib SciLexerD.lib Imm32.lib uxtheme.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../shared;../lib"
 				GenerateDebugInformation="true"
@@ -176,93 +176,6 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
-		<Configuration
-			Name="Release SSE2|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			UseOfMFC="0"
-			UseOfATL="0"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalOptions="/O2 /Ox"
-				Optimization="2"
-				InlineFunctionExpansion="2"
-				EnableIntrinsicFunctions="true"
-				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\include\scintilla"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;FOO_UIE_WSH_PANEL_EXPORTS;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS"
-				StringPooling="true"
-				RuntimeLibrary="0"
-				BufferSecurityCheck="false"
-				EnableEnhancedInstructionSet="2"
-				FloatingPointModel="2"
-				RuntimeTypeInfo="false"
-				UsePrecompiledHeader="2"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				Culture="1033"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="GdiPlus.lib shared.lib shlwapi.lib WinMM.lib SciLexer.lib Imm32.lib uxtheme.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../shared;../lib"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -289,14 +202,6 @@
 				>
 				<FileConfiguration
 					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release SSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -333,6 +238,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\simple_thread.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -345,14 +254,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release SSE2|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -407,10 +308,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\global_callback_guard.h"
-				>
-			</File>
-			<File
 				RelativePath=".\global_cfg.h"
 				>
 			</File>
@@ -460,6 +357,10 @@
 			</File>
 			<File
 				RelativePath=".\script_preprocessor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\simple_thread.h"
 				>
 			</File>
 			<File

@@ -4,34 +4,23 @@
 class NOVTABLE panel_notifier_callback
 {
 public:
-	virtual void on_callback(HWND hwnd, UINT uMsg, LRESULT lResult) = 0;
+	virtual void on_callback(HWND hwnd, UINT uMsg, LRESULT lResult) {}
 };
 
-class panel_notifier
+class panel_notifier_manager
 {
 public:
 	typedef pfc::list_t<HWND> t_hwndlist;
 
-private:
-	t_hwndlist m_hwnds;
-
-protected:
-	struct panel_notifier_data
+	panel_notifier_manager()
 	{
-	private:
-		volatile LONG m_ref;
-		panel_notifier_callback * m_callback;
+	}
 
-		panel_notifier_data(LONG ref, panel_notifier_callback * p_callback) : m_ref(ref), 
-			m_callback(p_callback) { }
-		virtual ~panel_notifier_data() { delete m_callback; }
+	static inline panel_notifier_manager & instance()
+	{
+		return sm_instance;
+	}
 
-		friend class panel_notifier;
-	};
-
-	static void CALLBACK g_notify_others_callback(HWND hwnd, UINT uMsg, ULONG_PTR dwData, LRESULT lResult);
-
-public:
 	inline void add_window(HWND p_wnd)
 	{
 		if (m_hwnds.find_item(p_wnd))
@@ -55,18 +44,35 @@ public:
 		return m_hwnds.get_count();
 	}
 
-	// async
-	void notify_others_callback(HWND p_wnd_except, UINT p_msg, WPARAM p_wp, LPARAM p_lp, panel_notifier_callback * p_callback);
+	void post_msg_to_others_callback(HWND p_wnd_except, UINT p_msg, WPARAM p_wp, LPARAM p_lp, panel_notifier_callback * p_callback);
+	void send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
+	void post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
+	void post_msg_to_all_callback(UINT p_msg, WPARAM p_wp, LPARAM p_lp, panel_notifier_callback * p_callback);
 
-	void notify_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
+protected:
+	struct panel_notifier_data
+	{
+	private:
+		volatile LONG m_ref;
+		panel_notifier_callback * m_callback;
 
-	void notify_all_async(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
+		panel_notifier_data(LONG ref, panel_notifier_callback * p_callback) : m_ref(ref),
+			m_callback(p_callback) { }
 
-	// async
-	void notify_all_callback(UINT p_msg, WPARAM p_wp, LPARAM p_lp, panel_notifier_callback * p_callback);
+		virtual ~panel_notifier_data() { delete m_callback; }
+
+		friend class panel_notifier_manager;
+	};
+
+	static void CALLBACK g_notify_others_callback(HWND hwnd, UINT uMsg, ULONG_PTR dwData, LRESULT lResult);
+
+private:
+	t_hwndlist m_hwnds;
+	static panel_notifier_manager sm_instance;
+	PFC_CLASS_NOT_COPYABLE_EX(panel_notifier_manager)
 };
 
-class config_object_notifier : public config_object_notify
+class config_object_callback : public config_object_notify
 {
 public:
 	virtual t_size get_watched_object_count();
@@ -74,21 +80,62 @@ public:
 	virtual void on_watched_object_changed(const service_ptr_t<config_object> & p_object);
 };
 
-class stat_collector_notifier : public playback_statistics_collector
+class playback_stat_callback : public playback_statistics_collector
 {
-private:
-	struct notify_callback : public panel_notifier_callback
-	{
-		metadb_handle_ptr m_handle;
-
-		notify_callback(const metadb_handle_ptr & p_handle) : m_handle(p_handle) {}
-		virtual ~notify_callback() {}
-
-		virtual void on_callback(HWND hwnd, UINT uMsg, LRESULT lResult) {}
-	};
-
 public:
 	virtual void on_item_played(metadb_handle_ptr p_item);
 };
 
-panel_notifier & g_get_panel_notifier();
+class metadb_changed_callback : public metadb_io_callback_dynamic, public initquit
+{
+public:
+	// metadb_io_callback_dynamic
+	virtual void on_changed_sorted(metadb_handle_list_cref p_items_sorted, bool p_fromhook);
+
+	// initquit
+	virtual void on_init();
+	virtual void on_quit();
+};
+
+class my_play_callback : public play_callback_static 
+{
+public:
+	virtual unsigned get_flags() { return flag_on_playback_all; }
+
+	virtual void on_playback_starting(play_control::t_track_command cmd, bool paused);
+	virtual void on_playback_new_track(metadb_handle_ptr track);
+	virtual void on_playback_stop(play_control::t_stop_reason reason);
+	virtual void on_playback_seek(double time);
+	virtual void on_playback_pause(bool state);
+	virtual void on_playback_edited(metadb_handle_ptr track);
+	virtual void on_playback_dynamic_info(const file_info& info);
+	virtual void on_playback_dynamic_info_track(const file_info& info);
+	virtual void on_playback_time(double time);
+	virtual void on_volume_change(float newval);
+};
+
+class my_playlist_callback : public playlist_callback_single_static
+{
+public:
+	virtual unsigned get_flags() { return flag_on_item_focus_change | flag_on_playback_order_changed; }
+
+	virtual void on_items_added(t_size p_base, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection) {}
+	virtual void on_items_reordered(const t_size * p_order,t_size p_count) {}
+	virtual void on_items_removing(const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
+	virtual void on_items_removed(const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
+	virtual void on_items_selection_change(const bit_array & p_affected,const bit_array & p_state) {}
+	// impl
+	virtual void on_item_focus_change(t_size p_from,t_size p_to);
+	virtual void on_items_modified(const bit_array & p_mask) {}
+	virtual void on_items_modified_fromplayback(const bit_array & p_mask,play_control::t_display_level p_level) {}
+	virtual void on_items_replaced(const bit_array & p_mask,const pfc::list_base_const_t<playlist_callback::t_on_items_replaced_entry> & p_data) {}
+	virtual void on_item_ensure_visible(t_size p_idx) {}
+
+	virtual void on_playlist_switch() {}
+	virtual void on_playlist_renamed(const char * p_new_name,t_size p_new_name_len) {}
+	virtual void on_playlist_locked(bool p_locked) {}
+
+	virtual void on_default_format_changed() {}
+	// impl
+	virtual void on_playback_order_changed(t_size p_new_index);
+};

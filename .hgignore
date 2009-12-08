@@ -9,12 +9,9 @@ vc90.idl
 vc90.tlb
 *.aps
 
-dist/*
+dist/
 
-Release/*
-Release SSE2/*
-Debug/*
-
-*/Release/*
-*/Release SSE2/*
-*/Debug/*
+# switch to regexp syntax
+syntax: regexp
+^([^\\/:*?"<>|]+/)*Release/
+^([^\\/:*?"<>|]+/)*Debug/

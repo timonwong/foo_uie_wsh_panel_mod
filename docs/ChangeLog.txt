@@ -1,3 +1,7 @@
+v1.2.1
+- CHG: Global callbacks are invoked *asynchronously* now.
+
+
 v1.2.0
 - ADD: Preprocessor directive "@import", See Preprocessors.txt for more details.
 - ADD: window.MaxWidth, window.MaxHeight, window.MinWidth and window.MinHeight properties.

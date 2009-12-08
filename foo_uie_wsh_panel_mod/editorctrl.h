@@ -5,11 +5,8 @@
 
 #include "wtlscintilla.h"
 #include "SString.h"
+#include "user_message.h"
 
-enum
-{
-	SCN_KEYDOWN = WM_APP + 334,
-};
 
 enum IndentationStatus 
 {
@@ -92,7 +89,7 @@ public:
 	LRESULT OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{	
 		bHandled = FALSE;
-		::PostMessage(::GetAncestor(m_hWnd, GA_PARENT), SCN_KEYDOWN, wParam, lParam);
+		::PostMessage(::GetAncestor(m_hWnd, GA_PARENT), UWM_SCN_KEYDOWN, wParam, lParam);
 		return TRUE;
 	}
 

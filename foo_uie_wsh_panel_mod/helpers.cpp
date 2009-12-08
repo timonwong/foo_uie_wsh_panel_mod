@@ -6,10 +6,6 @@
 
 namespace helpers
 {
-
-	// Simple thread manager
-	simple_thread_manager g_simple_thread_manager;
-
 	// p_out must be NULL
 	bool find_context_command_recur(const char * p_command, pfc::string_base & p_path, contextmenu_node * p_parent, contextmenu_node *& p_out)
 	{
@@ -271,7 +267,7 @@ namespace helpers
 				if (!check_gdiplus_object(bmp))
 				{
 					ret = false;
-					delete bmp;
+					if (bmp) delete bmp;
 					bmp = NULL;
 				}
 			}
@@ -308,7 +304,6 @@ namespace helpers
 				}
 				catch (std::exception &)
 				{
-
 				}
 			}
 		}
@@ -348,8 +343,8 @@ namespace helpers
 				{
 					aaep = ptr->open(NULL, urawpath, abort);
 
-					album_art_data_ptr data = aaep->query(art_guid, abort);
 					Gdiplus::Bitmap * bitmap = NULL;
+					album_art_data_ptr data = aaep->query(art_guid, abort);
 
 					if (helpers::read_album_art_into_bitmap(data, &bitmap))
 					{
@@ -359,7 +354,6 @@ namespace helpers
 				}
 				catch (std::exception &)
 				{
-
 				}
 			}
 		}
@@ -617,56 +611,6 @@ namespace helpers
 		return false;
 	}
 
-	void simple_thread::start()
-	{
-		close();
-
-		const int priority = GetThreadPriority(GetCurrentThread());
-		const bool overridePriority = (priority != THREAD_PRIORITY_NORMAL);
-		HANDLE thread = (HANDLE)_beginthreadex(NULL, 0, g_entry, reinterpret_cast<void*>(this), overridePriority ? CREATE_SUSPENDED : 0, &m_tid);
-
-		if (thread == NULL)
-			pfc::throw_exception_with_message<pfc::exception>("Could not create thread");
-
-		g_simple_thread_manager.add(this);
-
-		if (overridePriority)
-		{
-			SetThreadPriority(thread, priority);
-			ResumeThread(thread);
-		}
-
-		m_thread = thread;
-	}
-
-	void simple_thread::close()
-	{
-		if (is_active())
-		{
-			WaitForSingleObject(m_thread, INFINITE);
-			CloseHandle(m_thread);
-			m_thread = NULL;
-		}
-	}
-
-	unsigned int CALLBACK simple_thread::g_entry(void* p_instance)
-	{
-		simple_thread * thread_ptr = reinterpret_cast<simple_thread *>(p_instance);
-
-		try
-		{
-			thread_ptr->thread_proc();
-		}
-		catch (std::exception &)
-		{
-
-		}
-
-		g_simple_thread_manager.remove(thread_ptr);
-		delete thread_ptr;
-		return 0;
-	}
-
 	void album_art_async::thread_proc()
 	{
 		FbMetadbHandle * handle = NULL;
@@ -686,8 +630,8 @@ namespace helpers
 			handle = new com_object_impl_t<FbMetadbHandle>(m_handle);
 		}
 
-		t_param * param = new t_param(handle, m_art_id, bitmap);
+		t_param param(handle, m_art_id, bitmap);
 
-		PostMessage(m_notify_hwnd, UWM_GETALBUMARTASYNCDONE, 0, (LPARAM)param);
+		SendMessage(m_notify_hwnd, CALLBACK_UWM_GETALBUMARTASYNCDONE, 0, (LPARAM)&param);
 	}
 }

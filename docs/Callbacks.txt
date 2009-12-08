@@ -86,17 +86,6 @@ function on_refresh_background_done() {}
 //    of it has been played through.
 function on_item_played(metadb) {}
 
-// =====================================================================
-//                                WARNING
-//   Following callbacks are called global callbacks, so avoid updating
-// tags in these callbacks.
-//
-// [1.1.12]
-//   DO NOT try to use playback control methods such as 
-// fb.RunMainMenuCommand("Play") abd fb.RunMainMenuCommand("Next") in 
-// global callbacks, or you may make foobar2000 crash.
-// =====================================================================
-
 // cmd: (integer, begin with 0): default, play, next, prev, settrack, rand, resume
 function on_playback_starting(cmd, is_paused) {}
 
