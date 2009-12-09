@@ -245,10 +245,13 @@ void my_play_callback::on_playback_time(double time)
 
 void my_play_callback::on_volume_change(float newval)
 {
-	PFC_STATIC_ASSERT(sizeof(float) == sizeof(WPARAM));
+	// though sizeof(float) == sizeof(int), cast of IEEE754 is dangerous, always.
+	typedef simple_data_callback<float> callback_t;
 
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_VOLUME_CHANGE,
-		(WPARAM)newval, 0);
+	callback_t * p_callback = new callback_t(newval);
+
+	panel_notifier_manager::instance().post_msg_to_all_callback(CALLBACK_UWM_ON_VOLUME_CHANGE,
+		(WPARAM)&p_callback->m_param_holder, 0, p_callback);
 }
 
 void my_playlist_callback::on_item_focus_change(t_size p_from,t_size p_to)

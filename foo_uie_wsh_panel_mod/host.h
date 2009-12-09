@@ -4,6 +4,8 @@
 #include "script_interface_impl.h"
 #include "config.h"
 
+_COM_SMARTPTR_TYPEDEF(IActiveScriptParse, IID_IActiveScriptParse);
+
 
 class HostComm : public wsh_panel_vars
 {
@@ -21,10 +23,10 @@ protected:
 	UINT              m_accuracy;
 	metadb_handle_ptr m_watched_handle;
 
-	IActiveScriptPtr  m_script_engine;
-	IDispatchPtr      m_script_root;
-	SCRIPTSTATE       m_sstate;
-	bool              m_query_continue;
+	IActiveScriptPtr        m_script_engine;
+	IDispatchPtr            m_script_root;
+	SCRIPTSTATE             m_sstate;
+	bool                    m_query_continue;
 
 	HostComm();
 	virtual ~HostComm();
@@ -51,7 +53,6 @@ public:
 	ITimerObj * CreateTimerTimeout(UINT timeout);
 	ITimerObj * CreateTimerInterval(UINT delay);
 	void KillTimer(ITimerObj * p);
-
 
 	static void CALLBACK g_timer_proc(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
 };
@@ -95,7 +96,8 @@ public:
 	STDMETHODIMP SetCursor(UINT id);
 };
 
-class ScriptSite : public IActiveScriptSite,
+class ScriptSite : 
+	public IActiveScriptSite,
 	public IActiveScriptSiteWindow,
 	public IActiveScriptSiteInterruptPoll
 {

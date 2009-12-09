@@ -992,7 +992,6 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfo(IFbFileInfo * p)
 
 	if (m_handle.is_empty()) return E_NOINTERFACE;
 	if (!p) return E_INVALIDARG;
-	if (!core_api::is_main_thread()) return E_ACCESSDENIED;
 
 	static_api_ptr_t<metadb_io_v2> io;
 	file_info_impl * info_ptr = NULL;
@@ -1014,7 +1013,6 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 
 	if (m_handle.is_empty()) return E_NOINTERFACE;
 	if (!p) return E_INVALIDARG;
-	if (!core_api::is_main_thread()) return E_ACCESSDENIED;
 
 	helpers::file_info_pairs_filter::t_field_value_map field_value_map;
 	pfc::stringcvt::string_utf8_from_wide ufield, uvalue, umultival;

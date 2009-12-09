@@ -1,6 +1,7 @@
 v1.2.1
 - CHG: Global callbacks are invoked *asynchronously* now.
-
+- CHG: Notes & Hints.txt, tag "[OBSOLETE]".
+- DEL: Callbacks.txt, remove restriction information about global callbacks.
 
 v1.2.0
 - ADD: Preprocessor directive "@import", See Preprocessors.txt for more details.

@@ -613,6 +613,9 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 {
 	TRACK_FUNCTION();
 
+	if (!err)
+		return S_OK;
+
 	DWORD ctx = 0;
 	ULONG line = 0;
 	LONG  charpos = 0;
@@ -708,8 +711,6 @@ void wsh_panel_window::on_update_script(const char* name, const char* code)
 
 HRESULT wsh_panel_window::_script_init()
 {
-	_COM_SMARTPTR_TYPEDEF(IActiveScriptParse, IID_IActiveScriptParse);
-
 	script_term();
 
 	HRESULT hr = S_OK;
@@ -1422,7 +1423,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case CALLBACK_UWM_ON_VOLUME_CHANGE:
-		on_volume_change((float)wp);
+		on_volume_change(*reinterpret_cast<float *>(wp));
 		return 0;
 
 	case CALLBACK_UWM_ON_ITEM_FOCUS_CHANGE:
