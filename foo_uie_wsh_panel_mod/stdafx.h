@@ -50,7 +50,7 @@
 #undef SubclassWindow
 #endif
 
-#define NO_TRACK_FUNCTION
+//#define NO_TRACK_FUNCTION
 
 #if !defined(NO_TRACK_FUNCTION)
 #define TRACK_FUNCTION() TRACK_CALL_TEXT(__FUNCTION__)

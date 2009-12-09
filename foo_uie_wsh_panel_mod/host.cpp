@@ -711,6 +711,8 @@ void wsh_panel_window::on_update_script(const char* name, const char* code)
 
 HRESULT wsh_panel_window::_script_init()
 {
+	TRACK_FUNCTION();
+
 	script_term();
 
 	HRESULT hr = S_OK;
@@ -720,7 +722,7 @@ HRESULT wsh_panel_window::_script_init()
 	// Load preprocessor module
 	script_preprocessor preprocessor(wcode.get_ptr(), get_config_guid());
 
-	if (SUCCEEDED(hr)) hr = m_script_engine.CreateInstance(wname.get_ptr(), NULL, CLSCTX_INPROC_SERVER);
+	if (SUCCEEDED(hr)) hr = m_script_engine.CreateInstance(wname.get_ptr(), NULL, CLSCTX_ALL);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptSite(&m_script_site);
 	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
 	if (SUCCEEDED(hr)) hr = parser->InitNew();
@@ -826,6 +828,8 @@ bool wsh_panel_window::script_init()
 
 void wsh_panel_window::script_stop()
 {
+	TRACK_FUNCTION();
+
 	if (m_script_engine)
 	{
 		m_script_engine->Close();
@@ -834,6 +838,8 @@ void wsh_panel_window::script_stop()
 
 void wsh_panel_window::script_term()
 {
+	TRACK_FUNCTION();
+
 	script_stop();
 
 	if (m_script_root)
@@ -993,7 +999,7 @@ bool wsh_panel_window::show_property_popup(HWND parent)
 
 LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-	TRACK_CALL_TEXT_FORMAT("uie_win::on_message(hwnd=0x%x,msg=%u,wp=%d,lp=%d)", m_hwnd, msg, wp, lp);
+	//TRACK_CALL_TEXT_FORMAT("uie_win::on_message(hwnd=0x%x,msg=%u,wp=%d,lp=%d)", m_hwnd, msg, wp, lp);
 
 	switch (msg)
 	{
@@ -1383,7 +1389,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case CALLBACK_UWM_ON_CHANGED_SORTED:
-		on_changed_sorted(*reinterpret_cast<metadb_handle_list *>(wp), lp != 0);
+		on_changed_sorted(wp);
 		return 0;
 
 	case CALLBACK_UWM_ON_PLAYBACK_STARTING:
@@ -1391,7 +1397,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case CALLBACK_UWM_ON_PLAYBACK_NEW_TRACK:
-		on_playback_new_track(*reinterpret_cast<metadb_handle_ptr *>(wp));
+		on_playback_new_track(wp);
 		return 0;
 
 	case CALLBACK_UWM_ON_PLAYBACK_STOP:
@@ -1399,7 +1405,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case CALLBACK_UWM_ON_PLAYBACK_SEEK:
-		on_playback_seek(*reinterpret_cast<double *>(wp));
+		on_playback_seek(wp);
 		return 0;
 
 	case CALLBACK_UWM_ON_PLAYBACK_PAUSE:
@@ -1419,11 +1425,11 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case CALLBACK_UWM_ON_PLAYBACK_TIME:
-		on_playback_time(*reinterpret_cast<double *>(wp));
+		on_playback_time(wp);
 		return 0;
 
 	case CALLBACK_UWM_ON_VOLUME_CHANGE:
-		on_volume_change(*reinterpret_cast<float *>(wp));
+		on_volume_change(wp);
 		return 0;
 
 	case CALLBACK_UWM_ON_ITEM_FOCUS_CHANGE:
@@ -1533,8 +1539,10 @@ void wsh_panel_window::on_item_played(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	metadb_handle_ptr * meta = reinterpret_cast<metadb_handle_ptr *>(wp);
-	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(*meta);
+	t_simple_callback_data<metadb_handle_ptr> * data 
+		= reinterpret_cast<t_simple_callback_data<metadb_handle_ptr> *>(wp);
+
+	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
 	VARIANTARG args[1];
 
 	args[0].vt = VT_DISPATCH;
@@ -1542,6 +1550,7 @@ void wsh_panel_window::on_item_played(WPARAM wp)
 	script_invoke_v(L"on_item_played", 1, args);
 
 	handle->Release();
+	data->refcount_release();
 }
 
 void wsh_panel_window::on_get_album_art_done(LPARAM lp)
@@ -1618,18 +1627,22 @@ void wsh_panel_window::on_playback_starting(play_control::t_track_command cmd, b
 	script_invoke_v(L"on_playback_starting", 2, args);
 }
 
-void wsh_panel_window::on_playback_new_track(metadb_handle_ptr track)
+void wsh_panel_window::on_playback_new_track(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
+	t_simple_callback_data<metadb_handle_ptr> * data 
+		= reinterpret_cast<t_simple_callback_data<metadb_handle_ptr> *>(wp);
+
 	VARIANTARG args[1];
-	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(track);
+	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
 	
 	args[0].vt = VT_DISPATCH;
 	args[0].pdispVal = handle;
 	script_invoke_v(L"on_playback_new_track", 1, args);
 
 	handle->Release();
+	data->refcount_release();
 }
 
 void wsh_panel_window::on_playback_stop(play_control::t_stop_reason reason)
@@ -1643,15 +1656,20 @@ void wsh_panel_window::on_playback_stop(play_control::t_stop_reason reason)
 	script_invoke_v(L"on_playback_stop", 1, args);
 }
 
-void wsh_panel_window::on_playback_seek(double time)
+void wsh_panel_window::on_playback_seek(WPARAM wp)
 {
 	TRACK_FUNCTION();
+
+	t_simple_callback_data<double> * data = 
+		reinterpret_cast<t_simple_callback_data<double> *>(wp);
 
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R8;
-	args[0].dblVal = time;
+	args[0].dblVal = data->m_item;
 	script_invoke_v(L"on_playback_seek", 1, args);
+
+	data->refcount_release();
 }
 
 void wsh_panel_window::on_playback_pause(bool state)
@@ -1686,26 +1704,36 @@ void wsh_panel_window::on_playback_dynamic_info_track()
 	script_invoke_v(L"on_playback_dynamic_info_track");
 }
 
-void wsh_panel_window::on_playback_time(double time)
+void wsh_panel_window::on_playback_time(WPARAM wp)
 {
 	TRACK_FUNCTION();
+
+	t_simple_callback_data<double> * data 
+		= reinterpret_cast<t_simple_callback_data<double> *>(wp);
 
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R8;
-	args[0].dblVal = time;
+	args[0].dblVal = data->m_item;
 	script_invoke_v(L"on_playback_time", 1, args);
+
+	data->refcount_release();
 }
 
-void wsh_panel_window::on_volume_change(float newval)
+void wsh_panel_window::on_volume_change(WPARAM wp)
 {
 	TRACK_FUNCTION();
+
+	t_simple_callback_data<float> * data 
+		= reinterpret_cast<t_simple_callback_data<float> *>(wp);
 
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R4;
-	args[0].fltVal = newval;
+	args[0].fltVal = data->m_item;
 	script_invoke_v(L"on_volume_change", 1, args);
+
+	data->refcount_release();
 }
 
 void wsh_panel_window::on_item_focus_change()
@@ -1726,21 +1754,25 @@ void wsh_panel_window::on_playback_order_changed(t_size p_new_index)
 	script_invoke_v(L"on_playback_order_changed", 1, args);
 }
 
-void wsh_panel_window::on_changed_sorted(metadb_handle_list_cref p_items_sorted, bool p_fromhook)
+void wsh_panel_window::on_changed_sorted(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	if (m_watched_handle.is_empty() || !p_items_sorted.have_item(m_watched_handle))
+	metadb_changed_callback::t_on_changed_sorted_data * data 
+		= reinterpret_cast<metadb_changed_callback::t_on_changed_sorted_data *>(wp);
+
+	if (m_watched_handle.is_empty() || !data->m_items_sorted.have_item(m_watched_handle))
 		return;
 
 	VARIANTARG args[2];
 	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(m_watched_handle);
 
 	args[0].vt = VT_BOOL;
-	args[0].boolVal = TO_VARIANT_BOOL(p_fromhook);
+	args[0].boolVal = TO_VARIANT_BOOL(data->m_fromhook);
 	args[1].vt = VT_DISPATCH;
 	args[1].pdispVal = handle;
 	script_invoke_v(L"on_metadb_changed", 2, args);
 
 	handle->Release();
+	data->refcount_release();
 }

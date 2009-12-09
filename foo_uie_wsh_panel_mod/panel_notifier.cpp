@@ -11,6 +11,7 @@ static play_callback_static_factory_t<my_play_callback > g_my_play_callback;
 static service_factory_single_t<my_playlist_callback> g_my_playlist_callback;
 static initquit_factory_t<metadb_changed_callback> g_metadb_changed_callback;
 
+
 void panel_notifier_manager::post_msg_to_others_callback(HWND p_wnd_except, UINT p_msg, WPARAM p_wp, LPARAM p_lp, panel_notifier_callback * p_callback)
 {
 	t_size count = m_hwnds.get_count();
@@ -31,15 +32,15 @@ void panel_notifier_manager::post_msg_to_others_callback(HWND p_wnd_except, UINT
 	}
 }
 
-void panel_notifier_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
-{
-	for (t_size i = 0; i < m_hwnds.get_count(); ++i)
-	{
-		HWND wnd = m_hwnds[i];
-
-		SendMessage(wnd, p_msg, p_wp, p_lp);
-	}
-}
+//void panel_notifier_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
+//{
+//	for (t_size i = 0; i < m_hwnds.get_count(); ++i)
+//	{
+//		HWND wnd = m_hwnds[i];
+//
+//		SendMessage(wnd, p_msg, p_wp, p_lp);
+//	}
+//}
 
 void panel_notifier_manager::post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 {
@@ -51,20 +52,21 @@ void panel_notifier_manager::post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_l
 	}
 }
 
-void panel_notifier_manager::post_msg_to_all_callback(UINT p_msg, WPARAM p_wp, LPARAM p_lp, panel_notifier_callback * p_callback)
+void panel_notifier_manager::post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_root * p_param)
 {
 	t_size count = m_hwnds.get_count();
 
-	if (count < 1)
+	if (count < 1 || !p_param)
 		return;
 
-	panel_notifier_data * data_ptr = new panel_notifier_data(count, p_callback);
+	for (t_size i = 0; i < count; ++i)
+		p_param->refcount_add_ref();
 
 	for (t_size i = 0; i < count; ++i)
 	{
 		HWND wnd = m_hwnds[i];
 
-		SendMessageCallback(wnd, p_msg, p_wp, p_lp, g_notify_others_callback, (ULONG_PTR)data_ptr);
+		PostMessage(wnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0);
 	}
 }
 
@@ -148,22 +150,19 @@ void config_object_callback::on_watched_object_changed(const service_ptr_t<confi
 
 void playback_stat_callback::on_item_played(metadb_handle_ptr p_item)
 {
-	typedef simple_data_callback<metadb_handle_ptr> callback_t;
+	t_simple_callback_data<metadb_handle_ptr> * on_item_played_data 
+		= new t_simple_callback_data<metadb_handle_ptr>(p_item);
 
-	callback_t * p_callback = new callback_t(p_item);
-
-	panel_notifier_manager::instance().post_msg_to_all_callback(CALLBACK_UWM_ON_ITEM_PLAYED, 
-		(WPARAM)&p_callback->m_param_holder, 0, p_callback);
+	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_ITEM_PLAYED, 
+		on_item_played_data);
 }
 
 void metadb_changed_callback::on_changed_sorted(metadb_handle_list_cref p_items_sorted, bool p_fromhook)
 {
-	typedef simple_ref_data_callback<metadb_handle_list> callback_t;
+	t_on_changed_sorted_data * on_changed_sorted_data = new t_on_changed_sorted_data(p_items_sorted, p_fromhook);
 
-	callback_t * p_callback = new callback_t(p_items_sorted);
-
-	panel_notifier_manager::instance().post_msg_to_all_callback(CALLBACK_UWM_ON_CHANGED_SORTED, 
-		(WPARAM)&p_callback->m_param_holder, (LPARAM)p_fromhook, p_callback);
+	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_CHANGED_SORTED, 
+		on_changed_sorted_data);
 }
 
 void metadb_changed_callback::on_init()
@@ -186,12 +185,10 @@ void my_play_callback::on_playback_starting(play_control::t_track_command cmd, b
 
 void my_play_callback::on_playback_new_track(metadb_handle_ptr track)
 {
-	typedef simple_data_callback<metadb_handle_ptr> callback_t;
+	t_simple_callback_data<metadb_handle_ptr> * on_playback_new_track_data = new t_simple_callback_data<metadb_handle_ptr>(track);
 
-	callback_t * p_callback = new callback_t(track);
-
-	panel_notifier_manager::instance().post_msg_to_all_callback(CALLBACK_UWM_ON_PLAYBACK_NEW_TRACK, 
-		(WPARAM)&p_callback->m_param_holder, 0, p_callback);
+	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_PLAYBACK_NEW_TRACK, 
+		on_playback_new_track_data);
 }
 
 void my_play_callback::on_playback_stop(play_control::t_stop_reason reason)
@@ -203,12 +200,10 @@ void my_play_callback::on_playback_stop(play_control::t_stop_reason reason)
 void my_play_callback::on_playback_seek(double time)
 {
 	// sizeof(double) >= sizeof(WPARAM)
-	typedef simple_data_callback<double> callback_t;
+	t_simple_callback_data<double> * on_playback_seek_data = new t_simple_callback_data<double>(time);
 
-	callback_t * p_callback = new callback_t(time);
-
-	panel_notifier_manager::instance().post_msg_to_all_callback(CALLBACK_UWM_ON_PLAYBACK_SEEK,
-		(WPARAM)&p_callback->m_param_holder, 0, p_callback);
+	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_PLAYBACK_SEEK,
+		on_playback_seek_data);
 }
 
 void my_play_callback::on_playback_pause(bool state)
@@ -235,23 +230,19 @@ void my_play_callback::on_playback_dynamic_info_track(const file_info& info)
 void my_play_callback::on_playback_time(double time)
 {
 	// sizeof(double) >= sizeof(WPARAM)
-	typedef simple_data_callback<double> callback_t;
+	t_simple_callback_data<double> * on_playback_time_data = new t_simple_callback_data<double>(time);
 
-	callback_t * p_callback = new callback_t(time);
-
-	panel_notifier_manager::instance().post_msg_to_all_callback(CALLBACK_UWM_ON_PLAYBACK_TIME,
-		(WPARAM)&p_callback->m_param_holder, 0, p_callback);
+	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_PLAYBACK_TIME,
+		on_playback_time_data);
 }
 
 void my_play_callback::on_volume_change(float newval)
 {
 	// though sizeof(float) == sizeof(int), cast of IEEE754 is dangerous, always.
-	typedef simple_data_callback<float> callback_t;
+	t_simple_callback_data<float> * on_volume_change_data = new t_simple_callback_data<float>(newval);
 
-	callback_t * p_callback = new callback_t(newval);
-
-	panel_notifier_manager::instance().post_msg_to_all_callback(CALLBACK_UWM_ON_VOLUME_CHANGE,
-		(WPARAM)&p_callback->m_param_holder, 0, p_callback);
+	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_VOLUME_CHANGE,
+		on_volume_change_data);
 }
 
 void my_playlist_callback::on_item_focus_change(t_size p_from,t_size p_to)

@@ -45,9 +45,9 @@ public:
 	}
 
 	void post_msg_to_others_callback(HWND p_wnd_except, UINT p_msg, WPARAM p_wp, LPARAM p_lp, panel_notifier_callback * p_callback);
-	void send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
+	//void send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
 	void post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
-	void post_msg_to_all_callback(UINT p_msg, WPARAM p_wp, LPARAM p_lp, panel_notifier_callback * p_callback);
+	void post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_root * p_param);
 
 protected:
 	struct panel_notifier_data
@@ -80,6 +80,15 @@ public:
 	virtual void on_watched_object_changed(const service_ptr_t<config_object> & p_object);
 };
 
+template <class T>
+struct t_simple_callback_data : public pfc::refcounted_object_root
+{
+	T m_item;
+
+	t_simple_callback_data(const T & p_item) : m_item(p_item) {}
+};
+
+
 class playback_stat_callback : public playback_statistics_collector
 {
 public:
@@ -89,6 +98,17 @@ public:
 class metadb_changed_callback : public metadb_io_callback_dynamic, public initquit
 {
 public:
+	struct t_on_changed_sorted_data : public pfc::refcounted_object_root
+	{
+		metadb_handle_list m_items_sorted;
+		bool m_fromhook;
+
+		t_on_changed_sorted_data(metadb_handle_list_cref p_items_sorted, bool p_fromhook) 
+			: m_items_sorted(p_items_sorted)
+			, m_fromhook(p_fromhook)
+		{}
+	};
+
 	// metadb_io_callback_dynamic
 	virtual void on_changed_sorted(metadb_handle_list_cref p_items_sorted, bool p_fromhook);
 

@@ -221,20 +221,20 @@ public:
 
 	// play_callback
 	void on_playback_starting(play_control::t_track_command cmd, bool paused);
-	void on_playback_new_track(metadb_handle_ptr track);
+	void on_playback_new_track(WPARAM wp);
 	void on_playback_stop(play_control::t_stop_reason reason);
-	void on_playback_seek(double time);
+	void on_playback_seek(WPARAM wp);
 	void on_playback_pause(bool state);
 	void on_playback_edited();
 	void on_playback_dynamic_info();
 	void on_playback_dynamic_info_track();
-	void on_playback_time(double time);
-	void on_volume_change(float newval);
+	void on_playback_time(WPARAM wp);
+	void on_volume_change(WPARAM wp);
 
 	// playlist_callback
 	void on_item_focus_change();
 	void on_playback_order_changed(t_size p_new_index);
 
 	// metadb_io_callback_dynamic
-	void on_changed_sorted(metadb_handle_list_cref p_items_sorted, bool p_fromhook);
+	void on_changed_sorted(WPARAM wp);
 };
