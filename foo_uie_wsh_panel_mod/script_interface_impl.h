@@ -361,6 +361,7 @@ public:
 	STDMETHODIMP Font(BSTR name, float pxSize, int style, IGdiFont** pp);
 	STDMETHODIMP Image(BSTR path, IGdiBitmap** pp);
 	STDMETHODIMP CreateImage(int w, int h, IGdiBitmap ** pp);
+	STDMETHODIMP CreateStyleTextRender(IStyleTextRender ** pp);
 };
 
 class FbFileInfo : public IDisposableImpl4<IFbFileInfo>
@@ -668,4 +669,37 @@ public:
 	STDMETHODIMP SetMaxWidth(int width);
 	STDMETHODIMP get_Text(BSTR * pp);
 	STDMETHODIMP put_Text(BSTR text);
+};
+
+// forward declartion
+namespace TextDesign
+{
+	class OutlineText;
+}
+
+class StyleTextRender : public IDisposableImpl4<IStyleTextRender>
+{
+protected:
+	TextDesign::OutlineText * m_pOutLineText;
+
+	StyleTextRender();
+	virtual ~StyleTextRender() {}
+
+	virtual void FinalRelease();
+
+public:
+	// Outline
+	STDMETHODIMP OutLineText(DWORD text_color, DWORD outline_color, int outline_width);
+	STDMETHODIMP DoubleOutLineText(DWORD text_color, DWORD outline_color1, DWORD outline_color2, int outline_width1, int outline_width2);
+	STDMETHODIMP GlowText(DWORD text_color, DWORD glow_color, int glow_width);
+	// Shadow
+	STDMETHODIMP EnableShadow(VARIANT_BOOL enable);
+	STDMETHODIMP ResetShadow();
+	STDMETHODIMP Shadow(DWORD color, int thickness, int offset_x, int offset_y);
+	STDMETHODIMP DiffusedShadow(DWORD color, int thickness, int offset_x, int offset_y);
+	STDMETHODIMP SetShadowBackgroundColor(DWORD color, int width, int height);
+	STDMETHODIMP SetShadowBackgroundImage(IGdiBitmap * img);
+	// Render 
+	STDMETHODIMP RenderStringPoint(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, DWORD flags, VARIANT_BOOL * p);
+	STDMETHODIMP RenderStringRect(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int w, int h, DWORD flags, VARIANT_BOOL * p);
 };

@@ -128,8 +128,8 @@ __interface IGdiGraphics: IGdiObj
 	STDMETHOD(MeasureString)(BSTR str, IGdiFont * font, float x, float y, float w, float h, [defaultvalue(0)] DWORD flags, [out,retval] IMeasureStringInfo ** pp);
 	STDMETHOD(CalcTextWidth)(BSTR str, IGdiFont * font, [out,retval] UINT * p);
 	STDMETHOD(SetTextRenderingHint)([range(Gdiplus::TextRenderingHintSystemDefault, Gdiplus::TextRenderingHintClearTypeGridFit)] UINT mode);
-	STDMETHOD(SetSmoothingMode)([range(Gdiplus::SmoothingModeInvalid, Gdiplus::SmoothingModeAntiAlias)] INT mode);
-	STDMETHOD(SetInterpolationMode)([range(Gdiplus::InterpolationModeInvalid, Gdiplus::InterpolationModeHighQualityBicubic)] INT mode);
+	STDMETHOD(SetSmoothingMode)([range(Gdiplus::SmoothingModeInvalid, Gdiplus::SmoothingModeAntiAlias)] int mode);
+	STDMETHOD(SetInterpolationMode)([range(Gdiplus::InterpolationModeInvalid, Gdiplus::InterpolationModeHighQualityBicubic)] int mode);
 };
 _COM_SMARTPTR_TYPEDEF(IGdiGraphics, __uuidof(IGdiGraphics));
 
@@ -146,21 +146,35 @@ __interface IGdiUtils: IDispatch
 	STDMETHOD(Font)(BSTR name, float pxSize, [defaultvalue(0)] int style, [out,retval] IGdiFont** pp);
 	STDMETHOD(Image)(BSTR path, [out,retval] IGdiBitmap** pp);
 	STDMETHOD(CreateImage)(int w, int h, [out,retval] IGdiBitmap** pp);
+	STDMETHOD(CreateStyleTextRender)([out,retval] __interface IStyleTextRender ** pp);
 };
 _COM_SMARTPTR_TYPEDEF(IGdiUtils, __uuidof(IGdiUtils));
 
-////--
-//__interface IStyledTextRender: IDispatch
-//{
-//	// Outline
-//	STDMETHOD(ModeOutLine)(DWORD text_color, DWORD outline_color, float outline_width);
-//	STDMETHOD(ModeDoubleOutLine)(DWORD text_color, DWORD outline_color1, DWORD outline_color2, float outline_width1, float outline_width2);
-//	STDMETHOD(ModeGlow)(DWORD text_color, DWORD glow_color, float glow_width);
-//
-//	// Shadow
-//	STDMETHOD()
-//};
-//_COM_SMARTPTR_TYPEDEF(IStyleTextRender, __uuidof(IStyleTextRender));
+//--
+[
+	object,
+	dual,
+	pointer_default(unique),
+	library_block,
+	uuid("50e12553-8908-4eca-8801-ead834cea6f0")
+]
+__interface IStyleTextRender: IDisposable
+{
+	// Outline
+	STDMETHOD(OutLineText)(DWORD text_color, DWORD outline_color, int outline_width);
+	STDMETHOD(DoubleOutLineText)(DWORD text_color, DWORD outline_color1, DWORD outline_color2, int outline_width1, int outline_width2);
+	STDMETHOD(GlowText)(DWORD text_color, DWORD glow_color, int glow_width);
+	// Shadow
+	STDMETHOD(EnableShadow)(VARIANT_BOOL enable);
+	STDMETHOD(ResetShadow)();
+	STDMETHOD(Shadow)(DWORD color, int thickness, int offset_x, int offset_y);
+	STDMETHOD(DiffusedShadow)(DWORD color, int thickness, int offset_x, int offset_y);
+	STDMETHOD(SetShadowBackgroundColor)(DWORD color, int width, int height);
+	STDMETHOD(SetShadowBackgroundImage)(IGdiBitmap * img);
+	// Render 
+	STDMETHOD(RenderStringPoint)(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, [defaultvalue(0)] DWORD flags, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(RenderStringRect)(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int w, int h, [defaultvalue(0)] DWORD flags, [out,retval] VARIANT_BOOL * p);
+};
 
 //---
 [
@@ -435,6 +449,6 @@ __interface IWSHUtils: IDispatch
 	STDMETHOD(PathWildcardMatch)(BSTR pattern, BSTR str, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(ReadTextFile)(BSTR filename, [out,retval] BSTR * pp);
 	STDMETHOD(GetSysColor)(UINT index, [out,retval] DWORD * p);
-	STDMETHOD(GetSystemMetrics)(UINT index, [out,retval] INT * p);
+	STDMETHOD(GetSystemMetrics)(UINT index, [out,retval] int * p);
 };
 _COM_SMARTPTR_TYPEDEF(IWSHUtils, __uuidof(IWSHUtils));

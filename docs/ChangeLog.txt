@@ -1,5 +1,6 @@
 v1.2.1
-- ADD: IMainMenuManager interface, use fb.CreateMainMenuManager() to create one.
+- ADD: IMainMenuManager interface, use fb.CreateMainMenuManager() to create an instance (#Interfaces.txt).
+- ADD: IStyleTextRender interface, use gdi.CreateStyleTextRender() to create an instance (#Interfaces.txt).
 - ADD: GdiDrawText() now handles DT_CALCRECT flag, eg: g.GdiDrawText(..., DT_VCENTER | DT_CENTER | DT_WORDBREAK | DT_CALCRECT).
 - ADD: utils.GetSysColor() and utils.GetSystemMetrics() methods.
 - ADD: MainMenuManager sample.

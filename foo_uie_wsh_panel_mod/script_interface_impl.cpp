@@ -3,6 +3,7 @@
 #include "helpers.h"
 #include "boxblurfilter.h"
 #include "user_message.h"
+#include "../TextDesinger/OutlineText.h"
 
 
 STDMETHODIMP GdiFont::get_HFont(UINT* p)
@@ -400,7 +401,7 @@ STDMETHODIMP GdiGraphics::DrawString(BSTR str, IGdiFont* font, DWORD color, floa
 
 	Gdiplus::Font* fn = NULL;
 	font->get__ptr((void**)&fn);
-	if (!font) return E_INVALIDARG;
+	if (!fn) return E_INVALIDARG;
 
 	Gdiplus::SolidBrush br(color);
 	Gdiplus::StringFormat fmt(Gdiplus::StringFormat::GenericTypographic());
@@ -726,6 +727,16 @@ STDMETHODIMP GdiUtils::CreateImage(int w, int h, IGdiBitmap ** pp)
 	}
 
 	(*pp) = new com_object_impl_t<GdiBitmap>(img);
+	return S_OK;
+}
+
+STDMETHODIMP GdiUtils::CreateStyleTextRender(IStyleTextRender ** pp)
+{
+	TRACK_FUNCTION();
+
+	if (!pp) return E_POINTER;
+
+	(*pp) = new com_object_impl_t<StyleTextRender>();
 	return S_OK;
 }
 
@@ -2316,5 +2327,187 @@ STDMETHODIMP FbTooltip::put_Text(BSTR text)
 	ti.uId = (UINT_PTR)m_wndparent;
 	ti.lpszText = m_tip_buffer;
 	SendMessage(m_wndtooltip, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
+	return S_OK;
+}
+
+StyleTextRender::StyleTextRender() : m_pOutLineText(NULL)
+{
+	m_pOutLineText = new TextDesign::OutlineText;
+}
+
+void StyleTextRender::FinalRelease()
+{
+	if (m_pOutLineText)
+	{
+		delete m_pOutLineText;
+		m_pOutLineText = NULL;
+	}
+}
+
+STDMETHODIMP StyleTextRender::OutLineText(DWORD text_color, DWORD outline_color, int outline_width)
+{
+	TRACK_FUNCTION();
+
+	if (!m_pOutLineText) return E_NOINTERFACE;
+
+	m_pOutLineText->TextOutline(text_color, outline_color, outline_width);
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::DoubleOutLineText(DWORD text_color, DWORD outline_color1, DWORD outline_color2, int outline_width1, int outline_width2)
+{
+	TRACK_FUNCTION();
+
+	if (!m_pOutLineText) return E_NOINTERFACE;
+
+	m_pOutLineText->TextDblOutline(text_color, outline_color1, outline_color2, outline_width1, outline_width2);
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::GlowText(DWORD text_color, DWORD glow_color, int glow_width)
+{
+	TRACK_FUNCTION();
+
+	if (!m_pOutLineText) return E_NOINTERFACE;
+
+	m_pOutLineText->TextGlow(text_color, glow_color, glow_width);
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::EnableShadow(VARIANT_BOOL enable)
+{
+	TRACK_FUNCTION();
+
+	if (!m_pOutLineText) return E_NOINTERFACE;
+
+	m_pOutLineText->EnableShadow(enable == VARIANT_TRUE);
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::ResetShadow()
+{
+	TRACK_FUNCTION();
+
+	if (!m_pOutLineText) return E_NOINTERFACE;
+
+	m_pOutLineText->SetNullShadow();
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::Shadow(DWORD color, int thickness, int offset_x, int offset_y)
+{
+	TRACK_FUNCTION();
+
+	if (!m_pOutLineText) return E_NOINTERFACE;
+
+	m_pOutLineText->Shadow(color, thickness, Gdiplus::Point(offset_x, offset_y));
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::DiffusedShadow(DWORD color, int thickness, int offset_x, int offset_y)
+{
+	TRACK_FUNCTION();
+
+	if (!m_pOutLineText) return E_NOINTERFACE;
+
+	m_pOutLineText->DiffusedShadow(color, thickness, Gdiplus::Point(offset_x, offset_y));
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::SetShadowBackgroundColor(DWORD color, int width, int height)
+{
+	TRACK_FUNCTION();
+
+	if (!m_pOutLineText) return E_NOINTERFACE;
+
+	m_pOutLineText->SetShadowBkgd(color, width, height);
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::SetShadowBackgroundImage(IGdiBitmap * img)
+{
+	TRACK_FUNCTION();
+
+	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!img) return E_INVALIDARG;
+
+	Gdiplus::Bitmap * pBitmap = NULL;
+	img->get__ptr((void**)&pBitmap);
+
+	m_pOutLineText->SetShadowBkgd(pBitmap);
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::RenderStringPoint(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, DWORD flags, VARIANT_BOOL * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!g || !font || !str) return E_INVALIDARG;
+
+	Gdiplus::Font * fn = NULL;
+	Gdiplus::Graphics * graphics = NULL;
+
+	font->get__ptr((void**)&fn);
+	g->get__ptr((void**)&graphics);
+
+	if (!fn || !graphics) return E_INVALIDARG;
+
+	Gdiplus::FontFamily family;
+
+	fn->GetFamily(&family);
+
+	int fontstyle = fn->GetStyle();
+	int fontsize = static_cast<int>(fn->GetSize());
+	Gdiplus::StringFormat fmt(Gdiplus::StringFormat::GenericTypographic());
+
+	if (flags != 0)
+	{
+		fmt.SetAlignment((Gdiplus::StringAlignment)((flags >> 28) & 0x3));      //0xf0000000
+		fmt.SetLineAlignment((Gdiplus::StringAlignment)((flags >> 24) & 0x3));  //0x0f000000
+		fmt.SetTrimming((Gdiplus::StringTrimming)((flags >> 20) & 0x7));        //0x00f00000
+		fmt.SetFormatFlags((Gdiplus::StringFormatFlags)(flags & 0x7FFF));       //0x0000ffff
+	}
+
+	m_pOutLineText->DrawString(graphics, &family, (Gdiplus::FontStyle)fontstyle, 
+		fontsize, str, Gdiplus::Point(x, y), &fmt);
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::RenderStringRect(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int w, int h, DWORD flags, VARIANT_BOOL * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!g || !font || !str) return E_INVALIDARG;
+
+	Gdiplus::Font * fn = NULL;
+	Gdiplus::Graphics * graphics = NULL;
+
+	font->get__ptr((void**)&fn);
+	g->get__ptr((void**)&graphics);
+
+	if (!fn || !graphics) return E_INVALIDARG;
+
+	Gdiplus::FontFamily family;
+
+	fn->GetFamily(&family);
+
+	int fontstyle = fn->GetStyle();
+	int fontsize = static_cast<int>(fn->GetSize());
+	Gdiplus::StringFormat fmt(Gdiplus::StringFormat::GenericTypographic());
+
+	if (flags != 0)
+	{
+		fmt.SetAlignment((Gdiplus::StringAlignment)((flags >> 28) & 0x3));      //0xf0000000
+		fmt.SetLineAlignment((Gdiplus::StringAlignment)((flags >> 24) & 0x3));  //0x0f000000
+		fmt.SetTrimming((Gdiplus::StringTrimming)((flags >> 20) & 0x7));        //0x00f00000
+		fmt.SetFormatFlags((Gdiplus::StringFormatFlags)(flags & 0x7FFF));       //0x0000ffff
+	}
+
+	m_pOutLineText->DrawString(graphics, &family, (Gdiplus::FontStyle)fontstyle, 
+		fontsize, str, Gdiplus::Rect(x, y, w, h), &fmt);
 	return S_OK;
 }

@@ -81,6 +81,34 @@ Methods:
 	IGdiFont Font(name, ptSize, style = 0);
 	IGdiBitmap Image(path);
 	IGdiBitmap CreateImage(w, h); // Create an image. By default, this image is transparent
+	// [1.2.1] New:
+	IStyleTextRender CreateStyleTextRender();
+}
+
+// [1.2.1] New interface
+interface IStyleTextRender {
+Methods:
+	// ---- Outline Mode ----
+	void OutLineText(text_color, outline_color, outline_width);
+	void DoubleOutLineText(text_color, outline_color1, outline_color2, outline_width1, outline_width2);
+	void GlowText(text_color, glow_color, glow_width);
+	// ---- Shadow ----
+	void EnableShadow(enable);
+	// if you have a *global* IStyleTextRender instance once called EnableShadow(), 
+	//   it's recommended to call ResetShadow() then.
+	void ResetShadow();
+	// Default shadow, used in solid shadow color
+	void Shadow(color, thickness, offset_x, offset_y);
+	// "Soft shadow"
+	void DiffusedShadow(color, thickness, offset_x, offset_y);
+	// While using DiffusedShadow(), these two methods below are useful
+	void SetShadowBackgroundColor(color, width, height);
+	void SetShadowBackgroundImage(img);
+	// ---- Render ----
+	// Not recommended, if the flags contains something as "center", this won't 
+	//  work properly, because it's lack of width and height information.
+	boolean RenderStringPoint(g, str, font, x, y[, flags]);
+	boolean RenderStringRect(g, str, font, x, y, w, h[, flags]);
 }
 
 // [1.1.0] Updated:

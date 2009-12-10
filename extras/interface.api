@@ -25,6 +25,7 @@ window.SetCursor(id)
 gdi.Font(name, ptSize[, style])
 gdi.Image(path)
 gdi.CreateImage(w, h)
+gdi.CreateStyleTextRender()
 
 fb.ComponentPath
 fb.FoobarPath
