@@ -5,12 +5,15 @@
 
 
 /*static*/ panel_notifier_manager panel_notifier_manager::sm_instance;
-static service_factory_single_t<config_object_callback> g_config_object_callback;
-static playback_statistics_collector_factory_t<playback_stat_callback> g_stat_collector_callback;
-static play_callback_static_factory_t<my_play_callback > g_my_play_callback;
-static service_factory_single_t<my_playlist_callback> g_my_playlist_callback;
-static initquit_factory_t<metadb_changed_callback> g_metadb_changed_callback;
 
+namespace
+{
+	static service_factory_single_t<config_object_callback> g_config_object_callback;
+	static playback_statistics_collector_factory_t<playback_stat_callback> g_stat_collector_callback;
+	static play_callback_static_factory_t<my_play_callback > g_my_play_callback;
+	static service_factory_single_t<my_playlist_callback> g_my_playlist_callback;
+	static initquit_factory_t<metadb_changed_callback> g_metadb_changed_callback;
+}
 
 //void panel_notifier_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 //{

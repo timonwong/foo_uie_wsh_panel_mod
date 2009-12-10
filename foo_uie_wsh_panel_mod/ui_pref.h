@@ -1,7 +1,7 @@
 #pragma once
 
 #include "resource.h"
-
+#include "columns_ui_preferences_branch.h"
 
 class CDialogPref : public CDialogImpl<CDialogPref>
 	, public CWinDataExchange<CDialogPref>
@@ -66,7 +66,7 @@ public:
 	
 	GUID get_parent_guid()
 	{
-		return guid_display;
+		return g_guid_columns_ui_extensions_branch;
 	}
 
 	bool reset_query()
