@@ -1590,9 +1590,9 @@ void wsh_panel_window::on_notify_data(WPARAM wp)
 		= reinterpret_cast<t_simple_callback_data_2<_bstr_t, _bstr_t> *>(wp);
 
 	args[0].vt = VT_BSTR;
-	args[0].bstrVal = data->m_item1;
+	args[0].bstrVal = data->m_item2;
 	args[1].vt = VT_BSTR;
-	args[1].bstrVal =  data->m_item2;
+	args[1].bstrVal = data->m_item1;
 	script_invoke_v(L"on_notify_data", 2, args);
 
 	data->refcount_release();
