@@ -12,26 +12,6 @@ static service_factory_single_t<my_playlist_callback> g_my_playlist_callback;
 static initquit_factory_t<metadb_changed_callback> g_metadb_changed_callback;
 
 
-void panel_notifier_manager::post_msg_to_others_callback(HWND p_wnd_except, UINT p_msg, WPARAM p_wp, LPARAM p_lp, panel_notifier_callback * p_callback)
-{
-	t_size count = m_hwnds.get_count();
-
-	if (count < 2)
-		return;
-
-	panel_notifier_data * data_ptr = new panel_notifier_data(count - 1, p_callback);
-
-	for (t_size i = 0; i < count; ++i)
-	{
-		HWND wnd = m_hwnds[i];
-
-		if (wnd != p_wnd_except)
-		{
-			SendMessageCallback(wnd, p_msg, p_wp, p_lp, g_notify_others_callback, (ULONG_PTR)data_ptr);
-		}
-	}
-}
-
 //void panel_notifier_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 //{
 //	for (t_size i = 0; i < m_hwnds.get_count(); ++i)
@@ -41,6 +21,27 @@ void panel_notifier_manager::post_msg_to_others_callback(HWND p_wnd_except, UINT
 //		SendMessage(wnd, p_msg, p_wp, p_lp);
 //	}
 //}
+
+void panel_notifier_manager::post_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param)
+{
+	t_size count = m_hwnds.get_count();
+
+	if (count < 2 || !p_param)
+		return;
+
+	for (t_size i = 0; i < count - 1; ++i)
+		p_param->refcount_add_ref();
+
+	for (t_size i = 0; i < count; ++i)
+	{
+		HWND wnd = m_hwnds[i];
+
+		if (wnd != p_wnd_except)
+		{
+			PostMessage(wnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0);
+		}
+	}
+}
 
 void panel_notifier_manager::post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 {
@@ -69,44 +70,6 @@ void panel_notifier_manager::post_msg_to_all_pointer(UINT p_msg, pfc::refcounted
 		PostMessage(wnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0);
 	}
 }
-
-void CALLBACK panel_notifier_manager::g_notify_others_callback(HWND hwnd, UINT uMsg, ULONG_PTR dwData, LRESULT lResult)
-{
-	panel_notifier_data * data_ptr = reinterpret_cast<panel_notifier_data *>(dwData);
-	LONG ref = InterlockedDecrement(&data_ptr->m_ref);
-
-	if (data_ptr)
-	{
-		data_ptr->m_callback->on_callback(hwnd, uMsg, lResult);
-
-		if (ref == 0)
-		{
-			delete data_ptr;
-		}
-	}
-}
-
-// shame
-template <class T>
-struct simple_data_callback : public panel_notifier_callback
-{
-	T m_param_holder;
-
-	simple_data_callback(const T & param) : m_param_holder(param) {}
-	virtual ~simple_data_callback() {}
-};
-
-// shame
-template <class T>
-struct simple_ref_data_callback : public panel_notifier_callback
-{
-	T m_param_holder;
-
-	simple_ref_data_callback(T param) : m_param_holder(param) {}
-	virtual ~simple_ref_data_callback() {}
-
-	virtual void on_callback(HWND hwnd, UINT uMsg, LRESULT lResult) {}
-};
 
 t_size config_object_callback::get_watched_object_count()
 {

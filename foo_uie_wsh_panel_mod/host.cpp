@@ -412,32 +412,11 @@ STDMETHODIMP FbWindow::NotifyOthers(BSTR name, BSTR info)
 
 	if (!name || !info) return E_INVALIDARG;
 
-	struct notify_callback : public panel_notifier_callback
-	{
-		BSTR m_name;
-		BSTR m_info;
+	t_simple_callback_data_2<_bstr_t, _bstr_t> * notify_data 
+		= new t_simple_callback_data_2<_bstr_t, _bstr_t>(name, info);
 
-		notify_callback(BSTR p_name, BSTR p_info)
-		{
-			m_name = SysAllocString(p_name);
-			m_info = SysAllocString(p_info);
-		}
-
-		virtual ~notify_callback()
-		{
-			SysFreeString(m_name);
-			SysFreeString(m_info);
-		}
-
-		virtual void on_callback(HWND hwnd, UINT uMsg, LRESULT lResult) {}
-	};
-
-	notify_callback * callback_ptr = new notify_callback(name, info);
-
-	panel_notifier_manager::instance().post_msg_to_others_callback(m_host->GetHWND(), CALLBACK_UWM_NOTIFY_DATA, 
-		(WPARAM)callback_ptr->m_name, 
-		(LPARAM)callback_ptr->m_info, 
-		callback_ptr);
+	panel_notifier_manager::instance().post_msg_to_others_pointer(m_host->GetHWND(), CALLBACK_UWM_NOTIFY_DATA, 
+		notify_data);
 
 	return S_OK;
 }
@@ -1377,7 +1356,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case CALLBACK_UWM_NOTIFY_DATA:
-		on_notify_data(lp, wp);
+		on_notify_data(wp);
 		return 0;
 
 	case CALLBACK_UWM_GETALBUMARTASYNCDONE:
@@ -1603,15 +1582,20 @@ void wsh_panel_window::on_playback_follow_cursor_changed(WPARAM wp)
 	script_invoke_v(L"on_playback_follow_cursor_changed", 1, args);
 }
 
-void wsh_panel_window::on_notify_data(LPARAM lp, WPARAM wp)
+void wsh_panel_window::on_notify_data(WPARAM wp)
 {
 	VARIANTARG args[2];
 
+	t_simple_callback_data_2<_bstr_t, _bstr_t> * data 
+		= reinterpret_cast<t_simple_callback_data_2<_bstr_t, _bstr_t> *>(wp);
+
 	args[0].vt = VT_BSTR;
-	args[0].bstrVal = (BSTR)lp;
+	args[0].bstrVal = data->m_item1;
 	args[1].vt = VT_BSTR;
-	args[1].bstrVal = (BSTR)wp;
+	args[1].bstrVal =  data->m_item2;
 	script_invoke_v(L"on_notify_data", 2, args);
+
+	data->refcount_release();
 }
 
 void wsh_panel_window::on_playback_starting(play_control::t_track_command cmd, bool paused)

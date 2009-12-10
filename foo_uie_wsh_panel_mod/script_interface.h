@@ -149,6 +149,18 @@ __interface IGdiUtils: IDispatch
 };
 _COM_SMARTPTR_TYPEDEF(IGdiUtils, __uuidof(IGdiUtils));
 
+////--
+//__interface IStyledTextRender: IDispatch
+//{
+//	// Outline
+//	STDMETHOD(ModeOutLine)(DWORD text_color, DWORD outline_color, float outline_width);
+//	STDMETHOD(ModeDoubleOutLine)(DWORD text_color, DWORD outline_color1, DWORD outline_color2, float outline_width1, float outline_width2);
+//	STDMETHOD(ModeGlow)(DWORD text_color, DWORD glow_color, float glow_width);
+//
+//	// Shadow
+//	STDMETHOD()
+//};
+//_COM_SMARTPTR_TYPEDEF(IStyleTextRender, __uuidof(IStyleTextRender));
 
 //---
 [
@@ -210,7 +222,6 @@ __interface IFbTitleFormat: IDisposable
 	STDMETHOD(EvalWithMetadb)(IFbMetadbHandle * handle, [out,retval] BSTR * pp);
 };
 
-// forward declartion
 [
 	object,
 	dual,
@@ -241,7 +252,21 @@ __interface IContextMenuManager: IDisposable
 	STDMETHOD(InitContext)(IFbMetadbHandle * handle);
 	STDMETHOD(InitNowPlaying)();
 	STDMETHOD(BuildMenu)(IMenuObj * p, int base_id, int max_id);
-	STDMETHOD(ExecuteByID)(UINT id);
+	STDMETHOD(ExecuteByID)(UINT id, [out,retval] VARIANT_BOOL * p);
+};
+
+[
+	object,
+	dual,
+	pointer_default(unique),
+	library_block,
+	uuid("4a357221-1b75-4379-8de7-6a865bbfad10")
+]
+__interface IMainMenuManager: IDisposable
+{
+	STDMETHOD(Init)(BSTR root_name);
+	STDMETHOD(BuildMenu)(IMenuObj * p, int base_id, int count);
+	STDMETHOD(ExecuteByID)(UINT id, [out,retval] VARIANT_BOOL * p);
 };
 
 [
@@ -314,6 +339,7 @@ __interface IFbUtils: IDispatch
 	STDMETHOD(RunContextCommand)(BSTR command, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(RunContextCommandWithMetadb)(BSTR command, IFbMetadbHandle * handle, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(CreateContextMenuManager)([out,retval] IContextMenuManager ** pp);
+	STDMETHOD(CreateMainMenuManager)([out,retval] IMainMenuManager ** pp);
 	STDMETHOD(IsMetadbInMediaLibrary)(IFbMetadbHandle * handle, [out,retval] VARIANT_BOOL * p);
 };
 _COM_SMARTPTR_TYPEDEF(IFbUtils, __uuidof(IFbUtils));
@@ -408,5 +434,7 @@ __interface IWSHUtils: IDispatch
 	STDMETHOD(IsKeyPressed)(UINT vkey, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(PathWildcardMatch)(BSTR pattern, BSTR str, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(ReadTextFile)(BSTR filename, [out,retval] BSTR * pp);
+	STDMETHOD(GetSysColor)(UINT index, [out,retval] DWORD * p);
+	STDMETHOD(GetSystemMetrics)(UINT index, [out,retval] INT * p);
 };
 _COM_SMARTPTR_TYPEDEF(IWSHUtils, __uuidof(IWSHUtils));

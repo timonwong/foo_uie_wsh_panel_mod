@@ -5,7 +5,7 @@
 // TODO: Change Version Number Every Time
 DECLARE_COMPONENT_VERSION(
 	"WSH Panel Mod",
-	"1.2.1 Beta 2",
+	"1.2.1 Beta 3",
 	"Windows Scripting Host Panel\n"
 	"Modded by T.P. Wang\n\n"
 	"Build: "  __TIME__ ", " __DATE__ "\n"

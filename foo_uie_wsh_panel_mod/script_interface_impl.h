@@ -454,12 +454,8 @@ class ContextMenuManager : public IDisposableImpl4<IContextMenuManager>
 protected:
 	contextmenu_manager::ptr m_cm;
 
-	ContextMenuManager()
-	{
-		contextmenu_manager::g_create(m_cm);
-	}
-
-	virtual ~ContextMenuManager() { }
+	ContextMenuManager() {}
+	virtual ~ContextMenuManager() {}
 
 	virtual void FinalRelease()
 	{
@@ -470,7 +466,26 @@ public:
 	STDMETHODIMP InitContext(IFbMetadbHandle * handle);
 	STDMETHODIMP InitNowPlaying();
 	STDMETHODIMP BuildMenu(IMenuObj * p, int base_id, int max_id);
-	STDMETHODIMP ExecuteByID(UINT id);
+	STDMETHODIMP ExecuteByID(UINT id, VARIANT_BOOL * p);
+};
+
+class MainMenuManager : public IDisposableImpl4<IMainMenuManager>
+{
+protected:
+	mainmenu_manager::ptr m_mm;
+
+	MainMenuManager() {}
+	virtual ~MainMenuManager() {}
+
+	virtual void FinalRelease()
+	{
+		m_mm.release();
+	}
+
+public:
+	STDMETHODIMP Init(BSTR root_name);
+	STDMETHODIMP BuildMenu(IMenuObj * p, int base_id, int count);
+	STDMETHODIMP ExecuteByID(UINT id, VARIANT_BOOL * p);
 };
 
 class FbProfiler: public IDispatchImpl3<IFbProfiler>
@@ -541,6 +556,7 @@ public:
 	STDMETHODIMP RunContextCommand(BSTR command, VARIANT_BOOL * p);
 	STDMETHODIMP RunContextCommandWithMetadb(BSTR command, IFbMetadbHandle * handle, VARIANT_BOOL * p);
 	STDMETHODIMP CreateContextMenuManager(IContextMenuManager ** pp);
+	STDMETHODIMP CreateMainMenuManager(IMainMenuManager ** pp);
 	STDMETHODIMP IsMetadbInMediaLibrary(IFbMetadbHandle * handle, VARIANT_BOOL * p);
 };
 
@@ -616,6 +632,8 @@ public:
 	STDMETHODIMP IsKeyPressed(UINT vkey, VARIANT_BOOL * p);
 	STDMETHODIMP PathWildcardMatch(BSTR pattern, BSTR str, VARIANT_BOOL * p);
 	STDMETHODIMP ReadTextFile(BSTR filename, BSTR * pp);
+	STDMETHODIMP GetSysColor(UINT index, DWORD * p);
+	STDMETHODIMP GetSystemMetrics(UINT index, INT * p);
 };
 
 class FbTooltip : public IDisposableImpl4<IFbTooltip>

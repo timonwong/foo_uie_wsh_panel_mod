@@ -22,6 +22,10 @@ window.SetProperty(name, val)
 window.GetBackgroundImage()
 window.SetCursor(id)
 
+gdi.Font(name, ptSize[, style])
+gdi.Image(path)
+gdi.CreateImage(w, h)
+
 fb.ComponentPath
 fb.FoobarPath
 fb.ProfilePath
@@ -62,6 +66,7 @@ fb.RunMainMenuCommand(command)
 fb.RunContextCommand(command)
 fb.RunContextCommandWithMetadb(command, IFbMetadbHandle)
 fb.CreateContextMenuManager()
+fb.CreateMainMenuManager()
 fb.IsMetadbInMediaLibrary(metadb)
 
 utils.CheckComponent(name[, is_dll])
@@ -74,3 +79,5 @@ utils.WriteINI(filename, section, key, val)
 utils.IsKeyPressed(vkey)
 utils.PathWildcardMatch(pattern, str)
 utils.ReadTextFile(filename)
+utils.GetSysColor(index)
+utils.GetSystemMetrics(index)

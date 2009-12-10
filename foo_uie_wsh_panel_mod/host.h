@@ -217,7 +217,7 @@ public:
 	void on_playlist_stop_after_current_changed(WPARAM wp);
 	void on_cursor_follow_playback_changed(WPARAM wp);
 	void on_playback_follow_cursor_changed(WPARAM wp);
-	void on_notify_data(LPARAM lp, WPARAM wp);
+	void on_notify_data(WPARAM wp);
 
 	// play_callback
 	void on_playback_starting(play_control::t_track_command cmd, bool paused);

@@ -75,4 +75,10 @@ public:
 	}
 
 	void reset();
+
+	bool get_help_url(pfc::string_base & p_out)
+	{
+		p_out = "http://code.google.com/p/foo-wsh-panel-mod/wiki/EditorProperties";
+		return true;
+	}
 };

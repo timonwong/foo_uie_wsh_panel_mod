@@ -1,12 +1,6 @@
 #pragma once
 
 
-class NOVTABLE panel_notifier_callback
-{
-public:
-	virtual void on_callback(HWND hwnd, UINT uMsg, LRESULT lResult) {}
-};
-
 class panel_notifier_manager
 {
 public:
@@ -44,27 +38,10 @@ public:
 		return m_hwnds.get_count();
 	}
 
-	void post_msg_to_others_callback(HWND p_wnd_except, UINT p_msg, WPARAM p_wp, LPARAM p_lp, panel_notifier_callback * p_callback);
 	//void send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
+	void post_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param);
 	void post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
 	void post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_root * p_param);
-
-protected:
-	struct panel_notifier_data
-	{
-	private:
-		volatile LONG m_ref;
-		panel_notifier_callback * m_callback;
-
-		panel_notifier_data(LONG ref, panel_notifier_callback * p_callback) : m_ref(ref),
-			m_callback(p_callback) { }
-
-		virtual ~panel_notifier_data() { delete m_callback; }
-
-		friend class panel_notifier_manager;
-	};
-
-	static void CALLBACK g_notify_others_callback(HWND hwnd, UINT uMsg, ULONG_PTR dwData, LRESULT lResult);
 
 private:
 	t_hwndlist m_hwnds;
@@ -88,6 +65,14 @@ struct t_simple_callback_data : public pfc::refcounted_object_root
 	t_simple_callback_data(const T & p_item) : m_item(p_item) {}
 };
 
+template <class T1, class T2>
+struct t_simple_callback_data_2 : public pfc::refcounted_object_root
+{
+	T1 m_item1;
+	T2 m_item2;
+
+	t_simple_callback_data_2(const T1 & p_item1, const T2 & p_item2) : m_item1(p_item1), m_item2(p_item2) {}
+};
 
 class playback_stat_callback : public playback_statistics_collector
 {

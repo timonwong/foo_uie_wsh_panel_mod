@@ -166,8 +166,19 @@ Methods:
 	void InitContext(IFbMetadbHandle);
 	void InitNowPlaying();
 	void BuildMenu(IMenuObj, base_id, max_id);
-	void ExecuteByID(id);
+	// [1.2.1] Changed, return boolean
+	boolean ExecuteByID(id);
 	// [1.1.10] New:
+	void Dispose();
+}
+
+// [1.2.1] New
+interface IMainMenuManager {
+Methods:
+	void Init(root_name);
+	// NOTE: the last param is count, not max_id
+	void BuildMenu(IMenuObj, base_id, count);
+	boolean ExecuteByID(id);
 	void Dispose();
 }
 
@@ -328,7 +339,7 @@ Methods:
 	// [1.1.10] New:
 	// HINT: window_id can be retrieved by window.ID
 	// NOTE: This function returns immediately, album art will be sent to on_get_album_art_done() callback as soon as album art is found
-	unsigned GetAlbumArtAsync(window_id, IFbMetadbHandle, art_id = 0, need_stub = true, only_embed = false);
+	unsigned int GetAlbumArtAsync(window_id, IFbMetadbHandle, art_id = 0, need_stub = true, only_embed = false);
 	// [1.1.4] New: A INI file should like this:
 	// [section]
 	// key=val
@@ -346,6 +357,14 @@ Methods:
 	// If file doesn't exist, return null if file cannot be read.
 	// Text file can be either: UTF-16 with BOM, UTF-8 with BOM and ANSI.
 	String ReadTextFile(filename);
+	// [1.2.1] New:
+	// index: http://msdn.microsoft.com/en-us/library/ms724371%28VS.85%29.aspx
+	// Returns 0 if failed.
+	unsigned int GetSysColor(index);
+	// [1.2.1] New
+	// index: http://msdn.microsoft.com/en-us/library/ms724385%28VS.85%29.aspx
+	// Returns 0 if failed.
+	int GetSystemMetrics(index);
 }
 
 // Global variables:

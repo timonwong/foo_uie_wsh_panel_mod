@@ -9,6 +9,7 @@
 
 static preferences_page_factory_t<wsh_preferences_page> g_pref;
 
+
 LRESULT CDialogPref::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 {
 	// Set Spin	

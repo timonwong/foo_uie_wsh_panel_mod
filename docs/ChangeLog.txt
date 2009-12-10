@@ -1,6 +1,12 @@
 v1.2.1
-- CHG: Global callbacks are invoked *asynchronously* now.
+- ADD: IMainMenuManager interface, use fb.CreateMainMenuManager() to create one.
+- ADD: GdiDrawText() now handles DT_CALCRECT flag, eg: g.GdiDrawText(..., DT_VCENTER | DT_CENTER | DT_WORDBREAK | DT_CALCRECT).
+- ADD: utils.GetSysColor() and utils.GetSystemMetrics() methods.
+- CHG: Global callbacks are invoked asynchronously now.
+- CHG: utils.NotifyOthers is now asynchronous.
+- CHG: IMainMenuManager.ExecuteByID() now returns true if command was executed successfully.
 - CHG: Notes & Hints.txt, tag "[OBSOLETE]".
+- CHG: Help button in WSH Panel Mod Preference page is accessible now.
 - DEL: Callbacks.txt, remove restriction information about global callbacks.
 
 v1.2.0

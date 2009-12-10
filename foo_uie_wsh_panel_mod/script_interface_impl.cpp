@@ -537,19 +537,35 @@ STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, in
 	SetBkMode(dc, TRANSPARENT);
 	SetTextAlign(dc, TA_LEFT | TA_TOP | TA_NOUPDATECP);
 
+	// Remove DT_MODIFYSTRING flag
 	if (format & DT_MODIFYSTRING)
-	{
-		UINT len = SysStringLen(str);
-		pfc::array_t<WCHAR> text;
+		format &= ~DT_MODIFYSTRING;
 
-		text.set_size(len + 16);
-		StringCchCopy(text.get_ptr(), len , str);
-		DrawTextEx(dc, text.get_ptr(), len, &rc, format, &dpt);
-	}
-	else
+	// Well, magic :P
+	if (format & DT_CALCRECT)
 	{
-		DrawTextEx(dc, str, -1, &rc, format, &dpt);
+		RECT rc_calc, rc_old;
+
+		memcpy(&rc_calc, &rc, sizeof(RECT));
+		memcpy(&rc_old, &rc, sizeof(RECT));
+
+		DrawText(dc, str, -1, &rc_calc, format);
+
+		format &= ~DT_CALCRECT;
+
+		// adjust vertical align
+		if (format & DT_VCENTER)
+		{
+			rc.top = rc_old.top + (((rc_old.bottom - rc_old.top) - (rc_calc.bottom - rc_calc.top)) >> 1);
+			rc.bottom = rc.top + (rc_calc.bottom - rc_calc.top);
+		}
+		else if (format & DT_BOTTOM)
+		{
+			rc.top = rc_old.bottom - (rc_calc.bottom - rc_calc.top);
+		}
 	}
+
+	DrawTextEx(dc, str, -1, &rc, format, &dpt);
 
 	SelectFont(dc, oldfont);
 	m_ptr->ReleaseHDC(dc);
@@ -1162,6 +1178,16 @@ STDMETHODIMP FbUtils::trace(SAFEARRAY * p)
 	return S_OK;
 }
 
+STDMETHODIMP FbUtils::ShowPopupMessage(BSTR msg, BSTR title, int iconid)
+{
+	TRACK_FUNCTION();
+
+	if (!msg || !title) return E_INVALIDARG;
+
+	popup_message::g_show(pfc::stringcvt::string_utf8_from_wide(msg), pfc::stringcvt::string_utf8_from_wide(title), (popup_message::t_icon)iconid);
+	return S_OK;
+}
+
 STDMETHODIMP FbUtils::CreateProfiler(BSTR name, IFbProfiler ** pp)
 {
 	TRACK_FUNCTION();
@@ -1616,13 +1642,13 @@ STDMETHODIMP FbUtils::CreateContextMenuManager(IContextMenuManager ** pp)
 	return S_OK;
 }
 
-STDMETHODIMP FbUtils::ShowPopupMessage(BSTR msg, BSTR title, int iconid)
+STDMETHODIMP FbUtils::CreateMainMenuManager(IMainMenuManager ** pp)
 {
 	TRACK_FUNCTION();
 
-	if (!msg || !title) return E_INVALIDARG;
+	if (!pp) return E_POINTER;
 
-	popup_message::g_show(pfc::stringcvt::string_utf8_from_wide(msg), pfc::stringcvt::string_utf8_from_wide(title), (popup_message::t_icon)iconid);
+	(*pp) = new com_object_impl_t<MainMenuManager>();
 	return S_OK;
 }
 
@@ -1722,12 +1748,12 @@ STDMETHODIMP ContextMenuManager::InitContext(IFbMetadbHandle * handle)
 {
 	TRACK_FUNCTION();
 
-	if (m_cm.is_empty()) return E_NOINTERFACE;
 	if (!handle) return E_INVALIDARG;
 
 	metadb_handle * ptr = NULL;
 
 	handle->get__ptr((void**)&ptr);
+	contextmenu_manager::g_create(m_cm);
 	m_cm->init_context(pfc::list_single_ref_t<metadb_handle_ptr>(ptr), 0);
 	return S_OK;
 }
@@ -1736,8 +1762,7 @@ STDMETHODIMP ContextMenuManager::InitNowPlaying()
 {
 	TRACK_FUNCTION();
 
-	if (m_cm.is_empty()) return E_NOINTERFACE;
-
+	contextmenu_manager::g_create(m_cm);
 	m_cm->init_context_now_playing(0);
 	return S_OK;
 }
@@ -1757,13 +1782,79 @@ STDMETHODIMP ContextMenuManager::BuildMenu(IMenuObj * p, int base_id, int max_id
 	return S_OK;
 }
 
-STDMETHODIMP ContextMenuManager::ExecuteByID(UINT id)
+STDMETHODIMP ContextMenuManager::ExecuteByID(UINT id, VARIANT_BOOL * p)
 {
 	TRACK_FUNCTION();
 
+	if (!p) return E_POINTER;
 	if (m_cm.is_empty()) return E_NOINTERFACE;
 
-	m_cm->execute_by_id(id);
+	*p = TO_VARIANT_BOOL(m_cm->execute_by_id(id));
+	return S_OK;
+}
+
+STDMETHODIMP MainMenuManager::Init(BSTR root_name)
+{
+	TRACK_FUNCTION();
+
+	if (!root_name) return E_INVALIDARG;
+
+	struct t_valid_root_name
+	{
+		const wchar_t * name;
+		const GUID * guid;
+	};
+
+	// In mainmenu_groups: 
+	//   static const GUID file,view,edit,playback,library,help;
+
+	const t_valid_root_name valid_root_names[] = 
+	{
+		{L"file",     &mainmenu_groups::file},
+		{L"view",     &mainmenu_groups::view},
+		{L"edit",     &mainmenu_groups::edit},
+		{L"playback", &mainmenu_groups::playback},
+		{L"library",  &mainmenu_groups::library},
+		{L"help",     &mainmenu_groups::help},
+	};
+
+	// Find
+	for (int i = 0; i < _countof(valid_root_names) - 1; ++i)
+	{
+		if (_wcsicmp(root_name, valid_root_names[i].name) == 0)
+		{
+			// found
+			m_mm = standard_api_create_t<mainmenu_manager>();
+			m_mm->instantiate(*valid_root_names[i].guid);
+			return S_OK;
+		}
+	}
+
+	return E_INVALIDARG;
+}
+
+STDMETHODIMP MainMenuManager::BuildMenu(IMenuObj * p, int base_id, int count)
+{
+	TRACK_FUNCTION();
+
+	if (m_mm.is_empty()) return E_NOINTERFACE;
+	if (!p) return E_INVALIDARG;
+
+	UINT menuid;
+
+	p->get_ID(&menuid);
+	m_mm->generate_menu_win32((HMENU)menuid, base_id, count, 0);
+	return S_OK;
+}
+
+STDMETHODIMP MainMenuManager::ExecuteByID(UINT id, VARIANT_BOOL * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+	if (m_mm.is_empty()) return E_NOINTERFACE;
+
+	*p = TO_VARIANT_BOOL(m_mm->execute_command(id));
 	return S_OK;
 }
 
@@ -2111,6 +2202,39 @@ STDMETHODIMP WSHUtils::ReadTextFile(BSTR filename, BSTR * pp)
 		*pp = SysAllocString(content.get_ptr());
 	}
 
+	return S_OK;
+}
+
+STDMETHODIMP WSHUtils::GetSysColor(UINT index, DWORD * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	DWORD ret = ::GetSysColor(index);
+
+	if (!ret)
+	{
+		if (!::GetSysColorBrush(index))
+		{
+			// invalid
+			*p = 0;
+			return S_OK;
+		}
+	}
+
+	ret |= 0xff000000;
+	*p = ret;
+	return S_OK;
+}
+
+STDMETHODIMP WSHUtils::GetSystemMetrics(UINT index, INT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = ::GetSystemMetrics(index);
 	return S_OK;
 }
 
