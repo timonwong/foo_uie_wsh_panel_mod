@@ -674,13 +674,13 @@ public:
 // forward declartion
 namespace TextDesign
 {
-	class OutlineText;
+	class IOutlineText;
 }
 
 class StyleTextRender : public IDisposableImpl4<IStyleTextRender>
 {
 protected:
-	TextDesign::OutlineText * m_pOutLineText;
+	TextDesign::IOutlineText * m_pOutLineText;
 
 	StyleTextRender();
 	virtual ~StyleTextRender() {}

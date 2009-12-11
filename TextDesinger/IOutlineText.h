@@ -84,6 +84,17 @@ public:
 		int nThickness,
 		Gdiplus::Point ptOffset) = 0;
 
+	/** Diffused Shadow Settings
+
+	@param[in]		color is the text color
+	@param[in]		nThickness is the shadow outline thickness
+	@param[in]		ptOffset is the relative offset
+	*/
+	virtual void DiffusedShadow(
+		Gdiplus::Color color, 
+		int nThickness,
+		Gdiplus::Point ptOffset) = 0;
+
 	/** Draw String, using a point as the starting point
 	
 	@param[in]		pGraphics is the graphics context

@@ -97,9 +97,9 @@ Methods:
 	// if you have a *global* IStyleTextRender instance once called EnableShadow(), 
 	//   it's recommended to call ResetShadow() then.
 	void ResetShadow();
-	// Default shadow, used in solid shadow color
+	// Mode: Default shadow, used in solid shadow color
 	void Shadow(color, thickness, offset_x, offset_y);
-	// "Soft shadow"
+	// Mode: Soft shadow
 	void DiffusedShadow(color, thickness, offset_x, offset_y);
 	// While using DiffusedShadow(), these two methods below are useful
 	void SetShadowBackgroundColor(color, width, height);

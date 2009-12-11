@@ -63,3 +63,12 @@ This file is provided "as is" with no expressed or implied warranty.
 The author accepts no liability if it causes any damage to you or your
 computer whatsoever. It's free, so don't hassle me about it.
 ---------------------------------------------------------------------------
+
+===========================================================================
+License for Text Designer Outline Text Library
+
+Copyright (c) 2009 Wong Shao Voon
+
+The Code Project Open License (CPOL)
+http://www.codeproject.com/info/cpol10.aspx
+---------------------------------------------------------------------------

@@ -189,7 +189,7 @@ public:
 	bool script_init();
 	void script_stop();
 	void script_term();
-	HRESULT script_invoke_v(LPOLESTR name, UINT argc = 0, VARIANTARG * argv = NULL, VARIANT * ret = NULL);
+	HRESULT script_invoke_v(LPOLESTR name, UINT argc = 0, VARIANTARG * argv = NULL, VARIANT * ret = NULL) throw();
 	void create_context();
 	void delete_context();
 

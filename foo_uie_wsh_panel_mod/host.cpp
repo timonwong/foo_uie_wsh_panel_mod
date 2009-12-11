@@ -9,8 +9,15 @@
 #include "user_message.h"
 #include "script_preprocessor.h"
 
-// Panel
-static ui_extension::window_factory<wsh_panel_window> g_uie_win;
+
+#define CRT_DEBUG_BREAK() __asm int 3;
+
+
+namespace
+{
+	// Panel
+	static ui_extension::window_factory<wsh_panel_window> g_uie_win;
+}
 
 
 HostComm::HostComm() 
@@ -832,7 +839,7 @@ void wsh_panel_window::script_term()
 	}
 }
 
-HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARIANTARG * argv /*= NULL*/, VARIANT * ret /*= NULL*/)
+HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARIANTARG * argv /*= NULL*/, VARIANT * ret /*= NULL*/) throw()
 {
 	if (GetScriptState() != SCRIPTSTATE_CONNECTED) return E_NOINTERFACE;
 	if (!m_script_root || !m_script_engine) return E_NOINTERFACE;
@@ -857,13 +864,22 @@ HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARI
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("WSH Panel Mod (GUID: %s): Fatal Error: %s", guid.get_ptr(), e.what());
+			console::printf("WSH Panel Mod (GUID: %s): Fatal Error: %s, crash now...", guid.get_ptr(), e.what());
+			CRT_DEBUG_BREAK();
 		}
 		catch (_com_error & e)
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("WSH Panel Mod (GUID: %s): Fatal COM Error: Code: 0x%08x", guid.get_ptr(), e.Error());
+			console::printf("WSH Panel Mod (GUID: %s): Fatal COM Error: Code: 0x%08x, crash now...", guid.get_ptr(), e.Error());
+			CRT_DEBUG_BREAK();
+		}
+		catch (...)
+		{
+			pfc::print_guid guid(get_config_guid());
+
+			console::printf("WSH Panel Mod (GUID: %s): Fatal Error: Unknown Error, crash now...", guid.get_ptr());
+			CRT_DEBUG_BREAK();
 		}
 
 		pdisp->Release();

@@ -1830,7 +1830,7 @@ STDMETHODIMP MainMenuManager::Init(BSTR root_name)
 	};
 
 	// Find
-	for (int i = 0; i < _countof(valid_root_names) - 1; ++i)
+	for (int i = 0; i < _countof(valid_root_names); ++i)
 	{
 		if (_wcsicmp(root_name, valid_root_names[i].name) == 0)
 		{
