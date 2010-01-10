@@ -5,6 +5,12 @@
 #define WINVER 0x0501
 #define _WIN32_IE 0x600
 
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#endif
+
 #include <tchar.h>
 #include <Windows.h>
 #include <ActivScp.h>
@@ -19,7 +25,7 @@
 #include <vssym32.h>
 #include <uxtheme.h>
 
-// WTL
+// ATL/WTL
 #define _WTL_USE_CSTRING
 #include <atlbase.h>
 #include <atlapp.h>
@@ -48,16 +54,6 @@
 // Some marcos defined by windowsx.h should be removed
 #ifdef _INC_WINDOWSX
 #undef SubclassWindow
-#endif
-
-//#define NO_TRACK_FUNCTION
-
-#if !defined(NO_TRACK_FUNCTION)
-#define TRACK_FUNCTION() TRACK_CALL_TEXT(__FUNCTION__)
-#define TRACK_CALL_TEXT_FORMAT(fmt, ...) TRACK_CALL_TEXT(uStringPrintf((fmt), __VA_ARGS__))
-#else
-#define TRACK_FUNCTION() 
-#define TRACK_CALL_TEXT_FORMAT(fmt, ...) 
 #endif
 
 #define _TO_STRING(_String) #_String

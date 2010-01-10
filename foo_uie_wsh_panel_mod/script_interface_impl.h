@@ -1,6 +1,7 @@
 #pragma once
 
 #include "script_interface.h"
+#include "dbgtrace.h"
 
 //-- IUnknown ---
 #define BEGIN_COM_QI_IMPL() \
@@ -85,6 +86,7 @@ public:
 		if (!IsEqualIID(riid, IID_NULL)) return DISP_E_UNKNOWNINTERFACE;
 		if (!g_typeinfo) return E_POINTER;
 
+		TRACK_THIS_DISPATCH(g_typeinfo, dispid, flag);
 		return g_typeinfo->Invoke(this, dispid, flag, params, result, excep, err);
 	}
 };
@@ -118,7 +120,7 @@ public:
 	}
 
 private:
-	void _construct()
+	inline void _construct()
 	{
 		m_dwRef = 0; 
 
@@ -361,7 +363,7 @@ public:
 	STDMETHODIMP Font(BSTR name, float pxSize, int style, IGdiFont** pp);
 	STDMETHODIMP Image(BSTR path, IGdiBitmap** pp);
 	STDMETHODIMP CreateImage(int w, int h, IGdiBitmap ** pp);
-	STDMETHODIMP CreateStyleTextRender(IStyleTextRender ** pp);
+	STDMETHODIMP CreateStyleTextRender(VARIANT_BOOL pngmode, IStyleTextRender ** pp);
 };
 
 class FbFileInfo : public IDisposableImpl4<IFbFileInfo>
@@ -626,6 +628,7 @@ public:
 	STDMETHODIMP CheckComponent(BSTR name, VARIANT_BOOL is_dll, VARIANT_BOOL * p);
 	STDMETHODIMP CheckFont(BSTR name, VARIANT_BOOL * p);
 	STDMETHODIMP GetAlbumArt(BSTR rawpath, int art_id, VARIANT_BOOL need_stub, IGdiBitmap ** pp);
+	STDMETHODIMP GetAlbumArtV2(IFbMetadbHandle * handle, int art_id, VARIANT_BOOL need_stub, IGdiBitmap **pp);
 	STDMETHODIMP GetAlbumArtEmbedded(BSTR rawpath, int art_id, IGdiBitmap ** pp);
 	STDMETHODIMP GetAlbumArtAsync(UINT window_id, IFbMetadbHandle * handle, int art_id, VARIANT_BOOL need_stub, VARIANT_BOOL only_embed, UINT * p);
 	STDMETHODIMP ReadINI(BSTR filename, BSTR section, BSTR key, VARIANT defaultval, BSTR * pp);
@@ -681,8 +684,9 @@ class StyleTextRender : public IDisposableImpl4<IStyleTextRender>
 {
 protected:
 	TextDesign::IOutlineText * m_pOutLineText;
+	bool m_pngmode;
 
-	StyleTextRender();
+	StyleTextRender(bool pngmode);
 	virtual ~StyleTextRender() {}
 
 	virtual void FinalRelease();
@@ -702,4 +706,7 @@ public:
 	// Render 
 	STDMETHODIMP RenderStringPoint(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, DWORD flags, VARIANT_BOOL * p);
 	STDMETHODIMP RenderStringRect(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int w, int h, DWORD flags, VARIANT_BOOL * p);
+	// PNG Mode only
+	STDMETHODIMP SetPngImage(IGdiBitmap * img);
+
 };

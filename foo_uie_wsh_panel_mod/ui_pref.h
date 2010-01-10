@@ -5,24 +5,36 @@
 
 class CDialogPref : public CDialogImpl<CDialogPref>
 	, public CWinDataExchange<CDialogPref>
+	, public preferences_page_instance
 {
 private:
 	CListViewCtrl m_props;
+	preferences_page_callback::ptr m_callback;
 
 public:
-	void OnFinalMessage(HWND hWnd);
+	CDialogPref(preferences_page_callback::ptr callback) : m_callback(callback) {}
+
 	void LoadProps(bool reset = false);
 	void uGetItemText(int nItem, int nSubItem, pfc::string_base & out);
+
+	void OnChanged();
+	bool HasChanged();
+
+	// preferences_page_instance
+	HWND get_wnd();
+	t_uint32 get_state();
+	void apply();
+	void reset();
 
 public:
 	enum { IDD = IDD_DIALOG_PREFERENCE };
 
 	BEGIN_MSG_MAP(CDialogPref)
 		MSG_WM_INITDIALOG(OnInitDialog)
-		MSG_WM_DESTROY(OnDestroy)
 		COMMAND_HANDLER_EX(IDC_BUTTON_EXPORT, BN_CLICKED, OnButtonExportBnClicked)
 		COMMAND_HANDLER_EX(IDC_BUTTON_IMPORT, BN_CLICKED, OnButtonImportBnClicked)
-		//COMMAND_HANDLER_EX(IDC_BUTTON_APPLY, BN_CLICKED, OnButtonApplyBnClicked)
+		COMMAND_HANDLER_EX(IDC_EDIT_TIMEOUT, EN_CHANGE, OnEditChange)
+		COMMAND_HANDLER_EX(IDC_CHECK_SAFE_MODE, BN_CLICKED, OnEditChange)
 		NOTIFY_HANDLER_EX(IDC_LIST_EDITOR_PROP, NM_DBLCLK, OnPropNMDblClk)
 	END_MSG_MAP()
 
@@ -30,24 +42,21 @@ public:
 		DDX_CONTROL_HANDLE(IDC_LIST_EDITOR_PROP, m_props)
 	END_DDX_MAP()
 
-	LRESULT OnInitDialog(HWND hwndFocus, LPARAM lParam);
-	LRESULT OnDestroy();
+	BOOL OnInitDialog(HWND hwndFocus, LPARAM lParam);
 	LRESULT OnPropNMDblClk(LPNMHDR pnmh);
-	LRESULT OnButtonExportBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl);
-	LRESULT OnButtonImportBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl);
-	//LRESULT OnButtonApplyBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl);
+	void OnButtonExportBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl);
+	void OnButtonImportBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl);
+	void OnEditChange(WORD, WORD, HWND);
 };
 
-class wsh_preferences_page : public preferences_page
+class wsh_preferences_page_impl : public preferences_page_v3
 {
-private:
-	CDialogPref * dlg;
-
 public:
-	HWND create(HWND p_parent)
+	preferences_page_instance::ptr instantiate(HWND parent, preferences_page_callback::ptr callback)
 	{
-		dlg = new CDialogPref;
-		return dlg->Create(p_parent);
+		service_impl_t<CDialogPref> * p = new service_impl_t<CDialogPref>(callback);
+		p->Create(parent);
+		return p;
 	}
 
 	const char * get_name()
@@ -68,13 +77,6 @@ public:
 	{
 		return g_guid_columns_ui_extensions_branch;
 	}
-
-	bool reset_query()
-	{
-		return true;
-	}
-
-	void reset();
 
 	bool get_help_url(pfc::string_base & p_out)
 	{

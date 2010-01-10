@@ -285,7 +285,7 @@ namespace helpers
 		GUID art_guid;
 		album_art_data_ptr data;
 		album_art_manager_instance_ptr aami = static_api_ptr_t<album_art_manager>()->instantiate();
-		foobar2000_io::abort_callback_dummy abort;
+		abort_callback_dummy abort;
 
 		aami->open(pfc::stringcvt::string_utf8_from_wide(rawpath), abort);
 		art_guid = helpers::convert_artid_to_guid(art_id);
@@ -315,6 +315,55 @@ namespace helpers
 
 		if (helpers::read_album_art_into_bitmap(data, &bitmap))
 			ret = new com_object_impl_t<GdiBitmap>(bitmap);
+
+		(*pp) = ret;
+		return S_OK;
+	}
+
+	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub)
+	{
+		if (handle.is_empty()) return E_INVALIDARG;
+		if (!pp) return E_POINTER;
+
+		GUID art_guid;
+		abort_callback_dummy abort;
+		static_api_ptr_t<album_art_manager_v2> aamv2;
+		album_art_extractor_instance_v2::ptr aaeiv2;
+		IGdiBitmap * ret = NULL;
+
+		aaeiv2 = aamv2->open(pfc::list_single_ref_t<metadb_handle_ptr>(handle), 
+			pfc::list_single_ref_t<GUID>(helpers::convert_artid_to_guid(art_id)), abort);
+
+		art_guid = helpers::convert_artid_to_guid(art_id);
+
+		try
+		{
+			album_art_data_ptr data = aaeiv2->query(art_guid, abort);
+			Gdiplus::Bitmap * bitmap = NULL;
+
+			if (helpers::read_album_art_into_bitmap(data, &bitmap))
+			{
+				ret = new com_object_impl_t<GdiBitmap>(bitmap);
+			}
+		}
+		catch (std::exception &)
+		{
+			if (need_stub)
+			{
+				album_art_extractor_instance_v2::ptr aaeiv2_stub = aamv2->open_stub(abort);
+
+				try 
+				{
+					album_art_data_ptr data = aaeiv2_stub->query(art_guid, abort);
+					Gdiplus::Bitmap * bitmap = NULL;
+
+					if (helpers::read_album_art_into_bitmap(data, &bitmap))
+					{
+						ret = new com_object_impl_t<GdiBitmap>(bitmap);
+					}
+				} catch (std::exception &) {}
+			}
+		}
 
 		(*pp) = ret;
 		return S_OK;
@@ -568,7 +617,12 @@ namespace helpers
 		, m_filed_value_map(p_field_value_map)
 	{
 		if (p_multivalue_field)
-			pfc::splitStringSimple_toList(m_multivalue_fields, ";", p_multivalue_field);
+		{
+			pfc::string8_fast_aggressive multivalue_field_upper;
+			// to upper first
+			stringToUpperAppend(multivalue_field_upper, p_multivalue_field, pfc_infinite);
+			pfc::splitStringSimple_toList(m_multivalue_fields, ";", multivalue_field_upper);
+		}
 	}
 
 	bool file_info_pairs_filter::apply_filter(metadb_handle_ptr p_location,t_filestats p_stats,file_info & p_info)
@@ -584,7 +638,10 @@ namespace helpers
 
 				if (!iter->m_value.is_empty())
 				{
-					if (m_multivalue_fields.contains(iter->m_key))
+					pfc::string8_fast_aggressive key_upper;
+					stringToUpperAppend(key_upper, iter->m_key, pfc_infinite);
+
+					if (m_multivalue_fields.find_item(key_upper))
 					{
 						// Yes, a multivalue field
 						pfc::string_list_impl valuelist;
@@ -624,7 +681,7 @@ namespace helpers
 			}
 			else
 			{
-				get_album_art(m_rawpath, &bitmap, m_art_id, m_need_stub);
+				get_album_art_v2(m_handle, &bitmap, m_art_id, m_need_stub);
 			}
 
 			handle = new com_object_impl_t<FbMetadbHandle>(m_handle);

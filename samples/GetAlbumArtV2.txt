@@ -1,0 +1,32 @@
+AlbumArtId = {
+	front: 0,
+	back: 1,
+	disc: 2,
+	icon: 3
+};
+
+var g_img = null;
+var ww = 0, wh = 0;
+
+function on_paint(gr) {
+	// Draw front cover
+	g_img && gr.DrawImage(g_img, 0, 0, ww, wh, 0, 0, g_img.Width, g_img.Height);
+}
+
+function on_size() {
+	ww = window.Width;
+	wh = window.Height;
+}
+
+function get_album_art(metadb) {
+	if (metadb)
+		// Get front cover
+		return utils.GetAlbumArtV2(metadb, AlbumArtId.front);
+}
+
+g_img = get_album_art(fb.GetNowPlaying());
+
+function on_playback_new_track(metadb) {
+	g_img = get_album_art(metadb);
+	window.Repaint();
+}

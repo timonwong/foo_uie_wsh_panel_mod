@@ -19,7 +19,7 @@ limitations under the License.
 #include "boxblurfilter.h"
 
 
-void box_blur_filter::filter(Gdiplus::Bitmap & p_img) throw()
+void box_blur_filter::filter(Gdiplus::Bitmap & p_img)
 {
 	int width = p_img.GetWidth();
 	int height = p_img.GetHeight();
@@ -58,7 +58,7 @@ void box_blur_filter::filter(Gdiplus::Bitmap & p_img) throw()
 		is_big_chunk ? VirtualFree(pixels_out, 0, MEM_RELEASE) : free(pixels_out);
 }
 
-void box_blur_filter::blur(const int * in, int * out, int width, int height, int radius) throw()
+void box_blur_filter::blur(const int * in, int * out, int width, int height, int radius)
 {
 	int width_minus_1 = width - 1;
 	int table_size = radius * 2 + 1;

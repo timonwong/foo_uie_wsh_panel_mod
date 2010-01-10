@@ -8,10 +8,8 @@
 #include "ui_property.h"
 #include "user_message.h"
 #include "script_preprocessor.h"
-
-
-#define CRT_DEBUG_BREAK() __asm int 3;
-
+#include "popup_msg.h"
+#include "dbgtrace.h"
 
 namespace
 {
@@ -792,7 +790,7 @@ bool wsh_panel_window::script_init()
 		}
 
 		// Show error message
-		popup_message::g_show(msg_formatter, "WSH Panel Mod", popup_message::icon_error);
+		popup_msg::g_show(msg_formatter, "WSH Panel Mod", popup_message::icon_error);
 		return false;
 	}
 
@@ -839,7 +837,7 @@ void wsh_panel_window::script_term()
 	}
 }
 
-HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARIANTARG * argv /*= NULL*/, VARIANT * ret /*= NULL*/) throw()
+HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARIANTARG * argv /*= NULL*/, VARIANT * ret /*= NULL*/)
 {
 	if (GetScriptState() != SCRIPTSTATE_CONNECTED) return E_NOINTERFACE;
 	if (!m_script_root || !m_script_engine) return E_NOINTERFACE;
@@ -864,22 +862,19 @@ HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARI
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("WSH Panel Mod (GUID: %s): Fatal Error: %s, crash now...", guid.get_ptr(), e.what());
-			CRT_DEBUG_BREAK();
-		}
-		catch (_com_error & e)
-		{
-			pfc::print_guid guid(get_config_guid());
-
-			console::printf("WSH Panel Mod (GUID: %s): Fatal COM Error: Code: 0x%08x, crash now...", guid.get_ptr(), e.Error());
-			CRT_DEBUG_BREAK();
+			console::printf("WSH Panel Mod (GUID: %s): Unhandled C++ Exception: \"%s\", will crash now...", guid.get_ptr(), e.what());
+			PRINT_DISPATCH_TRACK_MESSAGE();
+			// breakpoint
+			pfc::crash();
 		}
 		catch (...)
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("WSH Panel Mod (GUID: %s): Fatal Error: Unknown Error, crash now...", guid.get_ptr());
-			CRT_DEBUG_BREAK();
+			console::printf("WSH Panel Mod (GUID: %s): Unhandled Unknown Exception, will crash now...", guid.get_ptr());
+			PRINT_DISPATCH_TRACK_MESSAGE();
+			// breakpoint
+			pfc::crash();
 		}
 
 		pdisp->Release();
@@ -1298,7 +1293,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		get_disabled() = true;
 		script_stop();
 
-		popup_message::g_show(pfc::string_formatter() << "Script terminated due to the panel (GUID: " 
+		popup_msg::g_show(pfc::string_formatter() << "Script terminated due to the panel (GUID: " 
 			<< pfc::print_guid(get_config_guid())
 			<< ") seems to be unresponsive, "
 			<< "please check your script (usually infinite loop).", 
@@ -1323,7 +1318,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case UWM_SCRIPT_DISABLE:
 		// Show error message
-		popup_message::g_show(pfc::string_formatter() 
+		popup_msg::g_show(pfc::string_formatter() 
 			<< "Panel (GUID: "
 			<< pfc::print_guid(get_config_guid()) 
 			<< "): Refuse to load script due to critical error last run,"
@@ -1534,8 +1529,7 @@ void wsh_panel_window::on_item_played(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	t_simple_callback_data<metadb_handle_ptr> * data 
-		= reinterpret_cast<t_simple_callback_data<metadb_handle_ptr> *>(wp);
+	callback_data_ptr<t_simple_callback_data<metadb_handle_ptr> > data(wp);
 
 	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
 	VARIANTARG args[1];
@@ -1545,7 +1539,6 @@ void wsh_panel_window::on_item_played(WPARAM wp)
 	script_invoke_v(L"on_item_played", 1, args);
 
 	handle->Release();
-	data->refcount_release();
 }
 
 void wsh_panel_window::on_get_album_art_done(LPARAM lp)
@@ -1602,16 +1595,13 @@ void wsh_panel_window::on_notify_data(WPARAM wp)
 {
 	VARIANTARG args[2];
 
-	t_simple_callback_data_2<_bstr_t, _bstr_t> * data 
-		= reinterpret_cast<t_simple_callback_data_2<_bstr_t, _bstr_t> *>(wp);
+	callback_data_ptr<t_simple_callback_data_2<_bstr_t, _bstr_t> > data(wp);
 
 	args[0].vt = VT_BSTR;
 	args[0].bstrVal = data->m_item2;
 	args[1].vt = VT_BSTR;
 	args[1].bstrVal = data->m_item1;
 	script_invoke_v(L"on_notify_data", 2, args);
-
-	data->refcount_release();
 }
 
 void wsh_panel_window::on_playback_starting(play_control::t_track_command cmd, bool paused)
@@ -1631,8 +1621,7 @@ void wsh_panel_window::on_playback_new_track(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	t_simple_callback_data<metadb_handle_ptr> * data 
-		= reinterpret_cast<t_simple_callback_data<metadb_handle_ptr> *>(wp);
+	callback_data_ptr<t_simple_callback_data<metadb_handle_ptr> > data(wp);
 
 	VARIANTARG args[1];
 	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
@@ -1642,7 +1631,6 @@ void wsh_panel_window::on_playback_new_track(WPARAM wp)
 	script_invoke_v(L"on_playback_new_track", 1, args);
 
 	handle->Release();
-	data->refcount_release();
 }
 
 void wsh_panel_window::on_playback_stop(play_control::t_stop_reason reason)
@@ -1660,16 +1648,13 @@ void wsh_panel_window::on_playback_seek(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	t_simple_callback_data<double> * data = 
-		reinterpret_cast<t_simple_callback_data<double> *>(wp);
+	callback_data_ptr<t_simple_callback_data<double> > data(wp);
 
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R8;
 	args[0].dblVal = data->m_item;
 	script_invoke_v(L"on_playback_seek", 1, args);
-
-	data->refcount_release();
 }
 
 void wsh_panel_window::on_playback_pause(bool state)
@@ -1708,32 +1693,26 @@ void wsh_panel_window::on_playback_time(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	t_simple_callback_data<double> * data 
-		= reinterpret_cast<t_simple_callback_data<double> *>(wp);
+	callback_data_ptr<t_simple_callback_data<double> > data(wp);
 
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R8;
 	args[0].dblVal = data->m_item;
 	script_invoke_v(L"on_playback_time", 1, args);
-
-	data->refcount_release();
 }
 
 void wsh_panel_window::on_volume_change(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	t_simple_callback_data<float> * data 
-		= reinterpret_cast<t_simple_callback_data<float> *>(wp);
+	callback_data_ptr<t_simple_callback_data<float> > data(wp);
 
 	VARIANTARG args[1];
 
 	args[0].vt = VT_R4;
 	args[0].fltVal = data->m_item;
 	script_invoke_v(L"on_volume_change", 1, args);
-
-	data->refcount_release();
 }
 
 void wsh_panel_window::on_item_focus_change()
@@ -1758,8 +1737,7 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	metadb_changed_callback::t_on_changed_sorted_data * data 
-		= reinterpret_cast<metadb_changed_callback::t_on_changed_sorted_data *>(wp);
+	callback_data_ptr<metadb_changed_callback::t_on_changed_sorted_data > data(wp);
 
 	if (m_watched_handle.is_empty() || !data->m_items_sorted.have_item(m_watched_handle))
 		return;
@@ -1774,5 +1752,4 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 	script_invoke_v(L"on_metadb_changed", 2, args);
 
 	handle->Release();
-	data->refcount_release();
 }

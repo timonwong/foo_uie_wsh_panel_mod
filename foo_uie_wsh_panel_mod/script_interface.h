@@ -146,7 +146,7 @@ __interface IGdiUtils: IDispatch
 	STDMETHOD(Font)(BSTR name, float pxSize, [defaultvalue(0)] int style, [out,retval] IGdiFont** pp);
 	STDMETHOD(Image)(BSTR path, [out,retval] IGdiBitmap** pp);
 	STDMETHOD(CreateImage)(int w, int h, [out,retval] IGdiBitmap** pp);
-	STDMETHOD(CreateStyleTextRender)([out,retval] __interface IStyleTextRender ** pp);
+	STDMETHOD(CreateStyleTextRender)([defaultvalue(0)] VARIANT_BOOL pngmode, [out,retval] __interface IStyleTextRender ** pp);
 };
 _COM_SMARTPTR_TYPEDEF(IGdiUtils, __uuidof(IGdiUtils));
 
@@ -174,6 +174,8 @@ __interface IStyleTextRender: IDisposable
 	// Render 
 	STDMETHOD(RenderStringPoint)(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, [defaultvalue(0)] DWORD flags, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(RenderStringRect)(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int w, int h, [defaultvalue(0)] DWORD flags, [out,retval] VARIANT_BOOL * p);
+	// PNG Mode Only
+	STDMETHOD(SetPngImage)(IGdiBitmap * img);
 };
 
 //---
@@ -440,7 +442,8 @@ __interface IWSHUtils: IDispatch
 {
 	STDMETHOD(CheckComponent)(BSTR name, [defaultvalue(-1)] VARIANT_BOOL is_dll, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(CheckFont)(BSTR name, [out,retval] VARIANT_BOOL * p);
-	STDMETHOD(GetAlbumArt)(BSTR rawpath, [defaultvalue(-1)] int art_id, [defaultvalue(-1)] VARIANT_BOOL need_stub, [out,retval] IGdiBitmap ** pp);
+	STDMETHOD(GetAlbumArt)(BSTR rawpath, [defaultvalue(0)] int art_id, [defaultvalue(-1)] VARIANT_BOOL need_stub, [out,retval] IGdiBitmap ** pp);
+	STDMETHOD(GetAlbumArtV2)(IFbMetadbHandle * handle, [defaultvalue(0)] int art_id, [defaultvalue(-1)] VARIANT_BOOL need_stub, [out,retval] IGdiBitmap **pp);
 	STDMETHOD(GetAlbumArtEmbedded)(BSTR rawpath, [defaultvalue(0)] int art_id, [out,retval] IGdiBitmap ** pp);
 	STDMETHOD(GetAlbumArtAsync)(UINT window_id, IFbMetadbHandle * handle, [defaultvalue(0)] int art_id, [defaultvalue(-1)] VARIANT_BOOL need_stub, [defaultvalue(0)] VARIANT_BOOL only_embed, [out,retval] UINT * p);
 	STDMETHOD(ReadINI)(BSTR filename, BSTR section, BSTR key, [optional] VARIANT defaultval, [out,retval] BSTR * pp);

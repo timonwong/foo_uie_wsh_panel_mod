@@ -88,7 +88,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(TargetPath) D:\foobar2000\components\"
+				CommandLine="copy $(TargetPath) &quot;D:\foobar2000\components\&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -289,6 +289,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\popup_msg.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\simple_thread.cpp"
 					>
 				</File>
@@ -317,6 +321,10 @@
 			</File>
 			<File
 				RelativePath=".\config.h"
+				>
+			</File>
+			<File
+				RelativePath=".\dbgtrace.h"
 				>
 			</File>
 			<File
@@ -432,6 +440,10 @@
 				</File>
 				<File
 					RelativePath=".\helpers.h"
+					>
+				</File>
+				<File
+					RelativePath=".\popup_msg.h"
 					>
 				</File>
 				<File

@@ -15,15 +15,15 @@ namespace
 	static initquit_factory_t<metadb_changed_callback> g_metadb_changed_callback;
 }
 
-//void panel_notifier_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
-//{
-//	for (t_size i = 0; i < m_hwnds.get_count(); ++i)
-//	{
-//		HWND wnd = m_hwnds[i];
-//
-//		SendMessage(wnd, p_msg, p_wp, p_lp);
-//	}
-//}
+void panel_notifier_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
+{
+	for (t_size i = 0; i < m_hwnds.get_count(); ++i)
+	{
+		HWND wnd = m_hwnds[i];
+
+		SendMessage(wnd, p_msg, p_wp, p_lp);
+	}
+}
 
 void panel_notifier_manager::post_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param)
 {

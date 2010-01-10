@@ -3,7 +3,11 @@
 #include "helpers.h"
 #include "boxblurfilter.h"
 #include "user_message.h"
+#include "popup_msg.h"
+#include "dbgtrace.h"
+
 #include "../TextDesinger/OutlineText.h"
+#include "../TextDesinger/PngOutlineText.h"
 
 
 STDMETHODIMP GdiFont::get_HFont(UINT* p)
@@ -730,13 +734,13 @@ STDMETHODIMP GdiUtils::CreateImage(int w, int h, IGdiBitmap ** pp)
 	return S_OK;
 }
 
-STDMETHODIMP GdiUtils::CreateStyleTextRender(IStyleTextRender ** pp)
+STDMETHODIMP GdiUtils::CreateStyleTextRender(VARIANT_BOOL pngmode, IStyleTextRender ** pp)
 {
 	TRACK_FUNCTION();
 
 	if (!pp) return E_POINTER;
 
-	(*pp) = new com_object_impl_t<StyleTextRender>();
+	(*pp) = new com_object_impl_t<StyleTextRender>(pngmode != VARIANT_FALSE);
 	return S_OK;
 }
 
@@ -1195,7 +1199,8 @@ STDMETHODIMP FbUtils::ShowPopupMessage(BSTR msg, BSTR title, int iconid)
 
 	if (!msg || !title) return E_INVALIDARG;
 
-	popup_message::g_show(pfc::stringcvt::string_utf8_from_wide(msg), pfc::stringcvt::string_utf8_from_wide(title), (popup_message::t_icon)iconid);
+	popup_msg::g_show(pfc::stringcvt::string_utf8_from_wide(msg), 
+		pfc::stringcvt::string_utf8_from_wide(title), (popup_message::t_icon)iconid);
 	return S_OK;
 }
 
@@ -1608,7 +1613,15 @@ STDMETHODIMP FbUtils::RunMainMenuCommand(BSTR command, VARIANT_BOOL * p)
 
 	pfc::stringcvt::string_utf8_from_wide name(command);
 
-	*p = TO_VARIANT_BOOL(helpers::execute_mainmenu_command_by_name(name));
+	try
+	{
+		*p = TO_VARIANT_BOOL(helpers::execute_mainmenu_command_by_name(name));
+	}
+	catch (...)
+	{
+		*p = VARIANT_FALSE;
+	}
+	
 	return S_OK;
 }
 
@@ -1621,7 +1634,16 @@ STDMETHODIMP FbUtils::RunContextCommand(BSTR command, VARIANT_BOOL * p)
 
 	pfc::stringcvt::string_utf8_from_wide name(command);
 
-	*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name(name));
+	try
+	{
+
+		*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name(name));
+	}
+	catch (...)
+	{
+		*p = VARIANT_FALSE;
+	}
+	
 	return S_OK;
 }
 
@@ -1639,7 +1661,16 @@ STDMETHODIMP FbUtils::RunContextCommandWithMetadb(BSTR command, IFbMetadbHandle 
 
 	if (!ptr) return E_INVALIDARG;
 
-	*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name(name, ptr));
+	try
+	{
+
+		*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name(name, ptr));
+	}
+	catch (...)
+	{
+		*p = VARIANT_FALSE;
+	}
+
 	return S_OK;
 }
 
@@ -1854,7 +1885,14 @@ STDMETHODIMP MainMenuManager::BuildMenu(IMenuObj * p, int base_id, int count)
 	UINT menuid;
 
 	p->get_ID(&menuid);
-	m_mm->generate_menu_win32((HMENU)menuid, base_id, count, 0);
+
+	// HACK: workaround for foo_menu_addons
+	try
+	{
+		m_mm->generate_menu_win32((HMENU)menuid, base_id, count, 0);
+	}
+	catch (...) {}
+
 	return S_OK;
 }
 
@@ -2096,6 +2134,19 @@ STDMETHODIMP WSHUtils::GetAlbumArt(BSTR rawpath, int art_id, VARIANT_BOOL need_s
 	return helpers::get_album_art(rawpath, pp, art_id, need_stub);
 }
 
+STDMETHODIMP WSHUtils::GetAlbumArtV2(IFbMetadbHandle * handle, int art_id, VARIANT_BOOL need_stub, IGdiBitmap **pp)
+{
+	TRACK_FUNCTION();
+
+	if (!handle) return E_INVALIDARG;
+
+	metadb_handle * ptr = NULL;
+
+	handle->get__ptr((void**)&ptr);
+
+	return helpers::get_album_art_v2(ptr, pp, art_id, need_stub);
+}
+
 STDMETHODIMP WSHUtils::GetAlbumArtEmbedded(BSTR rawpath, int art_id, IGdiBitmap ** pp)
 {
 	TRACK_FUNCTION();
@@ -2330,7 +2381,7 @@ STDMETHODIMP FbTooltip::put_Text(BSTR text)
 	return S_OK;
 }
 
-StyleTextRender::StyleTextRender() : m_pOutLineText(NULL)
+StyleTextRender::StyleTextRender(bool pngmode) : m_pOutLineText(NULL), m_pngmode(pngmode)
 {
 	m_pOutLineText = new TextDesign::OutlineText;
 }
@@ -2509,5 +2560,21 @@ STDMETHODIMP StyleTextRender::RenderStringRect(IGdiGraphics * g, BSTR str, IGdiF
 
 	m_pOutLineText->DrawString(graphics, &family, (Gdiplus::FontStyle)fontstyle, 
 		fontsize, str, Gdiplus::Rect(x, y, w, h), &fmt);
+	return S_OK;
+}
+
+STDMETHODIMP StyleTextRender::SetPngImage(IGdiBitmap * img)
+{
+	TRACK_FUNCTION();
+
+	if (!m_pngmode) return E_NOINTERFACE;
+	if (!img) return E_INVALIDARG;
+
+	Gdiplus::Bitmap * pBitmap = NULL;
+	img->get__ptr((void**)&pBitmap);
+
+	TextDesign::PngOutlineText * pPngOutlineText = reinterpret_cast<TextDesign::PngOutlineText *>(m_pOutLineText);
+	pPngOutlineText->SetPngImage(pBitmap);
+
 	return S_OK;
 }

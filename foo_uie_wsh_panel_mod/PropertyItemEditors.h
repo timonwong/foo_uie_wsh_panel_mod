@@ -440,6 +440,7 @@ public:
 			CopyRect(&rc, &lpdis->rcItem);
 			rc.top += 1;
 			//rc.bottom -= 1;
+			::DrawThemeParentBackground(lpdis->hwndItem, lpdis->hDC, &rc);
 			DrawThemeBackground(lpdis->hDC, CP_DROPDOWNBUTTON, (lpdis->itemState & ODS_SELECTED) != 0 ? CBXS_PRESSED : CBXS_NORMAL, &rc, NULL);
 			DrawThemeEdge(lpdis->hDC, CP_DROPDOWNBUTTON, (lpdis->itemState & ODS_SELECTED) != 0 ? CBXS_PRESSED : CBXS_NORMAL, &rc, 0, 0, NULL);
 		}

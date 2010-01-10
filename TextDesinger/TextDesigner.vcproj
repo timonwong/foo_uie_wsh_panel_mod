@@ -163,6 +163,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PngOutlineText.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -218,6 +222,10 @@
 			</File>
 			<File
 				RelativePath=".\OutlineText.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PngOutlineText.h"
 				>
 			</File>
 			<File

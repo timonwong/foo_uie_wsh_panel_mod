@@ -38,7 +38,7 @@ public:
 		return m_hwnds.get_count();
 	}
 
-	//void send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
+	void send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
 	void post_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param);
 	void post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
 	void post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_root * p_param);
@@ -62,7 +62,7 @@ struct t_simple_callback_data : public pfc::refcounted_object_root
 {
 	T m_item;
 
-	t_simple_callback_data(const T & p_item) : m_item(p_item) {}
+	inline t_simple_callback_data(const T & p_item) : m_item(p_item) {}
 };
 
 template <class T1, class T2>
@@ -71,7 +71,38 @@ struct t_simple_callback_data_2 : public pfc::refcounted_object_root
 	T1 m_item1;
 	T2 m_item2;
 
-	t_simple_callback_data_2(const T1 & p_item1, const T2 & p_item2) : m_item1(p_item1), m_item2(p_item2) {}
+	inline t_simple_callback_data_2(const T1 & p_item1, const T2 & p_item2) : m_item1(p_item1), m_item2(p_item2) {}
+};
+
+// Only used in message handler
+template <class T>
+class callback_data_ptr
+{
+private:
+	T * m_data;
+
+public:
+	template <class TParam>
+	inline callback_data_ptr(TParam p_data)
+	{
+		m_data = reinterpret_cast<T *>(p_data);
+	}
+
+	template <class TParam>
+	inline callback_data_ptr(TParam * p_data)
+	{
+		m_data = reinterpret_cast<T *>(p_data);
+	}
+
+	inline virtual ~callback_data_ptr()
+	{
+		m_data->refcount_release();
+	}
+
+	T * operator->()
+	{
+		return m_data;
+	}
 };
 
 class playback_stat_callback : public playback_statistics_collector

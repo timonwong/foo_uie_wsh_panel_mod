@@ -32,6 +32,7 @@ namespace helpers
 	// bitmap must be NULL
 	bool read_album_art_into_bitmap(const album_art_data_ptr & data, Gdiplus::Bitmap ** bitmap);
 	HRESULT get_album_art(BSTR rawpath, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub);
+	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub);
 	HRESULT get_album_art_embedded(BSTR rawpath, IGdiBitmap ** pp, int art_id);
 
 	static bool get_is_vista_or_later()
@@ -99,7 +100,7 @@ namespace helpers
 	private:
 		metadb_handle_ptr m_handle;
 		t_field_value_map m_filed_value_map; 
-		pfc::avltree_t<pfc::string8, pfc::comparator_stricmp_ascii> m_multivalue_fields;
+		pfc::string_list_impl m_multivalue_fields;
 
 	public:
 		file_info_pairs_filter(const metadb_handle_ptr & p_handle, const t_field_value_map & p_field_value_map, const char * p_multivalue_field = NULL);
@@ -154,7 +155,7 @@ namespace helpers
 		}
 
 		virtual ~album_art_async()
-		{ }
+		{ close(); }
 
 	private:
 		virtual void thread_proc();

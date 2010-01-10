@@ -8,11 +8,11 @@
 
 namespace 
 {
-	static preferences_page_factory_t<wsh_preferences_page> g_pref;
+	static preferences_page_factory_t<wsh_preferences_page_impl> g_pref;
 }
 
 
-LRESULT CDialogPref::OnInitDialog(HWND hwndFocus, LPARAM lParam)
+BOOL CDialogPref::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 {
 	// Set Spin	
 	SendDlgItemMessage(IDC_SPIN_TIMEOUT, UDM_SETRANGE, 0, MAKELONG(180, 0));
@@ -38,24 +38,6 @@ LRESULT CDialogPref::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 	return TRUE; // set focus to default control
 }
 
-void CDialogPref::OnFinalMessage(HWND hWnd)
-{
-	delete this;
-}
-
-LRESULT CDialogPref::OnDestroy()
-{
-	BOOL translated;
-	int val = GetDlgItemInt(IDC_EDIT_TIMEOUT, &translated, FALSE);
-
-	if (translated) 
-		g_cfg_timeout = val;
-
-	g_cfg_safe_mode = (SendDlgItemMessage(IDC_CHECK_SAFE_MODE, BM_GETCHECK) == BST_CHECKED);
-
-	return 0;
-}
-
 void CDialogPref::LoadProps(bool reset /*= false*/)
 {
 	if (reset)
@@ -74,14 +56,8 @@ void CDialogPref::LoadProps(bool reset /*= false*/)
 		conv.convert(prop_sets[i].val);
 		m_props.AddItem(i, 1, conv);
 	}
-}
 
-void wsh_preferences_page::reset()
-{
-	if (!dlg)
-		return;
-
-	dlg->LoadProps(true);
+	OnChanged();
 }
 
 LRESULT CDialogPref::OnPropNMDblClk(LPNMHDR pnmh)
@@ -132,17 +108,15 @@ void CDialogPref::uGetItemText(int nItem, int nSubItem, pfc::string_base & out)
 	out.set_string(pfc::stringcvt::string_utf8_from_os(buffer));
 }
 
-LRESULT CDialogPref::OnButtonExportBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl)
+void CDialogPref::OnButtonExportBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 {
 	pfc::string8_fast filename;
 
 	if (uGetOpenFileName(m_hWnd, "Configuration files|*.cfg", 0, "cfg", "Save as", NULL, filename, TRUE))
 		g_sci_prop_sets.export_to_file(filename);
-
-	return 0;
 }
 
-LRESULT CDialogPref::OnButtonImportBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl)
+void CDialogPref::OnButtonImportBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 {
 	pfc::string8_fast filename;
 
@@ -150,11 +124,48 @@ LRESULT CDialogPref::OnButtonImportBnClicked(WORD wNotifyCode, WORD wID, HWND hW
 		g_sci_prop_sets.import_from_file(filename);
 
 	LoadProps();
-	return 0;
 }
 
-//LRESULT CDialogPref::OnButtonApplyBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl)
-//{
-//	g_config_dlg_mgr.PostMessage(UM_DIALOG_STYLE_RELOAD, 0, 0);
-//	return 0;
-//}
+void CDialogPref::OnEditChange(WORD, WORD, HWND)
+{
+	OnChanged();
+}
+
+void CDialogPref::OnChanged()
+{
+	m_callback->on_state_changed();
+}
+
+bool CDialogPref::HasChanged()
+{
+	return (GetDlgItemInt(IDC_EDIT_TIMEOUT, NULL, FALSE) != g_cfg_timeout)
+		|| ((SendDlgItemMessage(IDC_CHECK_SAFE_MODE, BM_GETCHECK) == BST_CHECKED) != g_cfg_safe_mode);
+}
+
+HWND CDialogPref::get_wnd()
+{
+	return m_hWnd;
+}
+
+t_uint32 CDialogPref::get_state()
+{
+	t_uint32 state = preferences_state::resettable;
+	if (HasChanged()) state |= preferences_state::changed;
+	return state;
+}
+
+void CDialogPref::apply()
+{
+	g_cfg_timeout = GetDlgItemInt(IDC_EDIT_TIMEOUT, NULL, FALSE);
+	g_cfg_safe_mode = (SendDlgItemMessage(IDC_CHECK_SAFE_MODE, BM_GETCHECK) == BST_CHECKED);
+
+	OnChanged();
+}
+
+void CDialogPref::reset()
+{
+	g_cfg_safe_mode = false;
+	g_cfg_timeout = 15;
+	LoadProps(true);
+	OnChanged();
+}

@@ -1,3 +1,12 @@
+v1.2.2
+- CHG: Compiled with the new SDK for foobar2000 1.0+, drop support for older versions.
+- CHG: Test versions will be expired after 14 days.
+- ADD: Png mode for IStyleTextRender (#gdi.CreateStyleTextRender(pngmode = false)) and IStyleTextRender.SetPngImage(), useful to create animation.
+- ADD: utils.GetAlbumArtV2() method.
+- FIX: Workaround for foo_menu_addons.
+- CHG: More detailed crash info now is appended to the console.
+- ADD: More samples (GetAlbumArtV2.txt, MainMenuManager All-In-One.txt).
+
 v1.2.1
 - ADD: IMainMenuManager interface, use fb.CreateMainMenuManager() to create an instance (#Interfaces.txt).
 - ADD: IStyleTextRender interface, use gdi.CreateStyleTextRender() to create an instance (#Interfaces.txt).

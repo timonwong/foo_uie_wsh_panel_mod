@@ -12,7 +12,6 @@ void wsh_panel_vars::get_default_script_code(pfc::string_base & out)
 		out.set_string(reinterpret_cast<const char *>(pures->GetPointer()), pures->GetSize());
 		return;
 	}
-
 	out.reset();
 }
 
