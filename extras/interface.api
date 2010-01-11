@@ -25,7 +25,7 @@ window.SetCursor(id)
 gdi.Font(name, ptSize[, style])
 gdi.Image(path)
 gdi.CreateImage(w, h)
-gdi.CreateStyleTextRender()
+gdi.CreateStyleTextRender([pngmode])
 
 fb.ComponentPath
 fb.FoobarPath
@@ -73,6 +73,7 @@ fb.IsMetadbInMediaLibrary(metadb)
 utils.CheckComponent(name[, is_dll])
 utils.CheckFont(name)
 utils.GetAlbumArt(rawpath[, art_id, need_stub])
+utils.GetAlbumArtV2(metadb[, art_id, need_stub])
 utils.GetAlbumArtEmbedded(rawpath[, art_id])
 utils.GetAlbumArtAsync(window_id, IFbMetadbHandle[, art_id, need_stub, only_embed])
 utils.ReadINI(filename, section, key[, defaultval])

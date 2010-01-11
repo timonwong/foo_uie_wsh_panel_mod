@@ -4,7 +4,7 @@
 class panel_notifier_manager
 {
 public:
-	typedef pfc::list_t<HWND> t_hwndlist;
+	typedef pfc::chain_list_v2_t<HWND> t_hwndlist;
 
 	panel_notifier_manager()
 	{
@@ -17,9 +17,7 @@ public:
 
 	inline void add_window(HWND p_wnd)
 	{
-		if (m_hwnds.find_item(p_wnd))
-			m_hwnds.remove_item(p_wnd);
-
+		m_hwnds.remove_item(p_wnd);
 		m_hwnds.add_item(p_wnd);
 	}
 

@@ -182,7 +182,7 @@ public:
 		script_term();
 	}
 
-	wsh_panel_window();
+	wsh_panel_window() : m_ismousetracked(false), m_script_site(this) {}
 
 	void on_update_script(const char* name, const char* code);
 	HRESULT _script_init();

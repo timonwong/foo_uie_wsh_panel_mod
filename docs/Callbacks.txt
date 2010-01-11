@@ -28,6 +28,7 @@ function on_mouse_mbtn_down(x, y, mask) {}
 
 // [1.1.8] New:
 // mask, see Flags.txt for more details
+// Actions should be executed in this callback
 function on_mouse_mbtn_up(x, y, mask) {}
 
 // [1.1.8] New:

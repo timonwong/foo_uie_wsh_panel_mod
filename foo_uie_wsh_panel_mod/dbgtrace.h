@@ -3,7 +3,7 @@
 #define NO_TRACK_FUNCTION
 //#define NO_TRACK_DISPATCH
 
-#if !defined(NO_TRACK_FUNCTION)
+#if !defined(NO_TRACK_FUNCTION) || defined(_DEBUG)
 #define TRACK_FUNCTION() TRACK_CALL_TEXT(__FUNCTION__)
 #define TRACK_CALL_TEXT_FORMAT(fmt, ...) TRACK_CALL_TEXT(uStringPrintf((fmt), __VA_ARGS__))
 #else

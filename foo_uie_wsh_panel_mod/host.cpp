@@ -417,8 +417,8 @@ STDMETHODIMP FbWindow::NotifyOthers(BSTR name, BSTR info)
 
 	if (!name || !info) return E_INVALIDARG;
 
-	t_simple_callback_data_2<_bstr_t, _bstr_t> * notify_data 
-		= new t_simple_callback_data_2<_bstr_t, _bstr_t>(name, info);
+	t_simple_callback_data_2<CComBSTR, CComBSTR> * notify_data 
+		= new t_simple_callback_data_2<CComBSTR, CComBSTR>(name, info);
 
 	panel_notifier_manager::instance().post_msg_to_others_pointer(m_host->GetHWND(), CALLBACK_UWM_NOTIFY_DATA, 
 		notify_data);
@@ -605,7 +605,7 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 	LONG  charpos = 0;
 	EXCEPINFO excep = { 0 };
 	WCHAR buf[512] = { 0 };
-	_bstr_t sourceline;
+	CComBSTR sourceline;
 
 	if (FAILED(err->GetSourcePosition(&ctx, &line, &charpos)))
 	{
@@ -613,7 +613,7 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 		charpos = 0;
 	}
 
-	if (FAILED(err->GetSourceLineText(sourceline.GetAddress())) || !sourceline.length())
+	if (FAILED(err->GetSourceLineText(&sourceline)))
 	{
 		sourceline = L"<no source text available>";
 	}
@@ -627,7 +627,7 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 		pfc::stringcvt::string_os_from_utf8 guid_str(pfc::print_guid(m_host->GetGUID()));
 
 		StringCbPrintf(buf, sizeof(buf), _T("WSH Panel Mod (GUID: %s): %s:\n%s\nLn: %d, Col: %d\n%s\n"),
-			guid_str.get_ptr(), excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, sourceline.GetBSTR());
+			guid_str.get_ptr(), excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, sourceline.m_str);
 
 		m_host->OnScriptError(buf);
 
@@ -677,12 +677,6 @@ STDMETHODIMP ScriptSite::QueryContinue()
 	}
 
 	return S_OK;
-}
-
-wsh_panel_window::wsh_panel_window() 
-: m_ismousetracked(false)
-, m_script_site(this)
-{
 }
 
 void wsh_panel_window::on_update_script(const char* name, const char* code)
@@ -865,7 +859,7 @@ HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARI
 			console::printf("WSH Panel Mod (GUID: %s): Unhandled C++ Exception: \"%s\", will crash now...", guid.get_ptr(), e.what());
 			PRINT_DISPATCH_TRACK_MESSAGE();
 			// breakpoint
-			pfc::crash();
+			__debugbreak();
 		}
 		catch (...)
 		{
@@ -1595,7 +1589,7 @@ void wsh_panel_window::on_notify_data(WPARAM wp)
 {
 	VARIANTARG args[2];
 
-	callback_data_ptr<t_simple_callback_data_2<_bstr_t, _bstr_t> > data(wp);
+	callback_data_ptr<t_simple_callback_data_2<CComBSTR, CComBSTR> > data(wp);
 
 	args[0].vt = VT_BSTR;
 	args[0].bstrVal = data->m_item2;

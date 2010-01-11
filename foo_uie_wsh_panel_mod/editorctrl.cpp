@@ -930,8 +930,8 @@ void CScriptEditorCtrl::Init()
 	AssignCmdKey(MAKELONG('H', SCMOD_CTRL), SCI_NULL);
 
 	// Tabs and indentation
-	SetUseTabs(true);
-	SetTabIndents(true);
+	SetUseTabs(false); 
+	SetTabIndents(false);
 	SetBackSpaceUnIndents(true);
 	SetTabWidth(4);
 	SetIndent(4);

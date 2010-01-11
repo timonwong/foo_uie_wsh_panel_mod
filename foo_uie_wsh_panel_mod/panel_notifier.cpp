@@ -17,11 +17,9 @@ namespace
 
 void panel_notifier_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 {
-	for (t_size i = 0; i < m_hwnds.get_count(); ++i)
+	for (t_hwndlist::iterator iter = m_hwnds.first(); iter.is_valid(); ++iter)
 	{
-		HWND wnd = m_hwnds[i];
-
-		SendMessage(wnd, p_msg, p_wp, p_lp);
+		SendMessage(*iter, p_msg, p_wp, p_lp);
 	}
 }
 
@@ -35,9 +33,9 @@ void panel_notifier_manager::post_msg_to_others_pointer(HWND p_wnd_except, UINT 
 	for (t_size i = 0; i < count - 1; ++i)
 		p_param->refcount_add_ref();
 
-	for (t_size i = 0; i < count; ++i)
+	for (t_hwndlist::iterator iter = m_hwnds.first(); iter.is_valid(); ++iter)
 	{
-		HWND wnd = m_hwnds[i];
+		const HWND & wnd = *iter;
 
 		if (wnd != p_wnd_except)
 		{
@@ -48,11 +46,9 @@ void panel_notifier_manager::post_msg_to_others_pointer(HWND p_wnd_except, UINT 
 
 void panel_notifier_manager::post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 {
-	for (t_size i = 0; i < m_hwnds.get_count(); ++i)
+	for (t_hwndlist::iterator iter = m_hwnds.first(); iter.is_valid(); ++iter)
 	{
-		HWND wnd = m_hwnds[i];
-
-		PostMessage(wnd, p_msg, p_wp, p_lp);
+		PostMessage(*iter, p_msg, p_wp, p_lp);
 	}
 }
 
@@ -66,11 +62,9 @@ void panel_notifier_manager::post_msg_to_all_pointer(UINT p_msg, pfc::refcounted
 	for (t_size i = 0; i < count; ++i)
 		p_param->refcount_add_ref();
 
-	for (t_size i = 0; i < count; ++i)
+	for (t_hwndlist::iterator iter = m_hwnds.first(); iter.is_valid(); ++iter)
 	{
-		HWND wnd = m_hwnds[i];
-
-		PostMessage(wnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0);
+		PostMessage(*iter, p_msg, reinterpret_cast<WPARAM>(p_param), 0);
 	}
 }
 

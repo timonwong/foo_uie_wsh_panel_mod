@@ -363,6 +363,10 @@
 				RelativePath=".\user_message.h"
 				>
 			</File>
+			<File
+				RelativePath=".\version.h"
+				>
+			</File>
 			<Filter
 				Name="PropertyList"
 				>

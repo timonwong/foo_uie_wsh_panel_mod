@@ -2,11 +2,14 @@
 #include "simple_thread.h"
 
 
-/*static*/ simple_thread_manager simple_thread_manager::sm_instance;
+simple_thread_manager simple_thread_manager::sm_instance;
 
 void simple_thread::start()
 {
 	close();
+
+	// Tracking this
+	simple_thread_manager::instance().add(this);
 
 	const int priority = GetThreadPriority(GetCurrentThread());
 	const bool overridePriority = (priority != THREAD_PRIORITY_NORMAL);
@@ -14,8 +17,6 @@ void simple_thread::start()
 
 	if (thread == NULL)
 		pfc::throw_exception_with_message<pfc::exception>("Could not create thread");
-
-	simple_thread_manager::instance().add(this);
 
 	if (overridePriority)
 	{
@@ -38,18 +39,17 @@ void simple_thread::close()
 
 unsigned int CALLBACK simple_thread::g_entry(void* p_instance)
 {
+	// Note this procedure is IN thread.
 	simple_thread * thread_ptr = reinterpret_cast<simple_thread *>(p_instance);
 
 	try
 	{
 		thread_ptr->thread_proc();
 	}
-	catch (std::exception &)
-	{
+	catch (...) {}
 
-	}
+	// Destroy this thread class in main_thread_callback.
+	simple_thread_manager::instance().safe_remove(thread_ptr);
 
-	simple_thread_manager::instance().remove(thread_ptr);
-	delete thread_ptr;
 	return 0;
 }

@@ -123,7 +123,7 @@ namespace helpers
 			{
 			}
 
-			virtual ~t_param()
+			~t_param()
 			{
 				if (handle)
 					handle->Release();
@@ -135,7 +135,7 @@ namespace helpers
 
 	private:
 		metadb_handle_ptr m_handle;
-		_bstr_t m_rawpath;
+		CComBSTR m_rawpath;
 		int m_art_id;
 		VARIANT_BOOL m_need_stub;
 		VARIANT_BOOL m_only_embed;
@@ -155,7 +155,9 @@ namespace helpers
 		}
 
 		virtual ~album_art_async()
-		{ close(); }
+		{
+			close();
+		}
 
 	private:
 		virtual void thread_proc();

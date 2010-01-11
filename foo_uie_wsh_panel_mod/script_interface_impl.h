@@ -103,29 +103,39 @@ protected:
 public:
 	STDMETHODIMP_(ULONG) AddRef()
 	{
-		return InterlockedIncrement(&m_dwRef);
+		return AddRef_();
 	}
 
 	STDMETHODIMP_(ULONG) Release()
 	{
+		return Release_();
+	}
+
+private:
+	inline ULONG AddRef_()
+	{
+		return InterlockedIncrement(&m_dwRef);
+	}
+
+	inline ULONG Release_()
+	{
 		ULONG nRef = InterlockedDecrement(&m_dwRef);
-		
+
 		if (nRef == 0)
 		{
 			FinalRelease();
 			delete this;
 		} 
-		
+
 		return nRef; 
 	}
 
-private:
-	inline void _construct()
+	inline void Construct_()
 	{
 		m_dwRef = 0; 
 
 		if (_AddRef)
-			AddRef();
+			AddRef_();
 	}
 
 public:
@@ -133,7 +143,7 @@ public:
 	{
 	}
 
-	TEMPLATE_CONSTRUCTOR_FORWARD_FLOOD_WITH_INITIALIZER(com_object_impl_t, _Base, { _construct(); })
+	TEMPLATE_CONSTRUCTOR_FORWARD_FLOOD_WITH_INITIALIZER(com_object_impl_t, _Base, { Construct_(); })
 };
 
 

@@ -12,7 +12,7 @@ public:
 		else
 		{
 			if (!sm_popup_pendings) 
-				sm_popup_pendings = new pfc::list_t<t_popup_pending>();
+				sm_popup_pendings = new t_popup_pendings();
 
 			if (sm_popup_pendings)
 				sm_popup_pendings->add_item(t_popup_pending(p_msg, p_title, p_icon));
@@ -23,10 +23,9 @@ public:
 	{
 		if (!sm_popup_pendings) return;
 
-		for (t_size i = 0; i < sm_popup_pendings->get_count(); ++i)
+		for (t_popup_pendings::iterator iter = sm_popup_pendings->first(); iter.is_valid(); ++iter)
 		{
-			::popup_message::g_show(sm_popup_pendings->get_item_ref(i).msg, 
-				sm_popup_pendings->get_item_ref(i).title, sm_popup_pendings->get_item_ref(i).icon);
+			::popup_message::g_show(iter->msg, iter->title, iter->icon);
 		}
 
 		sm_popup_pendings->remove_all();
@@ -50,7 +49,9 @@ public:
 		popup_message::t_icon icon;
 	};
 
+	typedef pfc::chain_list_v2_t<t_popup_pending> t_popup_pendings;
+
 private:
 	static bool sm_popup_service_initialized;
-	static pfc::list_t<t_popup_pending> * sm_popup_pendings;
+	static t_popup_pendings * sm_popup_pendings;
 };

@@ -2383,7 +2383,10 @@ STDMETHODIMP FbTooltip::put_Text(BSTR text)
 
 StyleTextRender::StyleTextRender(bool pngmode) : m_pOutLineText(NULL), m_pngmode(pngmode)
 {
-	m_pOutLineText = new TextDesign::OutlineText;
+	if (!pngmode)
+		m_pOutLineText = new TextDesign::OutlineText;
+	else
+		m_pOutLineText = new TextDesign::PngOutlineText;
 }
 
 void StyleTextRender::FinalRelease()
@@ -2569,6 +2572,7 @@ STDMETHODIMP StyleTextRender::SetPngImage(IGdiBitmap * img)
 
 	if (!m_pngmode) return E_NOINTERFACE;
 	if (!img) return E_INVALIDARG;
+	if (!m_pOutLineText) return E_NOINTERFACE;
 
 	Gdiplus::Bitmap * pBitmap = NULL;
 	img->get__ptr((void**)&pBitmap);

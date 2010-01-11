@@ -1,11 +1,13 @@
 v1.2.2
 - CHG: Compiled with the new SDK for foobar2000 1.0+, drop support for older versions.
-- CHG: Test versions will be expired after 14 days.
+- CHG: Test versions will be expired after 14 days (no other restrictions, just a popup dialog to prompt user to update).
 - ADD: Png mode for IStyleTextRender (#gdi.CreateStyleTextRender(pngmode = false)) and IStyleTextRender.SetPngImage(), useful to create animation.
-- ADD: utils.GetAlbumArtV2() method.
+- ADD: utils.GetAlbumArtV2() method (Support foobar2000 1.0 search patterns).
 - FIX: Workaround for foo_menu_addons.
 - CHG: More detailed crash info now is appended to the console.
 - ADD: More samples (GetAlbumArtV2.txt, MainMenuManager All-In-One.txt).
+- FIX: Some tiny mermory leaks (in script error and GetAlbumArtAsync()).
+- FIX: fb.ShowPopupMessage() now works even during foobar2000 startup.
 
 v1.2.1
 - ADD: IMainMenuManager interface, use fb.CreateMainMenuManager() to create an instance (#Interfaces.txt).

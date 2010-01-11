@@ -5,16 +5,17 @@
 #define WINVER 0x0501
 #define _WIN32_IE 0x600
 
-#ifdef _DEBUG
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
+// Define this to disable VLD
+#define NO_VISUAL_LEAK_DETECTOR
+
+#if defined(_DEBUG) && !defined(NO_VISUAL_LEAK_DETECTOR)
+#include <vld.h>
 #endif
 
 #include <tchar.h>
 #include <Windows.h>
-#include <ActivScp.h>
 #include <GdiPlus.h>
+#include <ActivScp.h>
 #include <ShellApi.h>
 #include <CommCtrl.h>
 #include <ComDef.h>

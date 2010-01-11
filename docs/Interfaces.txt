@@ -82,7 +82,8 @@ Methods:
 	IGdiBitmap Image(path);
 	IGdiBitmap CreateImage(w, h); // Create an image. By default, this image is transparent
 	// [1.2.1] New:
-	IStyleTextRender CreateStyleTextRender();
+	// [1.2.2] Add: pngmode
+	IStyleTextRender CreateStyleTextRender(pngmode = false);
 }
 
 // [1.2.1] New interface
@@ -109,6 +110,9 @@ Methods:
 	//  work properly, because it's lack of width and height information.
 	boolean RenderStringPoint(g, str, font, x, y[, flags]);
 	boolean RenderStringRect(g, str, font, x, y, w, h[, flags]);
+	// [1.2.2]: New
+	// Only in pngmode, the image should be an transparent image created by gdi.CreateImage().
+	void SetPngImage(IGdiBitmap);
 }
 
 // [1.1.0] Updated:
@@ -361,10 +365,14 @@ Methods:
 	// return NULL if failed
 	// NOTE: filename in rawpath, use IFbMetadbHandle.RawPath to retrieve that value
 	IGdiBitmap GetAlbumArt(rawpath, art_id = 0, need_stub = true);
+	// [1.2.2] New;
+	// Use this instead of GetAlbumArt() to retrieve album art data (support fb2k 1.0 search patterns).
+	IGdiBitmap GetAlbumArtV2(rawpath, art_id = 0, need_stub = true);
 	// [1.1.7] New:
 	// Only read embedded album art
 	IGdiBitmap GetAlbumArtEmbedded(rawpath, art_id = 0);
 	// [1.1.10] New:
+	// [1.2.2] CHG: Support fb2k 1.0 album art search patterns.
 	// HINT: window_id can be retrieved by window.ID
 	// NOTE: This function returns immediately, album art will be sent to on_get_album_art_done() callback as soon as album art is found
 	unsigned int GetAlbumArtAsync(window_id, IFbMetadbHandle, art_id = 0, need_stub = true, only_embed = false);
