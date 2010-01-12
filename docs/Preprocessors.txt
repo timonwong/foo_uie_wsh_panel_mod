@@ -1,33 +1,31 @@
-All preprocessors is started with "==PREPROCESSOR==" and ended with "==/PREPROCESSOR==":
-  VBSCRIPT:
-    ' // ==PREPROCESSOR==
-    ' ...
-    ' // ==/PREPROCESSOR==
-
-  JScript:
-    // ==PREPROCESSOR==
-    // ...
-    // ==PREPROCESSOR==
-
-And be aware that all preprocessors (directives) are case *sensitive*.
-
-== Directives ==
-  Directives should be started with "@", and placed into a single comment.
-
-* @import "path"
-----------------
-  Usage:
-    VBScript:
-    ' // ==PREPROCESSOR==
-    ' // @import "path"
-    ' // ==/PREPROCESSOR==
+DESCRIPTION
+  All preprocessors is started with "==PREPROCESSOR==" and ended with "==/PREPROCESSOR==":
+    VBSCRIPT:
+      ' // ==PREPROCESSOR==
+      ' ...
+      ' // ==/PREPROCESSOR==
 
     JScript:
-    // ==PREPROCESSOR==
-    // @import "path"
-    // ==PREPROCESSOR==
+      // ==PREPROCESSOR==
+      // ...
+      // ==PREPROCESSOR==
 
-  Remarks:
-    You can place %fb2k_path%, %fb2k_component_path% and %fb2k_profile_path% into "path", they will be expanded while parsing.
-    Escape one double quote (") with two double quotes ("") if path includes double quote(") character. eg: @import "D:\""Something"""
+  And be aware that all preprocessors (directives) are case sensitive.
 
+DIRECTIVES
+  Directives should be started with "@", and placed into a single comment.
+
+  @import "path"
+    VBScript:
+      ' // ==PREPROCESSOR==
+      ' // @import "path"
+      ' // ==/PREPROCESSOR==
+
+    JScript:
+      // ==PREPROCESSOR==
+      // @import "path"
+      // ==PREPROCESSOR==
+
+    Remarks:
+      You can place %fb2k_path%, %fb2k_component_path% and %fb2k_profile_path% into "path", they will be expanded while parsing.
+      Escape one double quote (") with two double quotes ("") if path includes double quote(") character. eg: @import "D:\""Something"""

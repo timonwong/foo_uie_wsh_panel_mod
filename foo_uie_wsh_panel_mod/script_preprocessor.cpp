@@ -16,7 +16,7 @@ HRESULT script_preprocessor::process_import(IActiveScriptParse * parser)
 		if (wcscmp(v.directive.get_ptr(), L"import") == 0)
 		{
 			// Try parse
-			expand_path(v.value);
+			expand_var(v.value);
 
 			pfc::array_t<wchar_t> code;
 			bool is_file_read = helpers::read_file_wide(v.value.get_ptr(), code);
@@ -48,7 +48,8 @@ HRESULT script_preprocessor::process_import(IActiveScriptParse * parser)
 }
 
 bool script_preprocessor::preprocess(const wchar_t * script)
-{	
+{
+	// Haven't introduce a FSM, so yes, these codes below looks really UGLY.
 	int block_begin = 0;
 	int block_end = 0;
 
@@ -129,10 +130,9 @@ bool script_preprocessor::scan_value(const wchar_t *& p, const wchar_t * pend)
 {
 	const t_size delta = 32;
 
-	m_value_buffer.set_size(MAX_PATH + 1);
+	m_value_buffer.force_reset();
 
-	wchar_t * pvalue = m_value_buffer.get_ptr();
-
+	// Skip leading spaces
 	while (*p == ' ' || *p == '\t')
 		++p;
 
@@ -140,44 +140,29 @@ bool script_preprocessor::scan_value(const wchar_t *& p, const wchar_t * pend)
 	{
 		++p;
 
-		while (*p && (p < pend) && *p != '\r' && *p != '\n')
+		while (*p && (p < pend) && (*p != '\r') && (*p != '\n'))
 		{
 			const wchar_t * p2 = p + 1;
-
-			if (pvalue >= m_value_buffer.get_ptr() + m_value_buffer.get_size())
-			{
-				// Store the current pos
-				t_size pos = pvalue - m_value_buffer.get_ptr();
-
-				// Increase buffer size
-				m_value_buffer.increase_size(delta);
-				pvalue = m_value_buffer.get_ptr() + pos;
-			}
 
 			// Escape (")
 			if (*p == '"')
 			{
 				if (*p2 == '"')
 				{
-					*pvalue = *p2;
-					++pvalue;
-
+					m_value_buffer.append_single(*p2);
 					p = p2 + 1;
 					continue;
 				}
 				else
 				{
 					// Add trailing 'zero'
-					*pvalue = 0;
-
+					m_value_buffer.append_single(0);
 					return true;
 				}
 			}
 			else
 			{
-				*pvalue = *p;
-				++pvalue;
-
+				m_value_buffer.append_single(*p);
 				++p;
 			}
 		}
@@ -187,96 +172,99 @@ bool script_preprocessor::scan_value(const wchar_t *& p, const wchar_t * pend)
 	return false;
 }
 
-bool script_preprocessor::expand_path(pfc::array_t<wchar_t> & out)
+bool script_preprocessor::expand_var(pfc::array_t<wchar_t> & out)
 {
 	typedef pfc::string8_fast (*t_func)();
+
+	enum {
+		KStateInNormal,
+		KStateInPercent,
+	};
 
 	struct {
 		const wchar_t * which;
 		t_func func;
 	} expand_table[] = {
-		{ L"%fb2k_path%", helpers::get_fb2k_path },
-		{ L"%fb2k_component_path%", helpers::get_fb2k_component_path },
-		{ L"%fb2k_profile_path%", helpers::get_profile_path },
+		{ L"fb2k_path", helpers::get_fb2k_path },
+		{ L"fb2k_component_path", helpers::get_fb2k_component_path },
+		{ L"fb2k_profile_path", helpers::get_profile_path },
 	};
 
 	pfc::array_t<wchar_t> buffer;
-	buffer.set_size(MAX_PATH + 1);
 
-	wchar_t * p = out.get_ptr();
-	wchar_t * pend = p + wcslen(p);
-
-	wchar_t * pbuffer = buffer.get_ptr();
+	wchar_t * pscan = out.get_ptr();
+	const wchar_t * pready = NULL;
 	const t_size delta = 32;
 
-	while (p < pend)
+	int state = KStateInNormal;
+
+	while (*pscan)
 	{
-		if (*p != '%')
+		switch (state)
 		{
-			*pbuffer = *p;
-		}
-		else
-		{
-			bool found = false;
-
-			for (t_size i = 0; i < _countof(expand_table); ++i)
+		case KStateInNormal:
+			if (*pscan == '%')
 			{
-				t_size expand_which_size = wcslen(expand_table[i].which);
+				pready = pscan;
+				state = KStateInPercent;
+			}
+			else
+			{
+				buffer.append_single(*pscan);
+			}
+			break;
 
-				if (_wcsnicmp(p, expand_table[i].which, expand_which_size) == 0)
+		case KStateInPercent:
+			if (*pscan == '%')
+			{
+				unsigned count = pscan - pready - 1;
+
+				if (!count)
 				{
-					pfc::stringcvt::string_wide_from_utf8_fast expanded(expand_table[i].func());
-					t_size expanded_size = expanded.length();
+					buffer.append_single('%');
+				}
+				else
+				{
+					bool found = false;
 
-					if (pbuffer + expanded_size >= buffer.get_ptr() + buffer.get_size())
+					for (t_size i = 0; i < _countof(expand_table); ++i)
 					{
-						// Increase buffer size
-						do
-						{
-							// Store the current pos
-							t_size pos = pbuffer - buffer.get_ptr();
+						t_size expand_which_size = wcslen(expand_table[i].which);
 
-							buffer.increase_size(delta);
-							pbuffer = buffer.get_ptr() + pos;
-						} while (pbuffer >= buffer.get_ptr() + expanded_size);
+						if (wcsncmp(pready + 1, expand_table[i].which, max(count, expand_which_size)) == 0)
+						{
+							pfc::stringcvt::string_wide_from_utf8_fast expanded(expand_table[i].func());
+							t_size expanded_count = expanded.length();
+
+							buffer.append_fromptr(expanded.get_ptr(), expanded_count);
+							found = true;
+							break;
+						}
 					}
 
-					pfc::__unsafe__memcpy_t(pbuffer, expanded.get_ptr(), expanded_size);
-					pbuffer += expanded_size - 1;
-					p += expand_which_size - 1;
-					found = true;
-					break;
+					if (!found)
+					{
+						buffer.append_fromptr(pready, count);
+					}
 				}
-			}
 
-			if (!found)
-			{
-				// No luck
-				*pbuffer = *p;
+				state = KStateInNormal;
 			}
+			break;
 		}
 
-		++pbuffer;
-		++p;
+		++pscan;
+	}
 
-		// Increase buffer size
-		if (!buffer.is_owned(pbuffer))
-		{
-			do
-			{
-				// Store the current pos
-				t_size pos = pbuffer - buffer.get_ptr();
-
-				buffer.increase_size(delta);
-				pbuffer = buffer.get_ptr() + pos;
-			} while (pbuffer >= buffer.get_ptr() + buffer.get_size());
-		}
+	if (state == KStateInPercent)
+	{
+		buffer.append_fromptr(pscan, wcslen(pscan));
 	}
 
 	// trailing 'zero'
-	*pbuffer = 0;
+	buffer.append_single(0);
 	// Copy
-	out.set_data_fromptr(buffer.get_ptr(), pbuffer - buffer.get_ptr() + 1);
+	out = buffer;
 	return true;
 }
 

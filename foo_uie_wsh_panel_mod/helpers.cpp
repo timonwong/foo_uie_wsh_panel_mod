@@ -618,9 +618,9 @@ namespace helpers
 	{
 		if (p_multivalue_field)
 		{
-			pfc::string8_fast_aggressive multivalue_field_upper;
 			// to upper first
-			stringToUpperAppend(multivalue_field_upper, p_multivalue_field, pfc_infinite);
+			string_upper multivalue_field_upper(p_multivalue_field);
+
 			pfc::splitStringSimple_toList(m_multivalue_fields, ";", multivalue_field_upper);
 		}
 	}
@@ -638,10 +638,7 @@ namespace helpers
 
 				if (!iter->m_value.is_empty())
 				{
-					pfc::string8_fast_aggressive key_upper;
-					stringToUpperAppend(key_upper, iter->m_key, pfc_infinite);
-
-					if (m_multivalue_fields.find_item(key_upper))
+					if (m_multivalue_fields.find_item(string_upper(iter->m_key)))
 					{
 						// Yes, a multivalue field
 						pfc::string_list_impl valuelist;

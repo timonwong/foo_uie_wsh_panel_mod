@@ -185,6 +185,7 @@ Methods:
 	void AppendMenuItem(flags, item_id, text);
 	void AppendMenuSeparator();
 	void EnableMenuItem(item_id, enable);
+	// [1.2.2] Changed: check is now a boolean value.
 	void CheckMenuItem(item_id, check);
 	void CheckMenuRadioItem(first, last, check);
 	int TrackPopupMenu(x, y);

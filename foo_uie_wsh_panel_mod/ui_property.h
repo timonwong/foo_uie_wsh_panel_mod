@@ -62,27 +62,3 @@ public:
 	LRESULT OnImportBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl);
 	LRESULT OnExportBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl);
 };
-
-
-class menu_node_properties : public ui_extension::menu_node_command_t
-{
-private:
-	wsh_panel_window * p_this;
-
-public:
-	menu_node_properties(wsh_panel_window * wnd) : p_this(wnd) {};
-
-	bool get_display_data(pfc::string_base & p_out,unsigned & p_displayflags) const
-	{
-		p_out = "Properties";
-		p_displayflags= 0;
-		return true;
-	}
-
-	bool get_description(pfc::string_base & p_out) const
-	{
-		return false;
-	}
-
-	void execute();
-};

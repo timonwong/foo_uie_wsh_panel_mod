@@ -187,8 +187,3 @@ LRESULT CDialogProperty::OnExportBnClicked(WORD wNotifyCode, WORD wID, HWND hWnd
 
 	return 0;
 }
-
-void menu_node_properties::execute()
-{
-	p_this->show_property_popup(p_this->get_wnd());
-}

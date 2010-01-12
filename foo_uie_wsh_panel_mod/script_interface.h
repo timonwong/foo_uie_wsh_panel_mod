@@ -251,7 +251,7 @@ __interface IMenuObj: IDisposable
 	STDMETHOD(AppendMenuItem)(UINT flags, UINT item_id, BSTR text);
 	STDMETHOD(AppendMenuSeparator)();
 	STDMETHOD(EnableMenuItem)(UINT item_id, UINT enable);
-	STDMETHOD(CheckMenuItem)(UINT item_id, UINT check);
+	STDMETHOD(CheckMenuItem)(UINT item_id, VARIANT_BOOL check);
 	STDMETHOD(CheckMenuRadioItem)(UINT first, UINT last, UINT check);
 	STDMETHOD(TrackPopupMenu)(int x, int y, [out,retval] UINT * item_id);
 };

@@ -16,7 +16,15 @@ namespace
 		"Windows Scripting Host Panel\n"
 		"Modded by T.P. Wang\n\n"
 		"Build: "  __TIME__ ", " __DATE__ "\n"
-		"Columns UI API Version: " UI_EXTENSION_VERSION "\n"
+		"Columns UI API Version: " UI_EXTENSION_VERSION "\n\n\n\n"
+		"Scintilla and SciTE\n"
+		"Copyright 1998-2003 by Neil Hodgson <neilh@scintilla.org>\n\n\n"
+		"Text Designer Outline Text Library\n"
+		"Copyright (c) 2009 Wong Shao Voon\n\n\n"
+		"box blur filter\n"
+		"Copyright 2006 Jerry Huxtable\n\n"
+		"CPropertyList - A Property List control\n"
+		"Copyright (c) 2001-2003 Bjarke Viksoe\n\n"
 	);
 
 	// Is there anything not correctly loaded?

@@ -1750,13 +1750,16 @@ STDMETHODIMP MenuObj::EnableMenuItem(UINT item_id, UINT enable)
 	return S_OK;
 }
 
-STDMETHODIMP MenuObj::CheckMenuItem(UINT item_id, UINT check)
+STDMETHODIMP MenuObj::CheckMenuItem(UINT item_id, VARIANT_BOOL check)
 {
 	TRACK_FUNCTION();
 
 	if (!m_hMenu) return E_NOINTERFACE;
 
-	::CheckMenuItem(m_hMenu, item_id, check);
+	UINT ucheck = 0;
+	if (check) ucheck = MF_CHECKED;
+
+	::CheckMenuItem(m_hMenu, item_id, ucheck);
 	return S_OK;
 }
 

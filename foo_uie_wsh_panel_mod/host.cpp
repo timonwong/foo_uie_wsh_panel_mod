@@ -13,22 +13,80 @@
 
 namespace
 {
-	// Panel
-	static ui_extension::window_factory<wsh_panel_window> g_uie_win;
+#pragma region my ugly implemetation
+	template <class TImpl>
+	class my_uie_window_impl : public TImpl
+	{
+	private:
+		HWND create_or_transfer_window(HWND parent, const uie::window_host_ptr & host, const ui_helpers::window_position_t & p_position)
+		{
+			if (TImpl::get_wnd())
+			{
+				ShowWindow(TImpl::get_wnd(), SW_HIDE);
+				SetParent(TImpl::get_wnd(), parent);
+				TImpl::get_host()->relinquish_ownership(TImpl::get_wnd());
+				TImpl::get_host() = host;
+
+				SetWindowPos(TImpl::get_wnd(), NULL, p_position.x, p_position.y, p_position.cx, p_position.cy, SWP_NOZORDER);
+			}
+			else
+			{
+				TImpl::get_host() = host; //store interface to host
+				create(parent, get_create_param(), p_position);
+			}
+
+			return TImpl::get_wnd();
+		}
+
+		virtual void destroy_window() {destroy(); TImpl::get_host().release();}
+
+	public:
+		virtual bool is_available(const uie::window_host_ptr & p) const {return true;}
+		const uie::window_host_ptr & get_host() const {return TImpl::get_host();}
+		virtual HWND get_wnd()const{return TImpl::get_wnd();}
+
+		LPVOID get_create_param() {return this;}
+	};
+
+	template<typename TImpl>
+	class my_ui_element_impl : public ui_element 
+	{
+	public:
+		GUID get_guid() { return TImpl::g_get_guid();}
+		GUID get_subclass() { return TImpl::g_get_subclass();}
+		void get_name(pfc::string_base & out) { TImpl::g_get_name(out); }
+
+		ui_element_instance::ptr instantiate(HWND parent,ui_element_config::ptr cfg,ui_element_instance_callback::ptr callback) 
+		{
+			PFC_ASSERT( cfg->get_guid() == get_guid() );
+			service_nnptr_t<ui_element_instance_impl_helper> item = new service_impl_t<ui_element_instance_impl_helper>(cfg, callback);
+			item->initialize_window(parent);
+			return item;
+		}
+
+		ui_element_config::ptr get_default_configuration() { return TImpl::g_get_default_configuration(); }
+		ui_element_children_enumerator_ptr enumerate_children(ui_element_config::ptr cfg) {return NULL;}
+		bool get_description(pfc::string_base & out) {out = TImpl::g_get_description(); return true;}
+
+	private:
+		class ui_element_instance_impl_helper : public TImpl 
+		{
+		public:
+			ui_element_instance_impl_helper(ui_element_config::ptr cfg, ui_element_instance_callback::ptr callback)
+				: TImpl(cfg, callback) {}
+		};
+	};
+#pragma endregion
+
+	// CUI panel instance
+	static uie::window_factory<my_uie_window_impl<wsh_panel_window_cui> > g_wsh_panel_wndow_cui;
+	// DUI panel instance
+	static service_factory_t<my_ui_element_impl<wsh_panel_window_dui> > g_wsh_panel_wndow_dui;
 }
 
 
-HostComm::HostComm() 
-: m_hwnd(NULL)
-, m_hdc(NULL)
-, m_width(0)
-, m_height(0)
-, m_gr_bmp(NULL)
-, m_bk_updating(false)
-, m_paint_pending(false)
-, m_accuracy(0)
-, m_sstate(SCRIPTSTATE_UNINITIALIZED)
-, m_query_continue(false)
+HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_bmp(NULL), m_bk_updating(false), 
+	m_paint_pending(false), m_accuracy(0), m_sstate(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false)
 {
 	m_max_size.x = INT_MAX;
 	m_max_size.y = INT_MAX;
@@ -294,7 +352,7 @@ STDMETHODIMP FbWindow::put_MaxWidth(UINT width)
 	TRACK_FUNCTION();
 
 	m_host->GetMaxSize().x = width;
-	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, ui_extension::size_limit_maximum_width);
+	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, uie::size_limit_maximum_width);
 	return S_OK;
 }
 
@@ -313,7 +371,7 @@ STDMETHODIMP FbWindow::put_MaxHeight(UINT height)
 	TRACK_FUNCTION();
 
 	m_host->GetMaxSize().y = height;
-	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, ui_extension::size_limit_maximum_height);
+	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, uie::size_limit_maximum_height);
 	return S_OK;
 }
 
@@ -332,7 +390,7 @@ STDMETHODIMP FbWindow::put_MinWidth(UINT width)
 	TRACK_FUNCTION();
 
 	m_host->GetMinSize().x = width;
-	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, ui_extension::size_limit_minimum_width);
+	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, uie::size_limit_minimum_width);
 	return S_OK;
 }
 
@@ -351,7 +409,7 @@ STDMETHODIMP FbWindow::put_MinHeight(UINT height)
 	TRACK_FUNCTION();
 
 	m_host->GetMinSize().y = height;
-	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, ui_extension::size_limit_minimum_height);
+	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, uie::size_limit_minimum_height);
 	return S_OK;
 }
 
@@ -684,10 +742,10 @@ void wsh_panel_window::on_update_script(const char* name, const char* code)
 	get_script_name() = name;
 	get_script_code() = code;
 	script_term();
-	script_init();
+	script_init_post();
 }
 
-HRESULT wsh_panel_window::_script_init()
+HRESULT wsh_panel_window::script_init_pre()
 {
 	TRACK_FUNCTION();
 
@@ -728,7 +786,7 @@ HRESULT wsh_panel_window::_script_init()
 	return hr;
 }
 
-bool wsh_panel_window::script_init()
+bool wsh_panel_window::script_init_post()
 {
 	TRACK_FUNCTION();
 
@@ -751,7 +809,7 @@ bool wsh_panel_window::script_init()
 	m_max_size.y = INT_MAX;
 	m_min_size.x = 0;
 	m_min_size.x = 0;
-	PostMessage(m_hwnd, UWM_SIZELIMITECHANGED, 0, ui_extension::size_limit_all);
+	PostMessage(m_hwnd, UWM_SIZELIMITECHANGED, 0, uie::size_limit_all);
 
 	m_watched_handle.release();
 
@@ -762,7 +820,7 @@ bool wsh_panel_window::script_init()
 		return false;
 	}
 
-	HRESULT hr = _script_init();
+	HRESULT hr = script_init_pre();
 
 	if (FAILED(hr))
 	{
@@ -905,30 +963,6 @@ void wsh_panel_window::delete_context()
 	}
 }
 
-const GUID& wsh_panel_window::get_extension_guid() const
-{
-	// {75A7B642-786C-4f24-9B52-17D737DEA09A}
-	static const GUID ext_guid =
-	{ 0x75a7b642, 0x786c, 0x4f24, { 0x9b, 0x52, 0x17, 0xd7, 0x37, 0xde, 0xa0, 0x9a } };
-
-	return ext_guid;
-}
-
-void wsh_panel_window::get_name(pfc::string_base& out) const
-{
-	out = "WSH Panel Mod";
-}
-
-void wsh_panel_window::get_category(pfc::string_base& out) const
-{
-	out = "Panels";
-}
-
-unsigned wsh_panel_window::get_type() const
-{
-	return ui_extension::type_toolbar | ui_extension::type_panel;
-}
-
 ui_helpers::container_window::class_data & wsh_panel_window::get_class_data() const
 {
 	static ui_helpers::container_window::class_data my_class_data =
@@ -948,35 +982,22 @@ ui_helpers::container_window::class_data & wsh_panel_window::get_class_data() co
 	return my_class_data;
 }
 
-void wsh_panel_window::set_config(stream_reader * reader, t_size size, abort_callback & abort)
+bool wsh_panel_window::show_configure_popup(HWND parent)
 {
-	load_config(reader, size, abort);
-}
+	modal_dialog_scope scope;
+	if (!scope.can_create()) return false;
+	scope.initialize(parent);
 
-void wsh_panel_window::get_config(stream_writer * writer, abort_callback & abort) const
-{
-	save_config(writer, abort);
-}
-
-void wsh_panel_window::get_menu_items(ui_extension::menu_hook_t& hook)
-{
-	hook.add_node(new menu_node_properties(this));
-	hook.add_node(new ui_extension::menu_node_configure(this));
-}
-
-bool wsh_panel_window::have_config_popup() const
-{
-	return true;
-}
-
-bool wsh_panel_window::show_config_popup(HWND parent)
-{
 	CDialogConf dlg(this);
 	return (dlg.DoModal(parent) == IDOK);
 }
 
 bool wsh_panel_window::show_property_popup(HWND parent)
 {
+	modal_dialog_scope scope;
+	if (!scope.can_create()) return false;
+	scope.initialize(parent);
+
 	CDialogProperty dlg(this);
 	return (dlg.DoModal(parent) == IDOK);
 }
@@ -1001,7 +1022,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			panel_notifier_manager::instance().add_window(m_hwnd);
 
-			script_init();
+			script_init_post();
 		}
 		return 0;
 
@@ -1020,7 +1041,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case WM_DISPLAYCHANGE:
 		script_term();
-		script_init();
+		script_init_post();
 		return 0;
 
 	case WM_ERASEBKGND:
@@ -1159,7 +1180,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 						if (SUCCEEDED(VariantChangeType(&var_suppress_menu, &var_result, 0, VT_BOOL)))
 						{
-							if ((var_suppress_menu.boolVal != FALSE))
+							if ((var_suppress_menu.boolVal != FALSE) && !m_is_edit_mode)
 								return 0;
 						}
 					}
@@ -1199,9 +1220,16 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		break;
 
+	case WM_CONTEXTMENU:
+		if (!m_is_edit_mode)
+		{
+			on_context_menu(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+			return 1;
+		}
+
 	case WM_MOUSEMOVE:
 		{
-			if (!m_ismousetracked)
+			if (!m_is_mouse_tracked)
 			{
 				TRACKMOUSEEVENT tme;
 
@@ -1209,7 +1237,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				tme.hwndTrack = m_hwnd;
 				tme.dwFlags = TME_LEAVE;
 				TrackMouseEvent(&tme);
-				m_ismousetracked = true;
+				m_is_mouse_tracked = true;
 
 				// Restore default cursor
 				SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
@@ -1227,7 +1255,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case WM_MOUSELEAVE:
 		{
-			m_ismousetracked = false;
+			m_is_mouse_tracked = false;
 
 			script_invoke_v(L"on_mouse_leave");
 			// Restore default cursor
@@ -1326,7 +1354,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case UWM_SHOWCONFIGURE:
-		show_config_popup(m_hwnd);
+		show_configure_popup(m_hwnd);
 		return 0;
 
 	case UWM_SHOWPROPERTIES:
@@ -1342,10 +1370,6 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			GUID * guid_ptr = reinterpret_cast<GUID *>(lp);
 			memcpy(guid_ptr, &get_config_guid(), sizeof(GUID));
 		}
-		return 0;
-
-	case UWM_SIZELIMITECHANGED:
-		get_host()->on_size_limit_change(m_hwnd, lp);
 		return 0;
 
 	case CALLBACK_UWM_PLAYLIST_STOP_AFTER_CURRENT:
@@ -1517,6 +1541,30 @@ void wsh_panel_window::on_timer(UINT timer_id)
 	args[0].vt = VT_UI4;
 	args[0].uintVal = timer_id;
 	script_invoke_v(L"on_timer", 1, args);
+}
+
+void wsh_panel_window::on_context_menu(int x, int y)
+{
+	HMENU hMenu = CreatePopupMenu();
+
+	AppendMenu(hMenu, MF_STRING, 1, _T("&Properties"));
+	AppendMenu(hMenu, MF_STRING, 2, _T("&Configure..."));
+
+	int ret = TrackPopupMenu(hMenu, TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD, 
+		x, y, 0, m_hwnd, 0);
+
+	switch (ret)
+	{
+	case 1:
+		show_property_popup(m_hwnd);
+		break;
+
+	case 2:
+		show_configure_popup(m_hwnd);			
+		break;
+	}
+
+	DestroyMenu(hMenu);
 }
 
 void wsh_panel_window::on_item_played(WPARAM wp)
@@ -1746,4 +1794,147 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 	script_invoke_v(L"on_metadb_changed", 2, args);
 
 	handle->Release();
+}
+
+const GUID& wsh_panel_window_cui::get_extension_guid() const
+{
+	// {75A7B642-786C-4f24-9B52-17D737DEA09A}
+	static const GUID ext_guid =
+	{ 0x75a7b642, 0x786c, 0x4f24, { 0x9b, 0x52, 0x17, 0xd7, 0x37, 0xde, 0xa0, 0x9a } };
+
+	return ext_guid;
+}
+
+void wsh_panel_window_cui::get_name(pfc::string_base& out) const
+{
+	out = "WSH Panel Mod";
+}
+
+void wsh_panel_window_cui::get_category(pfc::string_base& out) const
+{
+	out = "Panels";
+}
+
+unsigned wsh_panel_window_cui::get_type() const
+{
+	return uie::type_toolbar | uie::type_panel;
+}
+
+void wsh_panel_window_cui::set_config(stream_reader * reader, t_size size, abort_callback & abort)
+{
+	load_config(reader, size, abort);
+}
+
+void wsh_panel_window_cui::get_config(stream_writer * writer, abort_callback & abort) const
+{
+	save_config(writer, abort);
+}
+
+bool wsh_panel_window_cui::have_config_popup() const
+{
+	return true;
+}
+
+bool wsh_panel_window_cui::show_config_popup(HWND parent)
+{
+	return show_configure_popup(parent);
+}
+
+LRESULT wsh_panel_window_cui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+	switch (msg)
+	{
+	case UWM_SIZELIMITECHANGED:
+		get_host()->on_size_limit_change(m_hwnd, lp);
+		return 0;
+	}
+
+	return t_parent::on_message(hwnd, msg, wp, lp);
+}
+
+HWND wsh_panel_window_dui::get_wnd()
+{
+	return t_parent::get_wnd();
+}
+
+void wsh_panel_window_dui::set_configuration(ui_element_config::ptr data)
+{
+	ui_element_config_parser parser(data);
+	abort_callback_dummy abort;
+
+	load_config(&parser.m_stream, parser.get_remaining(), abort);
+}
+
+ui_element_config::ptr wsh_panel_window_dui::g_get_default_configuration()
+{
+	ui_element_config_builder builder;
+	abort_callback_dummy abort;
+	wsh_panel_vars vars;
+
+	vars.reset_config();
+	vars.save_config(&builder.m_stream, abort);
+	return builder.finish(g_get_guid());
+}
+
+ui_element_config::ptr wsh_panel_window_dui::get_configuration()
+{
+	ui_element_config_builder builder;
+	abort_callback_dummy abort;
+
+	save_config(&builder.m_stream, abort);
+	return builder.finish(g_get_guid());
+}
+
+void wsh_panel_window_dui::g_get_name(pfc::string_base & out)
+{
+	out = "WSH Panel Mod";
+}
+
+pfc::string8 wsh_panel_window_dui::g_get_description()
+{
+	return "Customizable panel with VBScript and JScript scripting support.";
+}
+
+GUID wsh_panel_window_dui::g_get_guid()
+{
+	// {A290D430-E431-45c5-BF76-EF1130EF1CF5}
+	static const GUID guid = 
+	{ 0xa290d430, 0xe431, 0x45c5, { 0xbf, 0x76, 0xef, 0x11, 0x30, 0xef, 0x1c, 0xf5 } };
+
+	return guid;
+}
+
+GUID wsh_panel_window_dui::get_guid()
+{
+	return g_get_guid();
+}
+
+GUID wsh_panel_window_dui::g_get_subclass()
+{
+	return ui_element_subclass_utility;
+}
+
+GUID wsh_panel_window_dui::get_subclass()
+{
+	return g_get_subclass();
+}
+
+void wsh_panel_window_dui::notify(const GUID & p_what, t_size p_param1, const void * p_param2, t_size p_param2size)
+{
+	if (p_what == ui_element_notify_edit_mode_changed)
+	{
+		m_is_edit_mode = m_callback->is_edit_mode_enabled();
+	}
+}
+
+LRESULT wsh_panel_window_dui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+	switch (msg)
+	{
+	case UWM_SIZELIMITECHANGED:
+		m_callback->on_min_max_info_change();
+		return 0;
+	}
+
+	return t_parent::on_message(hwnd, msg, wp, lp);
 }

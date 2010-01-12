@@ -44,6 +44,7 @@ public:
 private:
 	t_hwndlist m_hwnds;
 	static panel_notifier_manager sm_instance;
+
 	PFC_CLASS_NOT_COPYABLE_EX(panel_notifier_manager)
 };
 
