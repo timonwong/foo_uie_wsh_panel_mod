@@ -236,7 +236,7 @@ protected:
 	void on_changed_sorted(WPARAM wp);
 };
 
-class wsh_panel_window_cui : public wsh_panel_window
+class wsh_panel_window_cui : public wsh_panel_window, public uie::window
 {
 public:
 	// ui_extension
@@ -254,6 +254,11 @@ protected:
 	uie::window_host_ptr & get_host()
 	{
 		return m_host;
+	}
+
+	HWND get_wnd() const
+	{
+		return t_parent::get_wnd();
 	}
 
 private:

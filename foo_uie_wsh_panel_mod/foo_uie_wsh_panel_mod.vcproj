@@ -89,7 +89,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(TargetPath) &quot;D:\foobar2000\components\&quot;"
+				CommandLine="copy $(TargetPath) &quot;D:\Program Files\foobar2000\components\&quot;"
 			/>
 		</Configuration>
 		<Configuration
