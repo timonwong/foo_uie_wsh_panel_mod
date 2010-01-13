@@ -14,40 +14,6 @@
 namespace
 {
 #pragma region my ugly implemetation
-	template <class TImpl>
-	class my_uie_window_impl : public TImpl
-	{
-	private:
-		HWND create_or_transfer_window(HWND parent, const uie::window_host_ptr & host, const ui_helpers::window_position_t & p_position)
-		{
-			if (TImpl::get_wnd())
-			{
-				ShowWindow(TImpl::get_wnd(), SW_HIDE);
-				SetParent(TImpl::get_wnd(), parent);
-				TImpl::get_host()->relinquish_ownership(TImpl::get_wnd());
-				TImpl::get_host() = host;
-
-				SetWindowPos(TImpl::get_wnd(), NULL, p_position.x, p_position.y, p_position.cx, p_position.cy, SWP_NOZORDER);
-			}
-			else
-			{
-				TImpl::get_host() = host; //store interface to host
-				create(parent, get_create_param(), p_position);
-			}
-
-			return TImpl::get_wnd();
-		}
-
-		virtual void destroy_window() {destroy(); TImpl::get_host().release();}
-
-	public:
-		virtual bool is_available(const uie::window_host_ptr & p) const {return true;}
-		const uie::window_host_ptr & get_host() const {return TImpl::get_host();}
-		virtual HWND get_wnd()const{return TImpl::get_wnd();}
-
-		LPVOID get_create_param() {return this;}
-	};
-
 	template<typename TImpl>
 	class my_ui_element_impl : public ui_element 
 	{
@@ -79,14 +45,14 @@ namespace
 #pragma endregion
 
 	// CUI panel instance
-	static uie::window_factory<my_uie_window_impl<wsh_panel_window_cui> > g_wsh_panel_wndow_cui;
+	static uie::window_factory<wsh_panel_window_cui> g_wsh_panel_wndow_cui;
 	// DUI panel instance
 	static service_factory_t<my_ui_element_impl<wsh_panel_window_dui> > g_wsh_panel_wndow_dui;
 }
 
 
 HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_bmp(NULL), m_bk_updating(false), 
-	m_paint_pending(false), m_accuracy(0), m_sstate(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false)
+	m_paint_pending(false), m_accuracy(0), m_sstate(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false), m_instance_type(KInstanceTypeCUI)
 {
 	m_max_size.x = INT_MAX;
 	m_max_size.y = INT_MAX;
@@ -125,6 +91,11 @@ HWND HostComm::GetHWND()
 UINT HostComm::GetWidth()
 {
 	return m_width;
+}
+
+UINT HostComm::GetInstanceType()
+{
+	return m_instance_type;
 }
 
 UINT HostComm::GetHeight()
@@ -324,6 +295,14 @@ STDMETHODIMP FbWindow::get_Width(UINT* p)
 	if (!p) return E_POINTER;
 
 	*p = m_host->GetWidth();
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::get_InstanceType(UINT* p)
+{
+	TRACK_FUNCTION();
+
+	*p = m_host->GetInstanceType();
 	return S_OK;
 }
 
@@ -590,6 +569,83 @@ STDMETHODIMP FbWindow::SetCursor(UINT id)
 	return S_OK;
 }
 
+STDMETHODIMP FbWindow::GetColorCUI(UINT type, DWORD * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+	if (m_host->GetInstanceType() != HostComm::KInstanceTypeCUI) return E_NOTIMPL;
+
+	*p = m_host->GetColorCUI(type);
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::GetFontCUI(UINT type, IGdiFont ** pp)
+{
+	TRACK_FUNCTION();
+
+	if (!pp) return E_POINTER;
+	if (m_host->GetInstanceType() != HostComm::KInstanceTypeCUI) return E_NOTIMPL;
+
+	HFONT hFont = m_host->GetFontDUI(type);
+
+	*pp = NULL;
+
+	if (hFont)
+	{
+		Gdiplus::Font * font = new Gdiplus::Font(NULL, hFont);
+
+		if (!helpers::check_gdiplus_object(font))
+		{
+			if (font) delete font;
+			(*pp) = NULL;
+			return S_OK;
+		}
+
+		*pp = new com_object_impl_t<GdiFont>(font, hFont);
+	}
+
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::GetColorDUI(UINT type, DWORD * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+	if (m_host->GetInstanceType() != HostComm::KInstanceTypeDUI) return E_NOTIMPL;
+
+	*p = m_host->GetColorDUI(type);
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::GetFontDUI(UINT type, IGdiFont ** pp)
+{
+	TRACK_FUNCTION();
+
+	if (!pp) return E_POINTER;
+	if (m_host->GetInstanceType() != HostComm::KInstanceTypeDUI) return E_NOTIMPL;
+
+	HFONT hFont = m_host->GetFontDUI(type);
+	*pp = NULL;
+
+	if (hFont)
+	{
+		Gdiplus::Font * font = new Gdiplus::Font(NULL, hFont);
+
+		if (!helpers::check_gdiplus_object(font))
+		{
+			if (font) delete font;
+			(*pp) = NULL;
+			return S_OK;
+		}
+
+		*pp = new com_object_impl_t<GdiFont>(font, hFont);
+	}
+
+	return S_OK;
+}
+
 STDMETHODIMP ScriptSite::GetLCID(LCID* plcid)
 {
 	return E_NOTIMPL;
@@ -737,7 +793,7 @@ STDMETHODIMP ScriptSite::QueryContinue()
 	return S_OK;
 }
 
-void wsh_panel_window::on_update_script(const char* name, const char* code)
+void wsh_panel_window::update_script(const char* name, const char* code)
 {
 	get_script_name() = name;
 	get_script_code() = code;
@@ -889,7 +945,7 @@ void wsh_panel_window::script_term()
 	}
 }
 
-HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, UINT argc /*= 0*/, VARIANTARG * argv /*= NULL*/, VARIANT * ret /*= NULL*/)
+HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, VARIANTARG * argv /*= NULL*/, UINT argc /*= 0*/, VARIANT * ret /*= NULL*/)
 {
 	if (GetScriptState() != SCRIPTSTATE_CONNECTED) return E_NOINTERFACE;
 	if (!m_script_root || !m_script_engine) return E_NOINTERFACE;
@@ -1131,15 +1187,16 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			switch (msg)
 			{
 			case WM_LBUTTONDOWN:
-				script_invoke_v(L"on_mouse_lbtn_down", 3, args);
+				script_invoke_v(L"on_mouse_lbtn_down", args, _countof(args));
 				break;
 
 			case WM_MBUTTONDOWN:
-				script_invoke_v(L"on_mouse_mbtn_down", 3, args);
+				script_invoke_v(L"on_mouse_mbtn_down", args, _countof(args));
 				break;
 
 			case WM_RBUTTONDOWN:
-				script_invoke_v(L"on_mouse_rbtn_down", 3, args);
+				if (m_is_edit_mode) break;
+				script_invoke_v(L"on_mouse_rbtn_down", args, _countof(args));
 				break;
 			}
 		}
@@ -1163,24 +1220,25 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			switch (msg)
 			{
 			case WM_LBUTTONUP:
-				script_invoke_v(L"on_mouse_lbtn_up", 3, args);
+				script_invoke_v(L"on_mouse_lbtn_up", args, _countof(args));
 				break;
 
 			case WM_MBUTTONUP:
-				script_invoke_v(L"on_mouse_mbtn_up", 3, args);
+				script_invoke_v(L"on_mouse_mbtn_up", args, _countof(args));
 				break;
 
 			case WM_RBUTTONUP:
 				{
+					if (m_is_edit_mode) break;
 					_variant_t var_result;
 
-					if (SUCCEEDED(script_invoke_v(L"on_mouse_rbtn_up", 3, args, &var_result)))
+					if (SUCCEEDED(script_invoke_v(L"on_mouse_rbtn_up", args, _countof(args), &var_result)))
 					{
 						_variant_t var_suppress_menu;
 
 						if (SUCCEEDED(VariantChangeType(&var_suppress_menu, &var_result, 0, VT_BOOL)))
 						{
-							if ((var_suppress_menu.boolVal != FALSE) && !m_is_edit_mode)
+							if ((var_suppress_menu.boolVal != FALSE))
 								return 0;
 						}
 					}
@@ -1206,15 +1264,16 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			switch (msg)
 			{
 			case WM_LBUTTONDBLCLK:
-				script_invoke_v(L"on_mouse_lbtn_dblclk", 3, args);
+				script_invoke_v(L"on_mouse_lbtn_dblclk", args, _countof(args));
 				break;
 
 			case WM_MBUTTONDBLCLK:
-				script_invoke_v(L"on_mouse_mbtn_dblclk", 3, args);
+				script_invoke_v(L"on_mouse_mbtn_dblclk", args, _countof(args));
 				break;
 
-			case WM_RBUTTONDOWN:
-				script_invoke_v(L"on_mouse_rbtn_dblclk", 3, args);
+			case WM_RBUTTONDBLCLK:
+				if (m_is_edit_mode) break;
+				script_invoke_v(L"on_mouse_rbtn_dblclk", args, _countof(args));
 				break;
 			}
 		}
@@ -1226,6 +1285,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			on_context_menu(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
 			return 1;
 		}
+		break;
 
 	case WM_MOUSEMOVE:
 		{
@@ -1249,7 +1309,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			args[0].lVal = GET_Y_LPARAM(lp);
 			args[1].vt = VT_I4;
 			args[1].lVal = GET_X_LPARAM(lp);	
-			script_invoke_v(L"on_mouse_move", 2, args);
+			script_invoke_v(L"on_mouse_move", args, _countof(args));
 		}
 		break;
 
@@ -1269,7 +1329,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			args[0].vt = VT_I4;
 			args[0].lVal = GET_WHEEL_DELTA_WPARAM(wp) / WHEEL_DELTA;
-			script_invoke_v(L"on_mouse_wheel", 1, args);
+			script_invoke_v(L"on_mouse_wheel", args, _countof(args));
 		}
 		break;
 
@@ -1286,7 +1346,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 				args[0].vt = VT_UI4;
 				args[0].ulVal = (ULONG) wp;
-				script_invoke_v(L"on_key_down", 1, args);
+				script_invoke_v(L"on_key_down", args, _countof(args));
 			}
 		}
 		break;
@@ -1297,7 +1357,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			args[0].vt = VT_BOOL;
 			args[0].boolVal = VARIANT_TRUE;
-			script_invoke_v(L"on_focus", 1, args);
+			script_invoke_v(L"on_focus", args, _countof(args));
 		}
 		break;
 
@@ -1307,7 +1367,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			args[0].vt = VT_BOOL;
 			args[0].boolVal = VARIANT_FALSE;
-			script_invoke_v(L"on_focus", 1, args);
+			script_invoke_v(L"on_focus", args, _countof(args));
 		}
 		break;
 
@@ -1390,6 +1450,14 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case CALLBACK_UWM_GETALBUMARTASYNCDONE:
 		on_get_album_art_done(lp);
+		return 0;
+
+	case CALLBACK_UWM_FONT_CHANGED:
+		on_font_changed();
+		return 0;
+
+	case CALLBACK_UWM_COLORS_CHANGED:
+		on_colors_changed();
 		return 0;
 
 	case CALLBACK_UWM_ON_ITEM_PLAYED:
@@ -1511,7 +1579,7 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
 
 			args[0].vt = VT_DISPATCH;
 			args[0].pdispVal = m_gr_wrap;
-			script_invoke_v(L"on_paint", 1, args);
+			script_invoke_v(L"on_paint", args, _countof(args));
 		}
 
 		m_gr_wrap->put__ptr(NULL);
@@ -1540,7 +1608,7 @@ void wsh_panel_window::on_timer(UINT timer_id)
 
 	args[0].vt = VT_UI4;
 	args[0].uintVal = timer_id;
-	script_invoke_v(L"on_timer", 1, args);
+	script_invoke_v(L"on_timer", args, _countof(args));
 }
 
 void wsh_panel_window::on_context_menu(int x, int y)
@@ -1578,7 +1646,7 @@ void wsh_panel_window::on_item_played(WPARAM wp)
 
 	args[0].vt = VT_DISPATCH;
 	args[0].pdispVal = handle;
-	script_invoke_v(L"on_item_played", 1, args);
+	script_invoke_v(L"on_item_played", args, _countof(args));
 
 	handle->Release();
 }
@@ -1597,7 +1665,7 @@ void wsh_panel_window::on_get_album_art_done(LPARAM lp)
 	args[1].lVal = param->art_id;
 	args[2].vt = VT_DISPATCH;
 	args[2].pdispVal = param->handle;
-	script_invoke_v(L"on_get_album_art_done", 3, args);
+	script_invoke_v(L"on_get_album_art_done", args, _countof(args));
 }
 
 void wsh_panel_window::on_playlist_stop_after_current_changed(WPARAM wp)
@@ -1608,7 +1676,7 @@ void wsh_panel_window::on_playlist_stop_after_current_changed(WPARAM wp)
 
 	args[0].vt = VT_BOOL;
 	args[0].boolVal = TO_VARIANT_BOOL(wp);
-	script_invoke_v(L"on_playlist_stop_after_current_changed", 1, args);
+	script_invoke_v(L"on_playlist_stop_after_current_changed", args, _countof(args));
 }
 
 void wsh_panel_window::on_cursor_follow_playback_changed(WPARAM wp)
@@ -1619,7 +1687,7 @@ void wsh_panel_window::on_cursor_follow_playback_changed(WPARAM wp)
 
 	args[0].vt = VT_BOOL;
 	args[0].boolVal = TO_VARIANT_BOOL(wp);
-	script_invoke_v(L"on_cursor_follow_playback_changed", 1, args);
+	script_invoke_v(L"on_cursor_follow_playback_changed", args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_follow_cursor_changed(WPARAM wp)
@@ -1630,11 +1698,13 @@ void wsh_panel_window::on_playback_follow_cursor_changed(WPARAM wp)
 
 	args[0].vt = VT_BOOL;
 	args[0].boolVal = TO_VARIANT_BOOL(wp);
-	script_invoke_v(L"on_playback_follow_cursor_changed", 1, args);
+	script_invoke_v(L"on_playback_follow_cursor_changed", args, _countof(args));
 }
 
 void wsh_panel_window::on_notify_data(WPARAM wp)
 {
+	TRACK_FUNCTION();
+
 	VARIANTARG args[2];
 
 	callback_data_ptr<t_simple_callback_data_2<CComBSTR, CComBSTR> > data(wp);
@@ -1643,7 +1713,21 @@ void wsh_panel_window::on_notify_data(WPARAM wp)
 	args[0].bstrVal = data->m_item2;
 	args[1].vt = VT_BSTR;
 	args[1].bstrVal = data->m_item1;
-	script_invoke_v(L"on_notify_data", 2, args);
+	script_invoke_v(L"on_notify_data", args, _countof(args));
+}
+
+void wsh_panel_window::on_font_changed()
+{
+	TRACK_FUNCTION();
+
+	script_invoke_v(L"on_font_changed");
+}
+
+void wsh_panel_window::on_colors_changed()
+{
+	TRACK_FUNCTION();
+
+	script_invoke_v(L"on_colors_changed");
 }
 
 void wsh_panel_window::on_playback_starting(play_control::t_track_command cmd, bool paused)
@@ -1656,7 +1740,7 @@ void wsh_panel_window::on_playback_starting(play_control::t_track_command cmd, b
 	args[0].boolVal = TO_VARIANT_BOOL(paused);
 	args[1].vt = VT_I4;
 	args[1].lVal = cmd;
-	script_invoke_v(L"on_playback_starting", 2, args);
+	script_invoke_v(L"on_playback_starting", args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_new_track(WPARAM wp)
@@ -1670,7 +1754,7 @@ void wsh_panel_window::on_playback_new_track(WPARAM wp)
 	
 	args[0].vt = VT_DISPATCH;
 	args[0].pdispVal = handle;
-	script_invoke_v(L"on_playback_new_track", 1, args);
+	script_invoke_v(L"on_playback_new_track", args, _countof(args));
 
 	handle->Release();
 }
@@ -1683,7 +1767,7 @@ void wsh_panel_window::on_playback_stop(play_control::t_stop_reason reason)
 
 	args[0].vt = VT_I4;
 	args[0].lVal = reason;
-	script_invoke_v(L"on_playback_stop", 1, args);
+	script_invoke_v(L"on_playback_stop", args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_seek(WPARAM wp)
@@ -1696,7 +1780,7 @@ void wsh_panel_window::on_playback_seek(WPARAM wp)
 
 	args[0].vt = VT_R8;
 	args[0].dblVal = data->m_item;
-	script_invoke_v(L"on_playback_seek", 1, args);
+	script_invoke_v(L"on_playback_seek", args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_pause(bool state)
@@ -1707,7 +1791,7 @@ void wsh_panel_window::on_playback_pause(bool state)
 
 	args[0].vt = VT_BOOL;
 	args[0].boolVal = TO_VARIANT_BOOL(state);
-	script_invoke_v(L"on_playback_pause", 1, args);
+	script_invoke_v(L"on_playback_pause", args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_edited()
@@ -1741,7 +1825,7 @@ void wsh_panel_window::on_playback_time(WPARAM wp)
 
 	args[0].vt = VT_R8;
 	args[0].dblVal = data->m_item;
-	script_invoke_v(L"on_playback_time", 1, args);
+	script_invoke_v(L"on_playback_time", args, _countof(args));
 }
 
 void wsh_panel_window::on_volume_change(WPARAM wp)
@@ -1754,7 +1838,7 @@ void wsh_panel_window::on_volume_change(WPARAM wp)
 
 	args[0].vt = VT_R4;
 	args[0].fltVal = data->m_item;
-	script_invoke_v(L"on_volume_change", 1, args);
+	script_invoke_v(L"on_volume_change", args, _countof(args));
 }
 
 void wsh_panel_window::on_item_focus_change()
@@ -1772,7 +1856,7 @@ void wsh_panel_window::on_playback_order_changed(t_size p_new_index)
 
 	args[0].vt = VT_I4;
 	args[0].lVal = p_new_index;
-	script_invoke_v(L"on_playback_order_changed", 1, args);
+	script_invoke_v(L"on_playback_order_changed", args, _countof(args));
 }
 
 void wsh_panel_window::on_changed_sorted(WPARAM wp)
@@ -1791,7 +1875,7 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 	args[0].boolVal = TO_VARIANT_BOOL(data->m_fromhook);
 	args[1].vt = VT_DISPATCH;
 	args[1].pdispVal = handle;
-	script_invoke_v(L"on_metadb_changed", 2, args);
+	script_invoke_v(L"on_metadb_changed", args, _countof(args));
 
 	handle->Release();
 }
@@ -1844,12 +1928,84 @@ LRESULT wsh_panel_window_cui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 {
 	switch (msg)
 	{
+	case WM_CREATE:
+		static_api_ptr_t<columns_ui::fonts::manager>()->register_common_callback(this);
+		static_api_ptr_t<columns_ui::colours::manager>()->register_common_callback(this);
+		break;
+
+	case WM_DESTROY:
+		static_api_ptr_t<columns_ui::fonts::manager>()->deregister_common_callback(this);
+		static_api_ptr_t<columns_ui::colours::manager>()->deregister_common_callback(this);
+		break;
+
 	case UWM_SIZELIMITECHANGED:
-		get_host()->on_size_limit_change(m_hwnd, lp);
+		notify_size_limit_changed_(lp);
 		return 0;
 	}
 
 	return t_parent::on_message(hwnd, msg, wp, lp);
+}
+
+HWND wsh_panel_window_cui::create_or_transfer_window(HWND parent, const uie::window_host_ptr & host, const ui_helpers::window_position_t & p_position)
+{
+	if (m_host.is_valid())
+	{
+		ShowWindow(m_hwnd, SW_HIDE);
+		SetParent(m_hwnd, parent);
+		m_host->relinquish_ownership(m_hwnd);
+		m_host = host;
+
+		SetWindowPos(m_hwnd, NULL, p_position.x, p_position.y, p_position.cx, p_position.cy, SWP_NOZORDER);
+	}
+	else
+	{
+		m_host = host; //store interface to host
+		create(parent, this, p_position);
+	}
+
+	return get_wnd();
+}
+
+void wsh_panel_window_cui::notify_size_limit_changed_(LPARAM lp)
+{
+	get_host()->on_size_limit_change(m_hwnd, lp);
+}
+
+void wsh_panel_window_cui::on_font_changed(t_size mask) const
+{
+	PostMessage(m_hwnd, CALLBACK_UWM_FONT_CHANGED, 0, 0);
+}
+
+void wsh_panel_window_cui::on_colour_changed(t_size mask) const
+{
+	PostMessage(m_hwnd, CALLBACK_UWM_COLORS_CHANGED, 0, 0);
+}
+
+void wsh_panel_window_cui::on_bool_changed(t_size mask) const
+{
+	// TODO: may be implemented one day
+}
+
+DWORD wsh_panel_window_cui::GetColorCUI(unsigned type)
+{
+	if (type < columns_ui::colours::colour_inactive_selection_background)
+	{
+		columns_ui::colours::helper helper(pfc::guid_null);
+		
+		return helpers::convert_colorref_to_argb(helper.get_colour((columns_ui::colours::colour_identifier_t)type));
+	}
+
+	return 0;
+}
+
+HFONT wsh_panel_window_cui::GetFontCUI(unsigned type)
+{
+	if (type < columns_ui::fonts::font_type_labels)
+	{
+		return static_api_ptr_t<columns_ui::fonts::manager>()->get_font((columns_ui::fonts::font_type_t)type);
+	}
+
+	return NULL;
 }
 
 HWND wsh_panel_window_dui::get_wnd()
@@ -1923,7 +2079,15 @@ void wsh_panel_window_dui::notify(const GUID & p_what, t_size p_param1, const vo
 {
 	if (p_what == ui_element_notify_edit_mode_changed)
 	{
-		m_is_edit_mode = m_callback->is_edit_mode_enabled();
+		notify_is_edit_mode_changed_(m_callback->is_edit_mode_enabled());
+	}
+	else if (p_what == ui_element_notify_font_changed)
+	{
+		PostMessage(m_hwnd, CALLBACK_UWM_FONT_CHANGED, 0, 0);
+	}
+	else if (p_what == ui_element_notify_colors_changed)
+	{
+		PostMessage(m_hwnd, CALLBACK_UWM_COLORS_CHANGED, 0, 0);
 	}
 }
 
@@ -1932,9 +2096,50 @@ LRESULT wsh_panel_window_dui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 	switch (msg)
 	{
 	case UWM_SIZELIMITECHANGED:
-		m_callback->on_min_max_info_change();
+		notify_size_limit_changed_(lp);
 		return 0;
 	}
 
 	return t_parent::on_message(hwnd, msg, wp, lp);
+}
+
+void wsh_panel_window_dui::notify_size_limit_changed_(LPARAM lp)
+{
+	m_callback->on_min_max_info_change();
+}
+
+DWORD wsh_panel_window_dui::GetColorDUI(unsigned type)
+{
+	const GUID * guids[] = {
+		&ui_color_text,
+		&ui_color_background,
+		&ui_color_highlight,
+		&ui_color_selection,
+	};
+
+	if (type < _countof(guids))
+	{
+		return helpers::convert_colorref_to_argb(m_callback->query_std_color(*guids[type]));
+	}
+
+	return 0;
+}
+
+HFONT wsh_panel_window_dui::GetFontDUI(unsigned type)
+{
+	const GUID * guids[] = {
+		&ui_font_default,
+		&ui_font_tabs,
+		&ui_font_lists,
+		&ui_font_playlists,
+		&ui_font_statusbar,
+		&ui_font_console,
+	};
+
+	if (type < _countof(guids))
+	{
+		return m_callback->query_font_ex(*guids[type]);
+	}
+
+	return NULL;
 }

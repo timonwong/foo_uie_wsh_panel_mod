@@ -1,6 +1,6 @@
 #pragma once
 
-#define WSPM_VERSION_NUMBER_MAIN "1.2.2"
+#define WSPM_VERSION_NUMBER_MAIN "1.3.0"
 #define WSPM_TEST_VERSION 1
 
 #ifdef _DEBUG
@@ -10,7 +10,7 @@
 #endif
 
 #if WSPM_TEST_VERSION == 1
-#	define WSPM_TEST_VERSION_SUFFIX "Beta 3"
+#	define WSPM_TEST_VERSION_SUFFIX "Beta 4"
 #	define WSPM_VERSION_NUMBER WSPM_VERSION_NUMBER_MAIN " " WSPM_TEST_VERSION_SUFFIX WSPM_DEBUG_SUFFIX
 #	include <time.h>
 #else

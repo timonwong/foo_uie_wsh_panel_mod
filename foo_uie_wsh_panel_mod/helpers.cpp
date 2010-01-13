@@ -174,11 +174,12 @@ namespace helpers
 		HFONT hFont;
 		LOGFONT logfont;
 		HFONT oldfont;
-		Gdiplus::Bitmap bmp(5, 5, PixelFormat32bppARGB);
+		Gdiplus::Bitmap bmp(1, 1, PixelFormat32bppARGB);
 		Gdiplus::Graphics g(&bmp);
 		SIZE sz;
 
 		fn.GetLogFontW(&g, &logfont);
+		fn.GetLogFontW(NULL, &logfont);
 		hFont = CreateFontIndirect(&logfont);
 		hDC = g.GetHDC();
 		oldfont = SelectFont(hDC, hFont);
@@ -214,30 +215,23 @@ namespace helpers
 		return (int_from_hex_digit(hex_byte[0]) << 4) | (int_from_hex_digit(hex_byte[1]));
 	}
 
-	const GUID & convert_artid_to_guid(int art_id)
+	const GUID convert_artid_to_guid(int art_id)
 	{
-		switch (art_id)
+		const GUID * guids[] = { 
+			&album_art_ids::cover_front,
+			&album_art_ids::cover_back,
+			&album_art_ids::disc,
+			&album_art_ids::icon,
+			&album_art_ids::artist,
+		};
+
+		if (0 <= art_id && art_id < _countof(guids))
 		{
-		default:
-		case 0:
-			return album_art_ids::cover_front;
-			break;
-
-		case 1:
-			return album_art_ids::cover_back;
-			break;
-
-		case 2:
-			return album_art_ids::disc;
-			break;
-
-		case 3:
-			return album_art_ids::icon;
-			break;
-
-		case 4:
-			return album_art_ids::artist;
-			break;
+			return *guids[art_id];
+		}
+		else
+		{
+			return *guids[0];
 		}
 	}
 

@@ -19,6 +19,11 @@ namespace helpers
 		return RGB(argb >> RED_SHIFT, argb >> GREEN_SHIFT, argb >> BLUE_SHIFT);
 	}
 
+	inline DWORD convert_colorref_to_argb(DWORD colorref)
+	{
+		return colorref | 0xff000000;
+	}
+
 	int int_from_hex_digit(int ch);
 	int int_from_hex_byte(const char * hex_byte);
 
@@ -28,7 +33,7 @@ namespace helpers
 		return ((obj) && (obj->GetLastStatus() == Gdiplus::Ok));
 	}
 
-	const GUID & convert_artid_to_guid(int art_id);
+	const GUID convert_artid_to_guid(int art_id);
 	// bitmap must be NULL
 	bool read_album_art_into_bitmap(const album_art_data_ptr & data, Gdiplus::Bitmap ** bitmap);
 	HRESULT get_album_art(BSTR rawpath, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub);

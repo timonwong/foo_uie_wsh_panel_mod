@@ -89,7 +89,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(TargetPath) &quot;D:\Program Files\foobar2000\components\&quot;"
+				CommandLine="copy $(TargetPath) &quot;D:\foobar2000\components\&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -188,10 +188,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\columns_ui_preferences_branch.cpp"
-				>
-			</File>
 			<File
 				RelativePath=".\config.cpp"
 				>
@@ -319,10 +315,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\columns_ui_preferences_branch.h"
-				>
-			</File>
-			<File
 				RelativePath=".\config.h"
 				>
 			</File>
@@ -369,6 +361,26 @@
 			<File
 				RelativePath=".\version.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Performing Custom Build Step"
+						CommandLine=""
+						Outputs=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Performing Custom Build Step"
+						CommandLine=""
+						Outputs=""
+					/>
+				</FileConfiguration>
 			</File>
 			<Filter
 				Name="PropertyList"

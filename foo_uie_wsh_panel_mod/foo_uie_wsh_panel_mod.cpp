@@ -22,9 +22,9 @@ namespace
 		"Text Designer Outline Text Library\n"
 		"Copyright (c) 2009 Wong Shao Voon\n\n\n"
 		"box blur filter\n"
-		"Copyright 2006 Jerry Huxtable\n\n"
+		"Copyright 2006 Jerry Huxtable\n\n\n"
 		"CPropertyList - A Property List control\n"
-		"Copyright (c) 2001-2003 Bjarke Viksoe\n\n"
+		"Copyright (c) 2001-2003 Bjarke Viksoe\n\n\n"
 	);
 
 	// Is there anything not correctly loaded?

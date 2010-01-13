@@ -402,6 +402,7 @@ __interface IFbWindow: IDispatch
 	[propget] STDMETHOD(ID)([out,retval] UINT* p);
 	[propget] STDMETHOD(Width)([out,retval] UINT* p);
 	[propget] STDMETHOD(Height)([out,retval] UINT* p);
+	[propget] STDMETHOD(InstanceType)([out,retval] UINT* p);
 	[propget] STDMETHOD(MaxWidth)([out,retval] UINT* p);
 	[propput] STDMETHOD(MaxWidth)(UINT width);
 	[propget] STDMETHOD(MaxHeight)([out,retval] UINT* p);
@@ -426,6 +427,10 @@ __interface IFbWindow: IDispatch
 	STDMETHOD(SetProperty)(BSTR name, VARIANT val);
 	STDMETHOD(GetBackgroundImage)([out,retval] IGdiBitmap ** pp);
 	STDMETHOD(SetCursor)(UINT id);
+	STDMETHOD(GetColorCUI)(UINT type, [out,retval] DWORD * p);
+	STDMETHOD(GetFontCUI)(UINT type, [out,retval] IGdiFont ** pp);
+	STDMETHOD(GetColorDUI)(UINT type, [out,retval] DWORD * p);
+	STDMETHOD(GetFontDUI)(UINT type, [out,retval] IGdiFont ** pp);
 };
 _COM_SMARTPTR_TYPEDEF(IFbWindow, __uuidof(IFbWindow));
 

@@ -14,8 +14,7 @@ STDMETHODIMP GdiFont::get_HFont(UINT* p)
 {
 	TRACK_FUNCTION();
 
-	if (!p) return E_POINTER;
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!p || !m_ptr) return E_POINTER;
 
 	*p = (UINT)m_hFont;
 	return S_OK;
@@ -25,8 +24,7 @@ STDMETHODIMP GdiFont::get_Height(UINT* p)
 {
 	TRACK_FUNCTION();
 
-	if (!p) return E_POINTER;
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!p || !m_ptr) return E_POINTER;
 
 	Gdiplus::Bitmap img(1, 1, PixelFormat32bppARGB);
 	Gdiplus::Graphics g(&img);
@@ -39,8 +37,7 @@ STDMETHODIMP GdiBitmap::get_Width(UINT* p)
 {
 	TRACK_FUNCTION();
 
-	if (!p) return E_POINTER;
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!p || !m_ptr) return E_POINTER;
 
 	*p = m_ptr->GetWidth();
 	return S_OK;
@@ -51,7 +48,7 @@ STDMETHODIMP GdiBitmap::get_Height(UINT* p)
 	TRACK_FUNCTION();
 
 	if (!p) return E_POINTER;
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	*p = m_ptr->GetHeight();
 	return S_OK;
@@ -62,7 +59,7 @@ STDMETHODIMP GdiBitmap::Clone(float x, float y, float w, float h, IGdiBitmap** p
 	TRACK_FUNCTION();
 
 	if (!pp) return E_POINTER;
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	Gdiplus::Bitmap * img = m_ptr->Clone(x, y, w, h, PixelFormatDontCare);
 	
@@ -81,7 +78,7 @@ STDMETHODIMP GdiBitmap::RotateFlip(UINT mode)
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	m_ptr->RotateFlip((Gdiplus::RotateFlipType)mode);
 	return S_OK;
@@ -92,7 +89,7 @@ STDMETHODIMP GdiBitmap::ApplyAlpha(BYTE alpha, IGdiBitmap ** pp)
 	TRACK_FUNCTION();
 
 	if (!pp) return E_POINTER;
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	UINT width = m_ptr->GetWidth();
 	UINT height = m_ptr->GetHeight();
@@ -122,7 +119,7 @@ STDMETHODIMP GdiBitmap::ApplyMask(IGdiBitmap * mask, VARIANT_BOOL * p)
 
 	*p = VARIANT_FALSE;
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 	if (!mask) return E_INVALIDARG;
 
 	Gdiplus::Bitmap * bitmap = NULL;
@@ -182,7 +179,7 @@ STDMETHODIMP GdiBitmap::CreateRawBitmap(IGdiRawBitmap ** pp)
 	TRACK_FUNCTION();
 
 	if (!pp) return E_POINTER;
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	(*pp) = new com_object_impl_t<GdiRawBitmap>(m_ptr);
 	return S_OK;
@@ -193,7 +190,7 @@ STDMETHODIMP GdiBitmap::GetGraphics(IGdiGraphics ** pp)
 	TRACK_FUNCTION();
 
 	if (!pp) return E_POINTER;
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	Gdiplus::Graphics * g = new Gdiplus::Graphics(m_ptr);
 	
@@ -221,7 +218,7 @@ STDMETHODIMP GdiBitmap::BoxBlur(int radius, int iteration)
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	box_blur_filter bbf;
 
@@ -235,7 +232,7 @@ STDMETHODIMP GdiBitmap::Resize(UINT w, UINT h, IGdiBitmap ** pp)
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 	if (!pp) return E_POINTER;
 
 	Gdiplus::Bitmap * bitmap = new Gdiplus::Bitmap(w, h); 
@@ -287,7 +284,7 @@ STDMETHODIMP GdiGraphics::FillSolidRect(float x, float y, float w, float h, DWOR
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	Gdiplus::SolidBrush brush(color);
 
@@ -299,7 +296,7 @@ STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	Gdiplus::LinearGradientBrush brush(Gdiplus::RectF(x, y, w, h), color1, color2, angle, TRUE);
 
@@ -311,7 +308,7 @@ STDMETHODIMP GdiGraphics::FillRoundRect(float x, float y, float w, float h, floa
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	// First, check parameters
 	if (2 * arc_width > w || 2 * arc_height > h)
@@ -331,7 +328,7 @@ STDMETHODIMP GdiGraphics::FillEllipse(float x, float y, float w, float h, DWORD 
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	Gdiplus::SolidBrush br(color);
 
@@ -343,7 +340,7 @@ STDMETHODIMP GdiGraphics::DrawLine(float x1, float y1, float x2, float y2, float
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	Gdiplus::Pen pen(color, line_width);
 
@@ -355,7 +352,7 @@ STDMETHODIMP GdiGraphics::DrawRect(float x, float y, float w, float h, float lin
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	Gdiplus::Pen pen(color, line_width);
 
@@ -367,7 +364,7 @@ STDMETHODIMP GdiGraphics::DrawRoundRect(float x, float y, float w, float h, floa
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	// First, check parameters
 	if (2 * arc_width > w || 2 * arc_height > h)
@@ -388,7 +385,7 @@ STDMETHODIMP GdiGraphics::DrawEllipse(float x, float y, float w, float h, float 
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	Gdiplus::Pen pen(color, line_width);
 
@@ -400,7 +397,7 @@ STDMETHODIMP GdiGraphics::DrawString(BSTR str, IGdiFont* font, DWORD color, floa
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 	if (!str || !font) return E_INVALIDARG;
 
 	Gdiplus::Font* fn = NULL;
@@ -426,7 +423,7 @@ STDMETHODIMP GdiGraphics::DrawImage(IGdiBitmap* image, float dstX, float dstY, f
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 	if (!image) return E_INVALIDARG;
 
 	Gdiplus::Bitmap* img = NULL;
@@ -477,7 +474,7 @@ STDMETHODIMP GdiGraphics::GdiDrawBitmap(IGdiRawBitmap * bitmap, int dstX, int ds
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 	if (!bitmap) return E_INVALIDARG;
 
 	HDC src_dc = NULL;
@@ -505,7 +502,7 @@ STDMETHODIMP GdiGraphics::GdiAlphaBlend(IGdiRawBitmap * bitmap, int dstX, int ds
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 	if (!bitmap) return E_INVALIDARG;
 
 	HDC src_dc = NULL;
@@ -524,7 +521,7 @@ STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, in
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 	if (!str || !font) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
@@ -584,7 +581,7 @@ STDMETHODIMP GdiGraphics::MeasureString(BSTR str, IGdiFont * font, float x, floa
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 	if (!str || !font) return E_INVALIDARG;
 	if (!pp) return E_POINTER;
 
@@ -615,7 +612,7 @@ STDMETHODIMP GdiGraphics::CalcTextWidth(BSTR str, IGdiFont * font, UINT * p)
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 	if (!str || !font) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
@@ -639,7 +636,7 @@ STDMETHODIMP GdiGraphics::SetTextRenderingHint(UINT mode)
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	m_ptr->SetTextRenderingHint((Gdiplus::TextRenderingHint)mode);
 	return S_OK;
@@ -649,7 +646,7 @@ STDMETHODIMP GdiGraphics::SetSmoothingMode(INT mode)
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	m_ptr->SetSmoothingMode((Gdiplus::SmoothingMode)mode);
 	return S_OK;
@@ -659,7 +656,7 @@ STDMETHODIMP GdiGraphics::SetInterpolationMode(INT mode)
 {
 	TRACK_FUNCTION();
 
-	if (!m_ptr) return E_NOINTERFACE;
+	if (!m_ptr) return E_POINTER;
 
 	m_ptr->SetInterpolationMode((Gdiplus::InterpolationMode)mode);
 	return S_OK;
@@ -758,7 +755,7 @@ STDMETHODIMP FbFileInfo::get_MetaCount(UINT* p)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!p) return E_POINTER;
 
 	*p = (UINT)m_info_ptr->meta_get_count();
@@ -769,7 +766,7 @@ STDMETHODIMP FbFileInfo::MetaValueCount(UINT idx, UINT* p)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!p) return E_POINTER;
 
 	*p = (UINT)m_info_ptr->meta_enum_value_count(idx);
@@ -780,7 +777,7 @@ STDMETHODIMP FbFileInfo::MetaName(UINT idx, BSTR* pp)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!pp) return E_POINTER;
 
 	(*pp) = NULL;
@@ -798,7 +795,7 @@ STDMETHODIMP FbFileInfo::MetaValue(UINT idx, UINT vidx, BSTR* pp)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!pp) return E_POINTER;
 
 	(*pp) = NULL;
@@ -816,8 +813,8 @@ STDMETHODIMP FbFileInfo::MetaFind(BSTR name, UINT * p)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
-	if (!name) return E_INVALIDARG;
+	if (!m_info_ptr) return E_POINTER;
+	if (!name) return E_POINTER;
 	if (!p) return E_POINTER;
 
 	*p = m_info_ptr->meta_find(pfc::stringcvt::string_utf8_from_wide(name));
@@ -828,7 +825,7 @@ STDMETHODIMP FbFileInfo::MetaRemoveField(BSTR name)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!name) return E_INVALIDARG;
 
 	m_info_ptr->meta_remove_field(pfc::stringcvt::string_utf8_from_wide(name));
@@ -839,7 +836,7 @@ STDMETHODIMP FbFileInfo::MetaAdd(BSTR name, BSTR value, UINT * p)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!name || !value) return E_INVALIDARG;
 
 	*p = m_info_ptr->meta_add(pfc::stringcvt::string_utf8_from_wide(name), 
@@ -852,7 +849,7 @@ STDMETHODIMP FbFileInfo::MetaInsertValue(UINT idx, UINT vidx, BSTR value)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!value) return E_INVALIDARG;
 
 	if (idx < m_info_ptr->meta_get_count() && vidx < m_info_ptr->meta_enum_value_count(idx))
@@ -867,7 +864,7 @@ STDMETHODIMP FbFileInfo::get_InfoCount(UINT* p)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!p) return E_POINTER;
 
 	*p = (UINT)m_info_ptr->info_get_count();
@@ -878,7 +875,7 @@ STDMETHODIMP FbFileInfo::InfoName(UINT idx, BSTR* pp)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!pp) return E_POINTER;
 
 	(*pp) = NULL;
@@ -896,7 +893,7 @@ STDMETHODIMP FbFileInfo::InfoValue(UINT idx, BSTR* pp)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!pp) return E_POINTER;
 
 	(*pp) = NULL;
@@ -914,7 +911,7 @@ STDMETHODIMP FbFileInfo::InfoFind(BSTR name, UINT * p)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!name) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
@@ -926,7 +923,7 @@ STDMETHODIMP FbFileInfo::MetaSet(BSTR name, BSTR value)
 {
 	TRACK_FUNCTION();
 
-	if (!m_info_ptr) return E_NOINTERFACE;
+	if (!m_info_ptr) return E_POINTER;
 	if (!name || !value) return E_INVALIDARG;
 
 	pfc::string8_fast uname = pfc::stringcvt::string_utf8_from_wide(name);
@@ -948,7 +945,7 @@ STDMETHODIMP FbMetadbHandle::get_Path(BSTR* pp)
 {
 	TRACK_FUNCTION();
 	
-	if (m_handle.is_empty()) return E_NOINTERFACE;
+	if (m_handle.is_empty()) return E_POINTER;
 	if (!pp) return E_POINTER;
 	
 	pfc::stringcvt::string_wide_from_utf8_fast ucs = file_path_display(m_handle->get_path());
@@ -961,7 +958,7 @@ STDMETHODIMP FbMetadbHandle::get_RawPath(BSTR * pp)
 {
 	TRACK_FUNCTION();
 
-	if (m_handle.is_empty()) return E_NOINTERFACE;
+	if (m_handle.is_empty()) return E_POINTER;
 	if (!pp) return E_POINTER;
 
 	pfc::stringcvt::string_wide_from_utf8_fast ucs = m_handle->get_path();
@@ -974,7 +971,7 @@ STDMETHODIMP FbMetadbHandle::get_SubSong(UINT* p)
 {
 	TRACK_FUNCTION();
 	
-	if (m_handle.is_empty()) return E_NOINTERFACE;
+	if (m_handle.is_empty()) return E_POINTER;
 	if (!p) return E_POINTER;
 	
 	*p = m_handle->get_subsong_index();
@@ -985,7 +982,7 @@ STDMETHODIMP FbMetadbHandle::get_FileSize(LONGLONG* p)
 {
 	TRACK_FUNCTION();
 	
-	if (m_handle.is_empty()) return E_NOINTERFACE;
+	if (m_handle.is_empty()) return E_POINTER;
 	if (!p) return E_POINTER;
 	
 	*p = m_handle->get_filesize();
@@ -996,7 +993,7 @@ STDMETHODIMP FbMetadbHandle::get_Length(double* p)
 {
 	TRACK_FUNCTION();
 	
-	if (m_handle.is_empty()) return E_NOINTERFACE;
+	if (m_handle.is_empty()) return E_POINTER;
 	if (!p) return E_POINTER;
 	
 	*p = m_handle->get_length();
@@ -1007,7 +1004,7 @@ STDMETHODIMP FbMetadbHandle::GetFileInfo(IFbFileInfo ** pp)
 {
 	TRACK_FUNCTION();
 	
-	if (m_handle.is_empty()) return E_NOINTERFACE;
+	if (m_handle.is_empty()) return E_POINTER;
 	if (!pp) return E_POINTER;
 	
 	file_info_impl * info_ptr = new file_info_impl;
@@ -1021,7 +1018,7 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfo(IFbFileInfo * p)
 {
 	TRACK_FUNCTION();
 
-	if (m_handle.is_empty()) return E_NOINTERFACE;
+	if (m_handle.is_empty()) return E_POINTER;
 	if (!p) return E_INVALIDARG;
 
 	static_api_ptr_t<metadb_io_v2> io;
@@ -1042,7 +1039,7 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 {
 	TRACK_FUNCTION();
 
-	if (m_handle.is_empty()) return E_NOINTERFACE;
+	if (m_handle.is_empty()) return E_POINTER;
 	if (!p) return E_INVALIDARG;
 
 	helpers::file_info_pairs_filter::t_field_value_map field_value_map;
@@ -1113,7 +1110,7 @@ STDMETHODIMP FbTitleFormat::Eval(VARIANT_BOOL force, BSTR* pp)
 {
 	TRACK_FUNCTION();
 
-	if (m_obj.is_empty()) return E_NOINTERFACE;
+	if (m_obj.is_empty()) return E_POINTER;
 	if (!pp) return E_POINTER;
 
 	pfc::string8_fast text;
@@ -1141,7 +1138,7 @@ STDMETHODIMP FbTitleFormat::EvalWithMetadb(IFbMetadbHandle * handle, BSTR * pp)
 {
 	TRACK_FUNCTION();
 
-	if (m_obj.is_empty()) return E_NOINTERFACE;
+	if (m_obj.is_empty()) return E_POINTER;
 	if (!handle) return E_INVALIDARG;
 	if (!pp) return E_POINTER;
 
@@ -1713,7 +1710,7 @@ STDMETHODIMP MenuObj::get_ID(UINT * p)
 	TRACK_FUNCTION();
 
 	if (!p) return E_INVALIDARG;
-	if (!m_hMenu) return E_NOINTERFACE;
+	if (!m_hMenu) return E_POINTER;
 
 	*p = (UINT)m_hMenu;
 	return S_OK;
@@ -1723,7 +1720,7 @@ STDMETHODIMP MenuObj::AppendMenuItem(UINT flags, UINT item_id, BSTR text)
 {
 	TRACK_FUNCTION();
 
-	if (!m_hMenu) return E_NOINTERFACE;
+	if (!m_hMenu) return E_POINTER;
 	if (!text) return E_INVALIDARG;
 
 	::AppendMenu(m_hMenu, flags, item_id, text);
@@ -1734,7 +1731,7 @@ STDMETHODIMP MenuObj::AppendMenuSeparator()
 {
 	TRACK_FUNCTION();
 
-	if (!m_hMenu) return E_NOINTERFACE;
+	if (!m_hMenu) return E_POINTER;
 
 	::AppendMenu(m_hMenu, MF_SEPARATOR, 0, 0);
 	return S_OK;
@@ -1744,7 +1741,7 @@ STDMETHODIMP MenuObj::EnableMenuItem(UINT item_id, UINT enable)
 {
 	TRACK_FUNCTION();
 
-	if (!m_hMenu) return E_NOINTERFACE;
+	if (!m_hMenu) return E_POINTER;
 
 	::EnableMenuItem(m_hMenu, item_id, enable);
 	return S_OK;
@@ -1754,7 +1751,7 @@ STDMETHODIMP MenuObj::CheckMenuItem(UINT item_id, VARIANT_BOOL check)
 {
 	TRACK_FUNCTION();
 
-	if (!m_hMenu) return E_NOINTERFACE;
+	if (!m_hMenu) return E_POINTER;
 
 	UINT ucheck = 0;
 	if (check) ucheck = MF_CHECKED;
@@ -1767,7 +1764,7 @@ STDMETHODIMP MenuObj::CheckMenuRadioItem(UINT first, UINT last, UINT check)
 {
 	TRACK_FUNCTION();
 
-	if (!m_hMenu) return E_NOINTERFACE;
+	if (!m_hMenu) return E_POINTER;
 
 	::CheckMenuRadioItem(m_hMenu, first, last, check, MF_BYCOMMAND);
 	return S_OK;
@@ -1777,7 +1774,7 @@ STDMETHODIMP MenuObj::TrackPopupMenu(int x, int y, UINT * item_id)
 {
 	TRACK_FUNCTION();
 
-	if (!m_hMenu) return E_NOINTERFACE;
+	if (!m_hMenu) return E_POINTER;
 	if (!item_id) return E_POINTER;
 
 	POINT pt = {x, y};
@@ -1816,7 +1813,7 @@ STDMETHODIMP ContextMenuManager::BuildMenu(IMenuObj * p, int base_id, int max_id
 {
 	TRACK_FUNCTION();
 
-	if (m_cm.is_empty()) return E_NOINTERFACE;
+	if (m_cm.is_empty()) return E_POINTER;
 	if (!p) return E_INVALIDARG;
 
 	UINT menuid;
@@ -1832,7 +1829,7 @@ STDMETHODIMP ContextMenuManager::ExecuteByID(UINT id, VARIANT_BOOL * p)
 	TRACK_FUNCTION();
 
 	if (!p) return E_POINTER;
-	if (m_cm.is_empty()) return E_NOINTERFACE;
+	if (m_cm.is_empty()) return E_POINTER;
 
 	*p = TO_VARIANT_BOOL(m_cm->execute_by_id(id));
 	return S_OK;
@@ -1882,7 +1879,7 @@ STDMETHODIMP MainMenuManager::BuildMenu(IMenuObj * p, int base_id, int count)
 {
 	TRACK_FUNCTION();
 
-	if (m_mm.is_empty()) return E_NOINTERFACE;
+	if (m_mm.is_empty()) return E_POINTER;
 	if (!p) return E_INVALIDARG;
 
 	UINT menuid;
@@ -1904,7 +1901,7 @@ STDMETHODIMP MainMenuManager::ExecuteByID(UINT id, VARIANT_BOOL * p)
 	TRACK_FUNCTION();
 
 	if (!p) return E_POINTER;
-	if (m_mm.is_empty()) return E_NOINTERFACE;
+	if (m_mm.is_empty()) return E_POINTER;
 
 	*p = TO_VARIANT_BOOL(m_mm->execute_command(id));
 	return S_OK;
@@ -2020,8 +2017,7 @@ STDMETHODIMP GdiRawBitmap::get__Handle(HDC * p)
 {
 	TRACK_FUNCTION();
 
-	if (!p) return E_POINTER;
-	if (!m_hdc) return E_NOINTERFACE;
+	if (!p || !m_hdc) return E_POINTER;
 
 	*p = m_hdc;
 	return S_OK;
@@ -2031,8 +2027,7 @@ STDMETHODIMP GdiRawBitmap::get_Width(UINT* p)
 {
 	TRACK_FUNCTION();
 
-	if (!p) return E_POINTER;
-	if (!m_hdc) return E_NOINTERFACE;
+	if (!p || !m_hdc) return E_POINTER;
 
 	*p = m_width;
 	return S_OK;
@@ -2042,8 +2037,7 @@ STDMETHODIMP GdiRawBitmap::get_Height(UINT* p)
 {
 	TRACK_FUNCTION();
 
-	if (!p) return E_POINTER;
-	if (!m_hdc) return E_NOINTERFACE;
+	if (!p || !m_hdc) return E_POINTER;
 
 	*p = m_height;
 	return S_OK;
@@ -2288,8 +2282,7 @@ STDMETHODIMP WSHUtils::GetSysColor(UINT index, DWORD * p)
 		}
 	}
 
-	ret |= 0xff000000;
-	*p = ret;
+	*p = helpers::convert_colorref_to_argb(ret);
 	return S_OK;
 }
 
@@ -2405,7 +2398,7 @@ STDMETHODIMP StyleTextRender::OutLineText(DWORD text_color, DWORD outline_color,
 {
 	TRACK_FUNCTION();
 
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!m_pOutLineText) return E_POINTER;
 
 	m_pOutLineText->TextOutline(text_color, outline_color, outline_width);
 	return S_OK;
@@ -2415,7 +2408,7 @@ STDMETHODIMP StyleTextRender::DoubleOutLineText(DWORD text_color, DWORD outline_
 {
 	TRACK_FUNCTION();
 
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!m_pOutLineText) return E_POINTER;
 
 	m_pOutLineText->TextDblOutline(text_color, outline_color1, outline_color2, outline_width1, outline_width2);
 	return S_OK;
@@ -2425,7 +2418,7 @@ STDMETHODIMP StyleTextRender::GlowText(DWORD text_color, DWORD glow_color, int g
 {
 	TRACK_FUNCTION();
 
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!m_pOutLineText) return E_POINTER;
 
 	m_pOutLineText->TextGlow(text_color, glow_color, glow_width);
 	return S_OK;
@@ -2435,7 +2428,7 @@ STDMETHODIMP StyleTextRender::EnableShadow(VARIANT_BOOL enable)
 {
 	TRACK_FUNCTION();
 
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!m_pOutLineText) return E_POINTER;
 
 	m_pOutLineText->EnableShadow(enable == VARIANT_TRUE);
 	return S_OK;
@@ -2445,7 +2438,7 @@ STDMETHODIMP StyleTextRender::ResetShadow()
 {
 	TRACK_FUNCTION();
 
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!m_pOutLineText) return E_POINTER;
 
 	m_pOutLineText->SetNullShadow();
 	return S_OK;
@@ -2455,7 +2448,7 @@ STDMETHODIMP StyleTextRender::Shadow(DWORD color, int thickness, int offset_x, i
 {
 	TRACK_FUNCTION();
 
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!m_pOutLineText) return E_POINTER;
 
 	m_pOutLineText->Shadow(color, thickness, Gdiplus::Point(offset_x, offset_y));
 	return S_OK;
@@ -2465,7 +2458,7 @@ STDMETHODIMP StyleTextRender::DiffusedShadow(DWORD color, int thickness, int off
 {
 	TRACK_FUNCTION();
 
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!m_pOutLineText) return E_POINTER;
 
 	m_pOutLineText->DiffusedShadow(color, thickness, Gdiplus::Point(offset_x, offset_y));
 	return S_OK;
@@ -2475,7 +2468,7 @@ STDMETHODIMP StyleTextRender::SetShadowBackgroundColor(DWORD color, int width, i
 {
 	TRACK_FUNCTION();
 
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!m_pOutLineText) return E_POINTER;
 
 	m_pOutLineText->SetShadowBkgd(color, width, height);
 	return S_OK;
@@ -2485,7 +2478,7 @@ STDMETHODIMP StyleTextRender::SetShadowBackgroundImage(IGdiBitmap * img)
 {
 	TRACK_FUNCTION();
 
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!m_pOutLineText) return E_POINTER;
 	if (!img) return E_INVALIDARG;
 
 	Gdiplus::Bitmap * pBitmap = NULL;
@@ -2499,8 +2492,7 @@ STDMETHODIMP StyleTextRender::RenderStringPoint(IGdiGraphics * g, BSTR str, IGdi
 {
 	TRACK_FUNCTION();
 
-	if (!p) return E_POINTER;
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!p || !m_pOutLineText) return E_POINTER;
 	if (!g || !font || !str) return E_INVALIDARG;
 
 	Gdiplus::Font * fn = NULL;
@@ -2536,8 +2528,7 @@ STDMETHODIMP StyleTextRender::RenderStringRect(IGdiGraphics * g, BSTR str, IGdiF
 {
 	TRACK_FUNCTION();
 
-	if (!p) return E_POINTER;
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!p || !m_pOutLineText) return E_POINTER;
 	if (!g || !font || !str) return E_INVALIDARG;
 
 	Gdiplus::Font * fn = NULL;
@@ -2573,9 +2564,9 @@ STDMETHODIMP StyleTextRender::SetPngImage(IGdiBitmap * img)
 {
 	TRACK_FUNCTION();
 
-	if (!m_pngmode) return E_NOINTERFACE;
+	if (!m_pngmode) return E_NOTIMPL;
 	if (!img) return E_INVALIDARG;
-	if (!m_pOutLineText) return E_NOINTERFACE;
+	if (!m_pOutLineText) return E_POINTER;
 
 	Gdiplus::Bitmap * pBitmap = NULL;
 	img->get__ptr((void**)&pBitmap);

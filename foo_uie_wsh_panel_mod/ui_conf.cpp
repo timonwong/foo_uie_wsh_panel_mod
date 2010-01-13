@@ -206,7 +206,7 @@ void CDialogConf::Apply()
 	m_parent->get_disabled() = false;
 	m_parent->get_grab_focus() = uButton_GetCheck(m_hWnd, IDC_CHECK_GRABFOCUS);
 	m_parent->get_pseudo_transparent() = uButton_GetCheck(m_hWnd, IDC_CHECK_PSEUDO_TRANSPARENT);
-	m_parent->on_update_script(name, code.get_ptr());
+	m_parent->update_script(name, code.get_ptr());
 
 	// Wndow position
 	GetWindowPlacement(&m_parent->get_wndpl());

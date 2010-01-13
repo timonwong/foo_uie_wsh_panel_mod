@@ -23,19 +23,26 @@ protected:
 	UINT              m_accuracy;
 	metadb_handle_ptr m_watched_handle;
 
-	IActiveScriptPtr        m_script_engine;
-	IDispatchPtr            m_script_root;
-	SCRIPTSTATE             m_sstate;
-	bool                    m_query_continue;
+	IActiveScriptPtr  m_script_engine;
+	IDispatchPtr      m_script_root;
+	SCRIPTSTATE       m_sstate;
+	bool              m_query_continue;
+	int               m_instance_type;
 
 	HostComm();
 	virtual ~HostComm();
 
 public:
+	enum {
+		KInstanceTypeCUI = 0,
+		KInstanceTypeDUI,
+	};
+
 	GUID GetGUID();
 	HWND GetHWND();
 	UINT GetWidth();
 	UINT GetHeight();
+	UINT GetInstanceType();
 	POINT & GetMaxSize();
 	POINT & GetMinSize();
 	SCRIPTSTATE & GetScriptState();
@@ -54,6 +61,12 @@ public:
 	ITimerObj * CreateTimerInterval(UINT delay);
 	void KillTimer(ITimerObj * p);
 
+	virtual DWORD GetColorCUI(unsigned type) = 0;
+	virtual HFONT GetFontCUI(unsigned type) = 0;
+	//virtual bool GetIsThemedCUI(unsigned type) = 0; // TODO:
+	virtual DWORD GetColorDUI(unsigned type) = 0;
+	virtual HFONT GetFontDUI(unsigned type) = 0;
+	
 	static void CALLBACK g_timer_proc(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
 };
 
@@ -70,6 +83,7 @@ public:
 	STDMETHODIMP get_ID(UINT* p);
 	STDMETHODIMP get_Width(UINT* p);
 	STDMETHODIMP get_Height(UINT* p);
+	STDMETHODIMP get_InstanceType(UINT* p);
 	STDMETHODIMP get_MaxWidth(UINT* p);
 	STDMETHODIMP put_MaxWidth(UINT width);
 	STDMETHODIMP get_MaxHeight(UINT* p);
@@ -94,6 +108,10 @@ public:
 	STDMETHODIMP SetProperty(BSTR name, VARIANT val);
 	STDMETHODIMP GetBackgroundImage(IGdiBitmap ** pp);
 	STDMETHODIMP SetCursor(UINT id);
+	STDMETHODIMP GetColorCUI(UINT type, DWORD * p);
+	STDMETHODIMP GetFontCUI(UINT type, IGdiFont ** pp);
+	STDMETHODIMP GetColorDUI(UINT type, DWORD * p);
+	STDMETHODIMP GetFontDUI(UINT type, IGdiFont ** pp);
 };
 
 class ScriptSite : 
@@ -173,36 +191,36 @@ private:
 	ScriptSite       m_script_site;
 	IGdiGraphicsPtr  m_gr_wrap;
 	bool             m_is_mouse_tracked;
-
-protected:
 	bool             m_is_edit_mode;
 
 public:
+	wsh_panel_window() : m_is_mouse_tracked(false), m_is_edit_mode(false), m_script_site(this) {}
+
 	virtual ~wsh_panel_window()
 	{
 		// Ensure active scripting is closed
 		script_term();
 	}
 
-	wsh_panel_window() : m_is_mouse_tracked(false), m_is_edit_mode(false), m_script_site(this) {}
+	void update_script(const char* name, const char* code);
 
-	void on_update_script(const char* name, const char* code);
+private:
 	HRESULT script_init_pre();
 	bool script_init_post();
 	void script_stop();
 	void script_term();
-	HRESULT script_invoke_v(LPOLESTR name, UINT argc = 0, VARIANTARG * argv = NULL, VARIANT * ret = NULL);
+	HRESULT script_invoke_v(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);
 	void create_context();
 	void delete_context();
 
-protected:
 	virtual ui_helpers::container_window::class_data & get_class_data() const;
 
+protected:
 	bool show_configure_popup(HWND parent);
 	bool show_property_popup(HWND parent);
-
 	LRESULT on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
+private:
 	void on_size(int w, int h);
 	void on_paint(HDC dc, LPRECT lpUpdateRect);
 	void on_timer(UINT timer_id);
@@ -215,6 +233,9 @@ protected:
 	void on_cursor_follow_playback_changed(WPARAM wp);
 	void on_playback_follow_cursor_changed(WPARAM wp);
 	void on_notify_data(WPARAM wp);
+
+	void on_font_changed();
+	void on_colors_changed();
 
 	// play_callback
 	void on_playback_starting(play_control::t_track_command cmd, bool paused);
@@ -234,11 +255,18 @@ protected:
 
 	// metadb_io_callback_dynamic
 	void on_changed_sorted(WPARAM wp);
+
+protected:
+	inline void notify_is_edit_mode_changed_(bool enabled) { m_is_edit_mode = enabled; }
+
+	// override me
+	virtual void notify_size_limit_changed_(LPARAM lp) = 0;
 };
 
-class wsh_panel_window_cui : public wsh_panel_window, public uie::window
+class wsh_panel_window_cui : public wsh_panel_window, public uie::window, 
+	public columns_ui::fonts::common_callback, public columns_ui::colours::common_callback
 {
-public:
+protected:
 	// ui_extension
 	virtual const GUID & get_extension_guid() const;
 	virtual void get_name(pfc::string_base& out) const;
@@ -250,16 +278,27 @@ public:
 	virtual bool show_config_popup(HWND parent);
 	virtual LRESULT on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
-protected:
-	uie::window_host_ptr & get_host()
-	{
-		return m_host;
-	}
+	virtual bool is_available(const uie::window_host_ptr & p) const {return true;}
+	virtual const uie::window_host_ptr & get_host() const {return m_host;}
+	virtual HWND create_or_transfer_window(HWND parent, const uie::window_host_ptr & host, const ui_helpers::window_position_t & p_position);
+	virtual void destroy_window() {destroy(); m_host.release();}
+	virtual HWND get_wnd() const { return t_parent::get_wnd(); }
 
-	HWND get_wnd() const
-	{
-		return t_parent::get_wnd();
-	}
+	// columns_ui::fonts::common_callback
+	virtual void on_font_changed(t_size mask) const;
+
+	// columns_ui::colours::common_callback
+	virtual void on_colour_changed(t_size mask) const;
+	virtual void on_bool_changed(t_size mask) const;
+
+	// HostComm
+	virtual DWORD GetColorCUI(unsigned type);
+	virtual HFONT GetFontCUI(unsigned type);
+	virtual DWORD GetColorDUI(unsigned type) { return 0; }
+	virtual HFONT GetFontDUI(unsigned type) { return NULL; }
+
+private:
+	virtual void notify_size_limit_changed_(LPARAM lp);
 
 private:
 	typedef wsh_panel_window t_parent;
@@ -272,18 +311,13 @@ class wsh_panel_window_dui : public wsh_panel_window,
 public:
 	wsh_panel_window_dui(ui_element_config::ptr cfg, ui_element_instance_callback::ptr callback) : m_callback(callback)
 	{
+		m_instance_type = KInstanceTypeDUI;
 		set_configuration(cfg);
 	}
 
-	virtual ~wsh_panel_window_dui()
-	{
-		t_parent::destroy();
-	}
+	virtual ~wsh_panel_window_dui() { t_parent::destroy(); }
 
-	void initialize_window(HWND parent)
-	{
-		t_parent::create(parent);
-	}
+	void initialize_window(HWND parent) { t_parent::create(parent); }
 
 	virtual HWND get_wnd();
 
@@ -303,6 +337,15 @@ public:
 	virtual void notify(const GUID & p_what, t_size p_param1, const void * p_param2, t_size p_param2size);
 
 	virtual LRESULT on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+
+	// HostComm
+	virtual DWORD GetColorCUI(unsigned type) { return 0; }
+	virtual HFONT GetFontCUI(unsigned type) { return NULL; }
+	virtual DWORD GetColorDUI(unsigned type);
+	virtual HFONT GetFontDUI(unsigned type);
+
+private:
+	virtual void notify_size_limit_changed_(LPARAM lp);
 
 private:
 	typedef wsh_panel_window t_parent;

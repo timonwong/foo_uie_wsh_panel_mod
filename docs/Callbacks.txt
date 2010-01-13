@@ -132,3 +132,15 @@ function on_item_focus_change() {}
 // fromhook: boolean, set to true when actual file contents haven't changed but one of metadb_display_field_provider 
 //   implementations requested an update so output of metadb_handle::format_title() etc has changed.
 function on_metadb_changed(metadb, fromhook) {}
+
+// [1.3.0] New:
+// DUI and CUI
+// On color setting changed
+// Retrieve colors using window.GetColorXXX() method.
+function on_colors_changed() {}
+
+// [1.3.0] New:
+// DUI and CUI
+// On font setting changed
+// Retrieve fonts using window.GetFontXXX() method.
+function on_font_changed() {}
