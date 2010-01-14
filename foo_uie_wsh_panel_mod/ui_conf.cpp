@@ -286,10 +286,7 @@ bool CDialogConf::MatchShortcuts(unsigned vk)
 
 		case 'G':
 			{
-				modal_dialog_scope scope;
-				if (!scope.can_create()) return false;
-				scope.initialize(m_hWnd);
-				
+				modal_dialog_scope scope(m_hWnd);
 				CDialogGoto dlg(GetDlgItem(IDC_EDIT));
 				dlg.DoModal(m_hWnd);
 			}

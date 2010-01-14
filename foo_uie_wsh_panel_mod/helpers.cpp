@@ -258,7 +258,7 @@ namespace helpers
 			{
 				bmp = new Gdiplus::Bitmap(is);
 
-				if (!check_gdiplus_object(bmp))
+				if (!ensure_gdiplus_object(bmp))
 				{
 					ret = false;
 					if (bmp) delete bmp;

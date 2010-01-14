@@ -1,5 +1,5 @@
 v1.3.0
-- CHG: Compiled with the new SDK for foobar2000 1.0+, drop support for older versions.
+- CHG: Compiled against new SDK for foobar2000 1.0+, drop support for older versions.
 - CHG: Test versions will be expired after 14 days (no other restrictions, just a popup dialog to prompt user to update).
 - CHG: Version number 1.2.2 => 1.3.0.
 - ADD: First attempt to implement as an UI element.
@@ -8,12 +8,14 @@ v1.3.0
 - ADD: window.InstanceType property (#Interfaces.txt).
 - ADD: Callback on_colors_changed() and on_font_changed() (#Callbacks.txt).
 - ADD: window.GetFontCUI(), window.GetColorCUI(), window.GetFontDUI() and window.GetColorDUI() methods (#Interfaces.txt).
-- CHG: IMenuObj.CheckMenuItem(item_id, check), now parameter `check' accept boolean value (#Interfaces.txt).
-- CHG: More detailed crash info now is appended to the console.
+- CHG: IMenuObj.CheckMenuItem(item_id, check), now parameter 'check' accept boolean value (#Interfaces.txt).
+- CHG: "safe mode" now enabled defaultly.
+- CHG: More detailed crash info now is attached to the console.
 - CHG: Move preference branch back to "Tools".
+- CHG: Replace the old default script.
 - ADD: More samples (GetAlbumArtV2.txt, MainMenuManager All-In-One.txt).
 - FIX: Workaround for foo_menu_addons.
-- FIX: Some tiny mermory leaks (in script error and GetAlbumArtAsync()).
+- FIX: Some tiny memory leaks (in script error and GetAlbumArtAsync()).
 - FIX: fb.ShowPopupMessage() now works even during foobar2000 startup.
 - FIX: Other tiny fixes.
 

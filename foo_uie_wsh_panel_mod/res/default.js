@@ -1,47 +1,120 @@
-function RGB(r, g, b) {
-    return (0xff000000 | (r << 16) | (g << 8) | (b));
-}
+// Use with GdiDrawText() 
+// {{
+var DT_TOP = 0x00000000;
+var DT_CENTER = 0x00000001;
+var DT_VCENTER = 0x00000004;
+var DT_WORDBREAK = 0x00000010;
+var DT_CALCRECT = 0x00000400;
+var DT_NOPREFIX = 0x00000800;
+// }}
 
-var g_font = gdi.Font("Tahoma", 12, 0);
-var g_drag = false;
+// {{
+// Used in window.GetColorCUI()
+ColorTypeCUI = {
+    text: 0,
+    selection_text: 1,
+    inactive_selection_text: 2,
+    background: 3,
+    selection_background: 4,
+    inactive_selection_background: 5,
+    active_item_frame: 6
+};
+
+// Used in window.GetFontCUI()
+FontTypeCUI = {
+    items: 0,
+    labels: 1
+};
+
+// Used in window.GetColorDUI()
+ColorTypeDUI = {
+    text: 0,
+    background: 1,
+    highlight: 2,
+    selection: 3
+};
+
+// Used in window.GetFontDUI()
+FontTypeDUI = {
+    defaults: 0,
+    tabs: 1,
+    lists: 2,
+    playlists: 3,
+    statusbar: 4,
+    console: 5
+};
+//}}
+
+var g_instancetype = window.InstanceType;
+var g_font = null;
+var g_text = "Create your script\nClick here to open the editor.";
+var ww = 0, wh = 0;
+var g_textcolor = 0, g_textcolor_hl = 0;
+var g_backcolor = 0;
+var g_hot = false;
+
+function get_font() {
+    if (g_instancetype == 0) { // CUI
+        g_font = window.GetFontCUI(FontTypeCUI.items);
+    } else if (g_instancetype == 1) { // DUI
+        g_font = window.GetFontDUI(FontTypeDUI.defaults);
+    } else {
+        // None
+    }
+}
+get_font();
+
+function get_colors() {
+    if (g_instancetype == 0) { // CUI
+        g_textcolor = window.GetColorCUI(ColorTypeCUI.text);
+        g_textcolor_hl = window.GetColorCUI(ColorTypeCUI.text);
+        g_backcolor = window.GetColorCUI(ColorTypeCUI.background);
+    } else if (g_instancetype == 1) { // DUI
+        g_textcolor = window.GetColorDUI(ColorTypeDUI.text);
+        g_textcolor_hl = window.GetColorDUI(ColorTypeDUI.highlight);
+        g_backcolor = window.GetColorDUI(ColorTypeDUI.background);
+    } else {
+        // None
+    }
+}
+get_colors();
+
+// START
+function on_size() {
+    ww = window.Width;
+    wh = window.Height;
+}
 
 function on_paint(gr) {
-    gr.SetTextRenderingHint(5);
-    var ww = window.Width;
-    var wh = window.Height;
-    var volume = fb.Volume;
-    var pos = window.Width * ((100 + volume) / 100);
-    var txt = (Math.ceil(volume)) + "dB";
-    gr.FillGradRect(0, 0, pos, wh, 90, RGB(240, 240, 240), RGB(100, 230, 100));
-    gr.FillGradRect(pos, 0, ww - pos, wh, 90, RGB(240, 240, 240), RGB(190, 190, 190));
-    gr.DrawString(txt, g_font, RGB(64, 64, 128), 0, 0, ww, wh, 0x11005000);
-    gr.DrawRect(0, 0, ww - 1, wh - 1, 1.0, RGB(150, 150, 150));
-}
-
-function on_mouse_lbtn_down(x, y) {
-    g_drag = true;
+    var text_color = g_hot ? g_textcolor_hl : g_textcolor;
+    gr.FillSolidRect(0, 0, ww, wh, g_backcolor);
+    gr.GdiDrawText(g_text, g_font, text_color, 0, 0, ww, wh, DT_VCENTER | DT_CENTER | DT_WORDBREAK | DT_CALCRECT | DT_NOPREFIX);
 }
 
 function on_mouse_lbtn_up(x, y) {
-    on_mouse_move(x, y);
-    g_drag = false;
+    window.ShowConfigure();
 }
 
-function on_mouse_move(x, y) {
-    if (g_drag) {
-        var v = x / window.Width;
-        v = (v < 0) ? 0 : (v < 1) ? v : 1;
-        v = -100 * (1 - v);
-        if (fb.Volume != v) fb.Volume = v;
+function on_mouse_move() {
+    if (!g_hot) {
+        g_hot = true;
+        window.Repaint();
     }
 }
 
-function on_mouse_wheel(delta) {
-    if (delta > 0) fb.VolumeUp();
-    else fb.VolumeDown();
+function on_mouse_leave() {
+    if (g_hot) {
+        g_hot = false;
+        window.Repaint();
+    }
 }
 
-function on_volume_change(val) {
+function on_font_changed() {
+    get_font();
     window.Repaint();
 }
-//EOF
+
+function on_colors_changed() {
+    get_colors();
+    window.Repaint();
+}

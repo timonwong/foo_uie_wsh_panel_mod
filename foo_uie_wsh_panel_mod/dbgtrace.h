@@ -12,11 +12,11 @@
 #endif
 
 #if !defined(NO_TRACK_DISPATCH)
-#define TRACK_THIS_DISPATCH(typeinfo, dispid, flag) \
+#define TRACK_THIS_DISPATCH_CALL(typeinfo, dispid, flag) \
 	disp_call_tracker DISPCALLTRACKER__##__LINE__(typeinfo, dispid, flag)
 #define PRINT_DISPATCH_TRACK_MESSAGE() disp_call_tracker::print_msg()
 #else
-#define TRACK_THIS_DISPATCH(typeinfo, dispid, flag) 
+#define TRACK_THIS_DISPATCH_CALL(typeinfo, dispid, flag) 
 #define PRINT_DISPATCH_TRACK_MESSAGE() 
 #endif
 

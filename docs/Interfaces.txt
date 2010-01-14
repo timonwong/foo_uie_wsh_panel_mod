@@ -353,6 +353,18 @@ Methods:
 	// [1.1.11] New: Set mouse cursor
 	// For standard cursors, see Flags.txt for more details.
 	void SetCursor(id);
+	// [1.3.0] New:
+	// for type, see Flags.txt
+	unsigned int GetColorCUI(type);
+	// [1.3.0] New:
+	// for type, see Flags.txt
+	IGdiFont GetFontCUI(type);
+	// [1.3.0] New:
+	// for type, see Flags.txt
+	unsigned int GetColorDUI(type);
+	// [1.3.0] New:
+	// for type, see Flags.txt
+	IGdiFont GetFontDUI(type);
 }
 
 // [1.1.0] New:
@@ -366,7 +378,7 @@ Methods:
 	// [1.1.0] New: For art_id, see Flags.txt: AlbumArtId
 	// need_stub: Determine whether querying for stub image to display when there's no album art to show
 	// this is set in "Advanced" page of fb2k preferences
-	// return NULL if failed
+	// return null if failed
 	// NOTE: filename in rawpath, use IFbMetadbHandle.RawPath to retrieve that value
 	IGdiBitmap GetAlbumArt(rawpath, art_id = 0, need_stub = true);
 	// [1.3.0] New;

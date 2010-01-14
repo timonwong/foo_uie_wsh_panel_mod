@@ -162,13 +162,13 @@ void CDialogPref::apply()
 {
 	g_cfg_timeout = GetDlgItemInt(IDC_EDIT_TIMEOUT, NULL, FALSE);
 	g_cfg_safe_mode = (SendDlgItemMessage(IDC_CHECK_SAFE_MODE, BM_GETCHECK) == BST_CHECKED);
-
 	OnChanged();
 }
 
 void CDialogPref::reset()
 {
-	g_cfg_safe_mode = false;
+	g_cfg_from_dui_first_time = true;
+	g_cfg_safe_mode = true;
 	g_cfg_timeout = 15;
 	LoadProps(true);
 	OnChanged();

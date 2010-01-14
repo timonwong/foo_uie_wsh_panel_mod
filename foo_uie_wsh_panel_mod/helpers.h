@@ -19,16 +19,21 @@ namespace helpers
 		return RGB(argb >> RED_SHIFT, argb >> GREEN_SHIFT, argb >> BLUE_SHIFT);
 	}
 
-	inline DWORD convert_colorref_to_argb(DWORD colorref)
+	inline DWORD convert_colorref_to_argb(DWORD color)
 	{
-		return colorref | 0xff000000;
+		// COLORREF : 0x00bbggrr
+		// ARGB : 0xaarrggbb
+		return (GetRValue(color) << RED_SHIFT) | 
+			(GetGValue(color) << GREEN_SHIFT) | 
+			(GetBValue(color) << BLUE_SHIFT) | 
+			0xff000000;
 	}
 
 	int int_from_hex_digit(int ch);
 	int int_from_hex_byte(const char * hex_byte);
 
 	template<class T>
-	inline bool check_gdiplus_object(T * obj)
+	inline bool ensure_gdiplus_object(T * obj)
 	{
 		return ((obj) && (obj->GetLastStatus() == Gdiplus::Ok));
 	}

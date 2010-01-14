@@ -249,7 +249,7 @@ IGdiBitmap * HostComm::GetBackgroundImage()
 	{
 		bitmap = Gdiplus::Bitmap::FromHBITMAP(m_gr_bmp_bk, NULL);
 
-		if (!helpers::check_gdiplus_object(bitmap))
+		if (!helpers::ensure_gdiplus_object(bitmap))
 		{
 			if (bitmap) delete bitmap;
 			bitmap = NULL;
@@ -587,15 +587,15 @@ STDMETHODIMP FbWindow::GetFontCUI(UINT type, IGdiFont ** pp)
 	if (!pp) return E_POINTER;
 	if (m_host->GetInstanceType() != HostComm::KInstanceTypeCUI) return E_NOTIMPL;
 
-	HFONT hFont = m_host->GetFontDUI(type);
+	HFONT hFont = m_host->GetFontCUI(type);
 
 	*pp = NULL;
 
 	if (hFont)
 	{
-		Gdiplus::Font * font = new Gdiplus::Font(NULL, hFont);
+		Gdiplus::Font * font = new Gdiplus::Font(m_host->GetHDC(), hFont);
 
-		if (!helpers::check_gdiplus_object(font))
+		if (!helpers::ensure_gdiplus_object(font))
 		{
 			if (font) delete font;
 			(*pp) = NULL;
@@ -631,16 +631,16 @@ STDMETHODIMP FbWindow::GetFontDUI(UINT type, IGdiFont ** pp)
 
 	if (hFont)
 	{
-		Gdiplus::Font * font = new Gdiplus::Font(NULL, hFont);
+		Gdiplus::Font * font = new Gdiplus::Font(m_host->GetHDC(), hFont);
 
-		if (!helpers::check_gdiplus_object(font))
+		if (!helpers::ensure_gdiplus_object(font))
 		{
 			if (font) delete font;
 			(*pp) = NULL;
 			return S_OK;
 		}
 
-		*pp = new com_object_impl_t<GdiFont>(font, hFont);
+		*pp = new com_object_impl_t<GdiFont>(font, hFont, false);
 	}
 
 	return S_OK;
@@ -1613,15 +1613,26 @@ void wsh_panel_window::on_timer(UINT timer_id)
 
 void wsh_panel_window::on_context_menu(int x, int y)
 {
-	HMENU hMenu = CreatePopupMenu();
+	const int base_id = 0;
+	HMENU menu = CreatePopupMenu();
+	int ret = 0;
 
-	AppendMenu(hMenu, MF_STRING, 1, _T("&Properties"));
-	AppendMenu(hMenu, MF_STRING, 2, _T("&Configure..."));
+	build_context_menu(menu, x, y, base_id);
 
-	int ret = TrackPopupMenu(hMenu, TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD, 
-		x, y, 0, m_hwnd, 0);
+	ret = TrackPopupMenu(menu, TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD, x, y, 0, m_hwnd, 0);
 
-	switch (ret)
+	execute_context_menu_command(ret, base_id);
+}
+
+void wsh_panel_window::build_context_menu(HMENU menu, int x, int y, int id_base)
+{
+	AppendMenu(menu, MF_STRING, id_base + 1, _T("&Properties"));
+	AppendMenu(menu, MF_STRING, id_base + 2, _T("&Configure..."));
+}
+
+void wsh_panel_window::execute_context_menu_command(int id, int id_base)
+{
+	switch (id - id_base)
 	{
 	case 1:
 		show_property_popup(m_hwnd);
@@ -1631,8 +1642,6 @@ void wsh_panel_window::on_context_menu(int x, int y)
 		show_configure_popup(m_hwnd);			
 		break;
 	}
-
-	DestroyMenu(hMenu);
 }
 
 void wsh_panel_window::on_item_played(WPARAM wp)
@@ -2006,6 +2015,17 @@ HFONT wsh_panel_window_cui::GetFontCUI(unsigned type)
 	}
 
 	return NULL;
+}
+
+void wsh_panel_window_dui::initialize_window(HWND parent)
+{
+	t_parent::create(parent);
+
+	// TODO: Announce
+	//if (g_cfg_from_dui_first_time)
+	//{
+		//g_cfg_from_dui_first_time = false;
+	//}
 }
 
 HWND wsh_panel_window_dui::get_wnd()

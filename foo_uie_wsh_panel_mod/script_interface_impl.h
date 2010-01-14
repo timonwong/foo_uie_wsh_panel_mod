@@ -86,7 +86,7 @@ public:
 		if (!IsEqualIID(riid, IID_NULL)) return DISP_E_UNKNOWNINTERFACE;
 		if (!g_typeinfo) return E_POINTER;
 
-		TRACK_THIS_DISPATCH(g_typeinfo, dispid, flag);
+		TRACK_THIS_DISPATCH_CALL(g_typeinfo, dispid, flag);
 		return g_typeinfo->Invoke(this, dispid, flag, params, result, excep, err);
 	}
 };
@@ -235,14 +235,16 @@ class GdiFont : public GdiObj<IGdiFont, Gdiplus::Font>
 {
 protected:
 	HFONT m_hFont;
+	bool  m_managed;
 
-	GdiFont(Gdiplus::Font* p, HFONT hFont): GdiObj<IGdiFont, Gdiplus::Font>(p), m_hFont(hFont) {}
+	GdiFont(Gdiplus::Font* p, HFONT hFont, bool managed = true): GdiObj<IGdiFont, Gdiplus::Font>(p), 
+		m_hFont(hFont), m_managed(managed) {}
 
 	virtual ~GdiFont() {}
 
 	virtual void FinalRelease()
 	{
-		if (m_hFont)
+		if (m_hFont && m_managed)
 		{
 			DeleteFont(m_hFont);
 			m_hFont = NULL;

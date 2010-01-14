@@ -63,7 +63,7 @@ STDMETHODIMP GdiBitmap::Clone(float x, float y, float w, float h, IGdiBitmap** p
 
 	Gdiplus::Bitmap * img = m_ptr->Clone(x, y, w, h, PixelFormatDontCare);
 	
-	if (!helpers::check_gdiplus_object(img))
+	if (!helpers::ensure_gdiplus_object(img))
 	{
 		if (img) delete img;
 		(*pp) = NULL;
@@ -671,7 +671,7 @@ STDMETHODIMP GdiUtils::Font(BSTR name, float pxSize, int style, IGdiFont** pp)
 
 	Gdiplus::Font * font = new Gdiplus::Font(name, pxSize, style, Gdiplus::UnitPixel);
 
-	if (!helpers::check_gdiplus_object(font))
+	if (!helpers::ensure_gdiplus_object(font))
 	{
 		if (font) delete font;
 		(*pp) = NULL;
@@ -699,7 +699,7 @@ STDMETHODIMP GdiUtils::Image(BSTR path, IGdiBitmap** pp)
 
 	Gdiplus::Bitmap * img = new Gdiplus::Bitmap(path);
 	
-	if (!helpers::check_gdiplus_object(img))
+	if (!helpers::ensure_gdiplus_object(img))
 	{
 		if (img) delete img;
 		(*pp) = NULL;
@@ -720,7 +720,7 @@ STDMETHODIMP GdiUtils::CreateImage(int w, int h, IGdiBitmap ** pp)
 
 	Gdiplus::Bitmap * img = new Gdiplus::Bitmap(w, h, PixelFormat32bppARGB);
 
-	if (!helpers::check_gdiplus_object(img))
+	if (!helpers::ensure_gdiplus_object(img))
 	{
 		if (img) delete img;
 		(*pp) = NULL;

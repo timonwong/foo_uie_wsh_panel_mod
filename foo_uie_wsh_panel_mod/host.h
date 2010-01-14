@@ -67,6 +67,8 @@ public:
 	virtual DWORD GetColorDUI(unsigned type) = 0;
 	virtual HFONT GetFontDUI(unsigned type) = 0;
 	
+	HDC GetHDC() { return m_hdc; }
+
 	static void CALLBACK g_timer_proc(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
 };
 
@@ -226,6 +228,11 @@ private:
 	void on_timer(UINT timer_id);
 	void on_context_menu(int x, int y);
 
+protected:
+	void build_context_menu(HMENU menu, int x, int y, int id_base);
+	void execute_context_menu_command(int id, int id_base);
+
+private:
 	// callbacks
 	void on_get_album_art_done(LPARAM lp);
 	void on_item_played(WPARAM wp);
@@ -317,7 +324,7 @@ public:
 
 	virtual ~wsh_panel_window_dui() { t_parent::destroy(); }
 
-	void initialize_window(HWND parent) { t_parent::create(parent); }
+	void initialize_window(HWND parent);
 
 	virtual HWND get_wnd();
 
@@ -335,6 +342,12 @@ public:
 	virtual GUID get_subclass();
 
 	virtual void notify(const GUID & p_what, t_size p_param1, const void * p_param2, t_size p_param2size);
+
+	virtual bool edit_mode_context_menu_test(const POINT & p_point,bool p_fromkeyboard) {return true;}
+	virtual void edit_mode_context_menu_build(const POINT & p_point,bool p_fromkeyboard,HMENU p_menu,unsigned p_id_base) { build_context_menu(p_menu, p_point.x, p_point.y, p_id_base); }
+	virtual void edit_mode_context_menu_command(const POINT & p_point,bool p_fromkeyboard,unsigned p_id,unsigned p_id_base) { execute_context_menu_command(p_id, p_id_base); }
+	//virtual bool edit_mode_context_menu_get_focus_point(POINT & p_point) {return true;}
+	virtual bool edit_mode_context_menu_get_description(unsigned p_id,unsigned p_id_base,pfc::string_base & p_out) {return false;}
 
 	virtual LRESULT on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
