@@ -276,17 +276,17 @@ namespace helpers
 		if (!rawpath) return E_INVALIDARG;
 		if (!pp) return E_POINTER;
 
-		GUID art_guid;
+		GUID what;
 		album_art_data_ptr data;
 		album_art_manager_instance_ptr aami = static_api_ptr_t<album_art_manager>()->instantiate();
 		abort_callback_dummy abort;
 
-		aami->open(pfc::stringcvt::string_utf8_from_wide(rawpath), abort);
-		art_guid = helpers::convert_artid_to_guid(art_id);
+		what = helpers::convert_artid_to_guid(art_id);
 
 		try
 		{
-			data = aami->query(art_guid, abort);
+			aami->open(pfc::stringcvt::string_utf8_from_wide(rawpath), abort);
+			data = aami->query(what, abort);
 		}
 		catch (std::exception &)
 		{
@@ -314,29 +314,39 @@ namespace helpers
 		return S_OK;
 	}
 
-	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub)
+	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub, pfc::string_base * image_path_ptr /*= NULL*/)
 	{
 		if (handle.is_empty()) return E_INVALIDARG;
 		if (!pp) return E_POINTER;
 
-		GUID art_guid;
+		GUID what;
 		abort_callback_dummy abort;
 		static_api_ptr_t<album_art_manager_v2> aamv2;
 		album_art_extractor_instance_v2::ptr aaeiv2;
 		IGdiBitmap * ret = NULL;
 
-		aaeiv2 = aamv2->open(pfc::list_single_ref_t<metadb_handle_ptr>(handle), 
-			pfc::list_single_ref_t<GUID>(helpers::convert_artid_to_guid(art_id)), abort);
-
-		art_guid = helpers::convert_artid_to_guid(art_id);
+		what = helpers::convert_artid_to_guid(art_id);
 
 		try
 		{
-			album_art_data_ptr data = aaeiv2->query(art_guid, abort);
+			aaeiv2 = aamv2->open(pfc::list_single_ref_t<metadb_handle_ptr>(handle), 
+				pfc::list_single_ref_t<GUID>(helpers::convert_artid_to_guid(art_id)), abort);
+
+			album_art_data_ptr data = aaeiv2->query(what, abort);
 			Gdiplus::Bitmap * bitmap = NULL;
 
 			if (helpers::read_album_art_into_bitmap(data, &bitmap))
 			{
+				if (image_path_ptr)
+				{
+					album_art_path_list::ptr list = aaeiv2->query_paths(what, abort);
+
+					if (list->get_count() > 0)
+					{
+						image_path_ptr->set_string(list->get_path(0));
+					}
+				}
+
 				ret = new com_object_impl_t<GdiBitmap>(bitmap);
 			}
 		}
@@ -348,11 +358,21 @@ namespace helpers
 
 				try 
 				{
-					album_art_data_ptr data = aaeiv2_stub->query(art_guid, abort);
+					album_art_data_ptr data = aaeiv2_stub->query(what, abort);
 					Gdiplus::Bitmap * bitmap = NULL;
 
 					if (helpers::read_album_art_into_bitmap(data, &bitmap))
 					{
+						if (image_path_ptr)
+						{
+							album_art_path_list::ptr list = aaeiv2_stub->query_paths(what, abort);
+
+							if (list->get_count() > 0)
+							{
+								image_path_ptr->set_string(list->get_path(0));
+							}
+						}
+
 						ret = new com_object_impl_t<GdiBitmap>(bitmap);
 					}
 				} catch (std::exception &) {}
@@ -380,14 +400,14 @@ namespace helpers
 			if (ptr->is_our_path(urawpath, ext))
 			{
 				album_art_extractor_instance_ptr aaep;
-				GUID art_guid = helpers::convert_artid_to_guid(art_id);
+				GUID what = helpers::convert_artid_to_guid(art_id);
 
 				try
 				{
 					aaep = ptr->open(NULL, urawpath, abort);
 
 					Gdiplus::Bitmap * bitmap = NULL;
-					album_art_data_ptr data = aaep->query(art_guid, abort);
+					album_art_data_ptr data = aaep->query(what, abort);
 
 					if (helpers::read_album_art_into_bitmap(data, &bitmap))
 					{
@@ -661,6 +681,7 @@ namespace helpers
 
 	void album_art_async::thread_proc()
 	{
+		pfc::string8_fast image_path;
 		FbMetadbHandle * handle = NULL;
 		IGdiBitmap * bitmap = NULL;
 
@@ -669,16 +690,17 @@ namespace helpers
 			if (m_only_embed)
 			{
 				get_album_art_embedded(m_rawpath, &bitmap, m_art_id);
+				image_path = m_handle->get_path();
 			}
 			else
 			{
-				get_album_art_v2(m_handle, &bitmap, m_art_id, m_need_stub);
+				get_album_art_v2(m_handle, &bitmap, m_art_id, m_need_stub, &image_path);
 			}
 
 			handle = new com_object_impl_t<FbMetadbHandle>(m_handle);
 		}
 
-		t_param param(handle, m_art_id, bitmap);
+		t_param param(handle, m_art_id, bitmap, file_path_display(image_path));
 
 		SendMessage(m_notify_hwnd, CALLBACK_UWM_GETALBUMARTASYNCDONE, 0, (LPARAM)&param);
 	}

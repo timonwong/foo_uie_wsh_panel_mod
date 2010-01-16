@@ -166,8 +166,8 @@ public:
 	virtual void on_items_modified_fromplayback(const bit_array & p_mask,play_control::t_display_level p_level) {}
 	virtual void on_items_replaced(const bit_array & p_mask,const pfc::list_base_const_t<playlist_callback::t_on_items_replaced_entry> & p_data) {}
 	virtual void on_item_ensure_visible(t_size p_idx) {}
-
-	virtual void on_playlist_switch() {}
+	// impl
+	virtual void on_playlist_switch();
 	virtual void on_playlist_renamed(const char * p_new_name,t_size p_new_name_len) {}
 	virtual void on_playlist_locked(bool p_locked) {}
 

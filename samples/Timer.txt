@@ -13,8 +13,8 @@ function print_to_console(msg) {
 function on_mouse_lbtn_up() {
 	if (!g_timer_started) {
 		// Timer are created here
-		g_timer1 = window.CreateTimerTimeout(2000); // 2s - one shot
-		g_timer2 = window.CreateTimerInterval(500); // 500ms - period
+		g_timer1 = window.CreateTimerTimeout(2000); // 2s - one shot, happens after 2000 ms, only once
+		g_timer2 = window.CreateTimerInterval(500); // 500ms - period, happens every 500 ms
 		g_timer_started = true;
 	} else {
 		// Kill all timers

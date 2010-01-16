@@ -67,15 +67,17 @@ function on_cursor_follow_playback_changed(state) {}
 
 // [1.1.1] New: Called when "playback follow cursor" state is changed
 // state: boolean, reflect current "playback follow cursor" value
-function on_playback_follow_cursor_change(state) {}
+function on_playback_follow_cursor_changed(state) {}
 
 // [1.1.1] New: Called in other panels after window.NotifyOthers(name, info) is executed
 // name and info is the same as in NotifyOthers()
 function on_notify_data(name, info) {}
 
 // [1.1.10] New:
+// [1.3.0] Updated:
+//   image_path will point to the image file (or music file itself, if image is a embedded image)
 // Get called while thread created by GetAlbumArtAsync() is done.
-function on_get_album_art_done(metadb, art_id, image) {}
+function on_get_album_art_done(metadb, art_id, image, image_path) {}
 
 // [1.1.10] New: 
 // NOTE 1: Always call window.GetBackgroundImage() during this callback
@@ -144,3 +146,6 @@ function on_colors_changed() {}
 // On font setting changed
 // Retrieve fonts using window.GetFontXXX() method.
 function on_font_changed() {}
+
+// [1.3.0] New:
+function on_playlist_switch() {}

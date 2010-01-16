@@ -23,6 +23,11 @@ public:
 	{
 	}
 
+	virtual ~CDialogProperty()
+	{
+
+	}
+
 	void LoadProperties(bool reload = true);
 	void Apply();
 

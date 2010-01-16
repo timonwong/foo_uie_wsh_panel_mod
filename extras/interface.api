@@ -22,8 +22,8 @@ window.GetProperty(name[, defaultval])
 window.SetProperty(name, val)
 window.GetBackgroundImage()
 window.SetCursor(id)
-window.GetColorCUI(type);
-window.GetFontCUI(type);
+window.GetColorCUI(type[, client_guid]);
+window.GetFontCUI(type[, client_guid]);
 window.GetColorDUI(type);
 window.GetFontDUI(type);
 
@@ -49,7 +49,7 @@ fb.ShowPopupMessage(msg[, title, iconid])
 fb.CreateProfiler([name])
 fb.TitleFormat(expression)
 fb.GetNowPlaying()
-fb.GetFocusItem()
+fb.GetFocusItem([force])
 fb.Exit()
 fb.Play()
 fb.Stop()
@@ -88,3 +88,4 @@ utils.PathWildcardMatch(pattern, str)
 utils.ReadTextFile(filename)
 utils.GetSysColor(index)
 utils.GetSystemMetrics(index)
+utils.Glob(pattern[, exc_mask, inc_mask])

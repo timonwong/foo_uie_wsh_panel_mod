@@ -79,7 +79,8 @@ void wsh_panel_vars::load_config(stream_reader * reader, t_size size, abort_call
 		if (!have_read_config)
 		{
 			// Configuration corruputed or config version dismatch.
-			console::info("WSH Panel Mod: Error: Configuration need newer version of WSH Panel Mod or is corrupted");
+			console::complain("WSH Panel Mod", 
+				"Error: Configuration need newer version of WSH Panel Mod or is corrupted");
 		}
 	}
 }
@@ -188,7 +189,7 @@ void sci_prop_config::g_load(t_map & data, stream_reader * reader, abort_callbac
 
 		for (t_size i = 0; i < count; ++i)
 		{
-			t_key key;
+			pfc::string8_fast key;
 			t_val val;
 			VARTYPE vt;
 			int cbRead = 0;

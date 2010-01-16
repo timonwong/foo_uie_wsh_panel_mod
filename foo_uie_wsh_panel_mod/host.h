@@ -61,13 +61,14 @@ public:
 	ITimerObj * CreateTimerInterval(UINT delay);
 	void KillTimer(ITimerObj * p);
 
-	virtual DWORD GetColorCUI(unsigned type) = 0;
-	virtual HFONT GetFontCUI(unsigned type) = 0;
+	virtual DWORD GetColorCUI(unsigned type, const GUID & guid) = 0;
+	virtual HFONT GetFontCUI(unsigned type, const GUID & guid) = 0;
 	//virtual bool GetIsThemedCUI(unsigned type) = 0; // TODO:
 	virtual DWORD GetColorDUI(unsigned type) = 0;
 	virtual HFONT GetFontDUI(unsigned type) = 0;
 	
 	HDC GetHDC() { return m_hdc; }
+	//void ToggleQueryContinue(bool enable) { m_query_continue = enable; }
 
 	static void CALLBACK g_timer_proc(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
 };
@@ -110,10 +111,11 @@ public:
 	STDMETHODIMP SetProperty(BSTR name, VARIANT val);
 	STDMETHODIMP GetBackgroundImage(IGdiBitmap ** pp);
 	STDMETHODIMP SetCursor(UINT id);
-	STDMETHODIMP GetColorCUI(UINT type, DWORD * p);
-	STDMETHODIMP GetFontCUI(UINT type, IGdiFont ** pp);
+	STDMETHODIMP GetColorCUI(UINT type, BSTR guidstr, DWORD * p);
+	STDMETHODIMP GetFontCUI(UINT type, BSTR guidstr, IGdiFont ** pp);
 	STDMETHODIMP GetColorDUI(UINT type, DWORD * p);
 	STDMETHODIMP GetFontDUI(UINT type, IGdiFont ** pp);
+	//STDMETHODIMP CreateObject(BSTR progid_or_clsid, IUnknown ** pp);
 };
 
 class ScriptSite : 
@@ -259,6 +261,7 @@ private:
 	// playlist_callback
 	void on_item_focus_change();
 	void on_playback_order_changed(t_size p_new_index);
+	void on_playlist_switch();
 
 	// metadb_io_callback_dynamic
 	void on_changed_sorted(WPARAM wp);
@@ -299,8 +302,8 @@ protected:
 	virtual void on_bool_changed(t_size mask) const;
 
 	// HostComm
-	virtual DWORD GetColorCUI(unsigned type);
-	virtual HFONT GetFontCUI(unsigned type);
+	virtual DWORD GetColorCUI(unsigned type, const GUID & guid);
+	virtual HFONT GetFontCUI(unsigned type, const GUID & guid);
 	virtual DWORD GetColorDUI(unsigned type) { return 0; }
 	virtual HFONT GetFontDUI(unsigned type) { return NULL; }
 
@@ -352,8 +355,8 @@ public:
 	virtual LRESULT on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 	// HostComm
-	virtual DWORD GetColorCUI(unsigned type) { return 0; }
-	virtual HFONT GetFontCUI(unsigned type) { return NULL; }
+	virtual DWORD GetColorCUI(unsigned type, const GUID & guid) { return 0; }
+	virtual HFONT GetFontCUI(unsigned type, const GUID & guid) { return NULL; }
 	virtual DWORD GetColorDUI(unsigned type);
 	virtual HFONT GetFontDUI(unsigned type);
 

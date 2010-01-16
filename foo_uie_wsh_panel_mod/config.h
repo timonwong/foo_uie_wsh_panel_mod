@@ -38,7 +38,7 @@ inline DWORD edge_style_from_config(t_edge_style edge_style)
 class sci_prop_config
 {
 public:
-	typedef pfc::string8 t_key;
+	typedef pfc::string_simple t_key;
 	typedef _variant_t t_val;
 	typedef pfc::map_t<t_key, t_val, pfc::comparator_stricmp_ascii> t_map;
 

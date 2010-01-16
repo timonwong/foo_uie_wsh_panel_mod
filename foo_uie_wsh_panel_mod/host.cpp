@@ -569,25 +569,55 @@ STDMETHODIMP FbWindow::SetCursor(UINT id)
 	return S_OK;
 }
 
-STDMETHODIMP FbWindow::GetColorCUI(UINT type, DWORD * p)
+STDMETHODIMP FbWindow::GetColorCUI(UINT type, BSTR guidstr, DWORD * p)
 {
 	TRACK_FUNCTION();
 
 	if (!p) return E_POINTER;
+	if (!guidstr) return E_INVALIDARG;
 	if (m_host->GetInstanceType() != HostComm::KInstanceTypeCUI) return E_NOTIMPL;
 
-	*p = m_host->GetColorCUI(type);
+	GUID guid;
+
+	if (!*guidstr)
+	{
+		memcpy(&guid, &pfc::guid_null, sizeof(guid));
+	}
+	else
+	{
+		if (CLSIDFromString(guidstr, &guid) != NOERROR)
+		{
+			return E_INVALIDARG;
+		}
+	}
+
+	*p = m_host->GetColorCUI(type, guid);
 	return S_OK;
 }
 
-STDMETHODIMP FbWindow::GetFontCUI(UINT type, IGdiFont ** pp)
+STDMETHODIMP FbWindow::GetFontCUI(UINT type, BSTR guidstr, IGdiFont ** pp)
 {
 	TRACK_FUNCTION();
 
 	if (!pp) return E_POINTER;
+	if (!guidstr) return E_INVALIDARG;
 	if (m_host->GetInstanceType() != HostComm::KInstanceTypeCUI) return E_NOTIMPL;
 
-	HFONT hFont = m_host->GetFontCUI(type);
+	GUID guid;
+
+	if (!*guidstr)
+	{
+		memcpy(&guid, &pfc::guid_null, sizeof(guid));
+	}
+	else
+	{
+		if (CLSIDFromString(guidstr, &guid) != NOERROR)
+		{
+			return E_INVALIDARG;
+		}
+	}
+
+	HFONT hFont = m_host->GetFontCUI(type, guid);
 
 	*pp = NULL;
 
@@ -645,6 +675,38 @@ STDMETHODIMP FbWindow::GetFontDUI(UINT type, IGdiFont ** pp)
 
 	return S_OK;
 }
+
+//STDMETHODIMP FbWindow::CreateObject(BSTR progid_or_clsid, IUnknown ** pp)
+//{
+//	TRACK_FUNCTION();
+//
+//	if (!progid_or_clsid) return E_INVALIDARG;
+//	if (!pp) return E_POINTER;
+//
+//	HRESULT hr = S_OK;
+//	CLSID clsid;
+//	IUnknownPtr unk;
+//	*pp = NULL;
+//	
+//	// Check safety
+//	if (g_cfg_safe_mode)
+//	{
+//		if (progid_or_clsid[0] == '{')
+//		{
+//			hr = CLSIDFromString(progid_or_clsid, &clsid);
+//		}
+//		else 
+//		{
+//			hr = CLSIDFromProgID(progid_or_clsid, &clsid);
+//		}
+//
+//
+//	}
+//
+//	if (SUCCEEDED(hr)) hr = unk.CreateInstance(clsid, NULL, CLSCTX_ALL);
+//	*pp = unk.Detach();
+//	return hr;
+//}
 
 STDMETHODIMP ScriptSite::GetLCID(LCID* plcid)
 {
@@ -826,7 +888,9 @@ HRESULT wsh_panel_window::script_init_pre()
 		IObjectSafetyPtr psafe;
 
 		if (SUCCEEDED(m_script_engine->QueryInterface(&psafe)))
+		{
 			psafe->SetInterfaceSafetyOptions(IID_IDispatch, INTERFACE_USES_SECURITY_MANAGER, INTERFACE_USES_SECURITY_MANAGER);
+		}
 	}
 
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"window", SCRIPTITEM_ISVISIBLE);
@@ -835,7 +899,7 @@ HRESULT wsh_panel_window::script_init_pre()
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
-	// @import
+	// processing "@import"
 	if (SUCCEEDED(hr)) hr = preprocessor.process_import(parser);
 	if (SUCCEEDED(hr)) hr = parser->ParseScriptText(wcode.get_ptr(), NULL, NULL, NULL, NULL, 0, SCRIPTTEXT_ISVISIBLE, NULL, NULL);
 
@@ -1515,6 +1579,10 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case CALLBACK_UWM_ON_PLAYBACK_ORDER_CHANGED:
 		on_playback_order_changed((t_size)wp);
 		return 0;
+
+	case CALLBACK_UWM_ON_PLAYLIST_SWITCH:
+		on_playlist_switch();
+		return 0;
 	}
 
 	return uDefWindowProc(hwnd, msg, wp, lp);
@@ -1666,14 +1734,16 @@ void wsh_panel_window::on_get_album_art_done(LPARAM lp)
 
 	using namespace helpers;
 	album_art_async::t_param * param = reinterpret_cast<album_art_async::t_param *>(lp);
-	VARIANTARG args[3];
+	VARIANTARG args[4];
 
-	args[0].vt = VT_DISPATCH;
-	args[0].pdispVal = param->bitmap;
-	args[1].vt = VT_I4;
-	args[1].lVal = param->art_id;
-	args[2].vt = VT_DISPATCH;
-	args[2].pdispVal = param->handle;
+	args[0].vt = VT_BSTR;
+	args[0].bstrVal = SysAllocString(param->image_path);
+	args[1].vt = VT_DISPATCH;
+	args[1].pdispVal = param->bitmap;
+	args[2].vt = VT_I4;
+	args[2].lVal = param->art_id;
+	args[3].vt = VT_DISPATCH;
+	args[3].pdispVal = param->handle;
 	script_invoke_v(L"on_get_album_art_done", args, _countof(args));
 }
 
@@ -1868,6 +1938,13 @@ void wsh_panel_window::on_playback_order_changed(t_size p_new_index)
 	script_invoke_v(L"on_playback_order_changed", args, _countof(args));
 }
 
+void wsh_panel_window::on_playlist_switch()
+{
+	TRACK_FUNCTION();
+
+	script_invoke_v(L"on_playlist_switch");
+}
+
 void wsh_panel_window::on_changed_sorted(WPARAM wp)
 {
 	TRACK_FUNCTION();
@@ -1938,13 +2015,38 @@ LRESULT wsh_panel_window_cui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 	switch (msg)
 	{
 	case WM_CREATE:
-		static_api_ptr_t<columns_ui::fonts::manager>()->register_common_callback(this);
-		static_api_ptr_t<columns_ui::colours::manager>()->register_common_callback(this);
+		try
+		{
+			static_api_ptr_t<columns_ui::fonts::manager>()->register_common_callback(this);
+			static_api_ptr_t<columns_ui::colours::manager>()->register_common_callback(this);
+		}
+		catch (exception_service_not_found &)
+		{
+			// Using in Default UI and dockable panels without Columns UI installed?
+			static bool g_reported = false;
+
+			if (!g_reported)
+			{
+				popup_msg::g_show("Warning: At least one of WSH Panel Mod instance running in the CUI-like"
+								  " container (dockable panels?) but cannot use some essential services"
+								  " provided by the Columns UI (don't have or use a very old version of"
+								  " Columns UI?). Please download and install the latest version of Columns UI", 
+								  "WSH Panel Mod");
+
+				g_reported = true;
+			}
+		}
 		break;
 
 	case WM_DESTROY:
-		static_api_ptr_t<columns_ui::fonts::manager>()->deregister_common_callback(this);
-		static_api_ptr_t<columns_ui::colours::manager>()->deregister_common_callback(this);
+		try
+		{
+			static_api_ptr_t<columns_ui::fonts::manager>()->deregister_common_callback(this);
+			static_api_ptr_t<columns_ui::colours::manager>()->deregister_common_callback(this);
+		}
+		catch (exception_service_not_found &)
+		{
+		}
 		break;
 
 	case UWM_SIZELIMITECHANGED:
@@ -1995,23 +2097,39 @@ void wsh_panel_window_cui::on_bool_changed(t_size mask) const
 	// TODO: may be implemented one day
 }
 
-DWORD wsh_panel_window_cui::GetColorCUI(unsigned type)
+DWORD wsh_panel_window_cui::GetColorCUI(unsigned type, const GUID & guid)
 {
 	if (type < columns_ui::colours::colour_inactive_selection_background)
 	{
-		columns_ui::colours::helper helper(pfc::guid_null);
-		
-		return helpers::convert_colorref_to_argb(helper.get_colour((columns_ui::colours::colour_identifier_t)type));
+		columns_ui::colours::helper helper(guid);
+
+		return helpers::convert_colorref_to_argb(
+			helper.get_colour((columns_ui::colours::colour_identifier_t)type));
 	}
 
 	return 0;
 }
 
-HFONT wsh_panel_window_cui::GetFontCUI(unsigned type)
+HFONT wsh_panel_window_cui::GetFontCUI(unsigned type, const GUID & guid)
 {
-	if (type < columns_ui::fonts::font_type_labels)
+	if (guid != pfc::guid_null)
 	{
-		return static_api_ptr_t<columns_ui::fonts::manager>()->get_font((columns_ui::fonts::font_type_t)type);
+		if (type < columns_ui::fonts::font_type_labels)
+		{
+			try
+			{
+				return static_api_ptr_t<columns_ui::fonts::manager>()->get_font((columns_ui::fonts::font_type_t)type);
+			}
+			catch (exception_service_not_found &)
+			{
+				return uCreateIconFont();
+			}
+		}
+	}
+	else
+	{
+		columns_ui::fonts::helper helper(guid);
+		return helper.get_font();
 	}
 
 	return NULL;

@@ -45,6 +45,11 @@ FontTypeDUI = {
 };
 //}}
 
+//{{
+// Used in window.SetCursor()
+var IDC_HAND = 32649;
+//}}
+
 var g_instancetype = window.InstanceType;
 var g_font = null;
 var g_text = "Create your script\nClick here to open the editor.";
@@ -97,6 +102,7 @@ function on_mouse_lbtn_up(x, y) {
 
 function on_mouse_move() {
     if (!g_hot) {
+        window.SetCursor(IDC_HAND);
         g_hot = true;
         window.Repaint();
     }

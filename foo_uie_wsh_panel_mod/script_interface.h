@@ -120,7 +120,7 @@ __interface IGdiGraphics: IGdiObj
 	STDMETHOD(DrawRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, DWORD color);
 	STDMETHOD(DrawEllipse)(float x, float y, float w, float h, float line_width, DWORD color);
 	STDMETHOD(DrawString)(BSTR str, IGdiFont* font, DWORD color, float x, float y, float w, float h, [defaultvalue(0)] DWORD flags);
-	STDMETHOD(GdiDrawText)(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, [defaultvalue(0)] DWORD format, [out,retval] UINT * p);
+	STDMETHOD(GdiDrawText)(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, [defaultvalue(0)] DWORD format, [out,retval] VARIANT * p);
 	STDMETHOD(DrawImage)(IGdiBitmap* image, float dstX, float dstY, float dstW, float dstH, float srcX, float srcY, float srcW, float srcH, [defaultvalue(0)]float angle, [defaultvalue(255)]BYTE alpha);
 	STDMETHOD(GdiDrawBitmap)(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH);
 	STDMETHOD(GdiAlphaBlend)(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, [defaultvalue(255)]BYTE alpha);
@@ -313,7 +313,7 @@ __interface IFbUtils: IDispatch
 	STDMETHOD(CreateProfiler)([defaultvalue("")] BSTR name, [out,retval] IFbProfiler ** pp);
 	STDMETHOD(TitleFormat)(BSTR expression, [out,retval] IFbTitleFormat** pp);
 	STDMETHOD(GetNowPlaying)([out,retval] IFbMetadbHandle** pp);
-	STDMETHOD(GetFocusItem)([out,retval] IFbMetadbHandle** pp);
+	STDMETHOD(GetFocusItem)([defaultvalue(-1)] VARIANT_BOOL force, [out,retval] IFbMetadbHandle** pp);
 	[propget] STDMETHOD(ComponentPath)([out,retval] BSTR* pp);
 	[propget] STDMETHOD(FoobarPath)([out,retval] BSTR* pp);
 	[propget] STDMETHOD(ProfilePath)([out,retval] BSTR* pp);
@@ -427,10 +427,11 @@ __interface IFbWindow: IDispatch
 	STDMETHOD(SetProperty)(BSTR name, VARIANT val);
 	STDMETHOD(GetBackgroundImage)([out,retval] IGdiBitmap ** pp);
 	STDMETHOD(SetCursor)(UINT id);
-	STDMETHOD(GetColorCUI)(UINT type, [out,retval] DWORD * p);
-	STDMETHOD(GetFontCUI)(UINT type, [out,retval] IGdiFont ** pp);
+	STDMETHOD(GetColorCUI)(UINT type, [defaultvalue("")] BSTR guidstr, [out,retval] DWORD * p);
+	STDMETHOD(GetFontCUI)(UINT type, [defaultvalue("")] BSTR guidstr, [out,retval] IGdiFont ** pp);
 	STDMETHOD(GetColorDUI)(UINT type, [out,retval] DWORD * p);
 	STDMETHOD(GetFontDUI)(UINT type, [out,retval] IGdiFont ** pp);
+	//STDMETHOD(CreateObject)(BSTR progid_or_clsid, [out,retval] IUnknown ** pp);
 };
 _COM_SMARTPTR_TYPEDEF(IFbWindow, __uuidof(IFbWindow));
 
@@ -458,5 +459,6 @@ __interface IWSHUtils: IDispatch
 	STDMETHOD(ReadTextFile)(BSTR filename, [out,retval] BSTR * pp);
 	STDMETHOD(GetSysColor)(UINT index, [out,retval] DWORD * p);
 	STDMETHOD(GetSystemMetrics)(UINT index, [out,retval] int * p);
+	STDMETHOD(Glob)(BSTR pattern, [defaultvalue(FILE_ATTRIBUTE_DIRECTORY)] UINT exc_mask, [defaultvalue(0xffffffff)] UINT inc_mask, [out,retval] VARIANT * p);
 };
 _COM_SMARTPTR_TYPEDEF(IWSHUtils, __uuidof(IWSHUtils));

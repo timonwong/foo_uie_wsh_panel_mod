@@ -301,7 +301,7 @@ public:
 	STDMETHODIMP DrawRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, DWORD color);
 	STDMETHODIMP DrawEllipse(float x, float y, float w, float h, float line_width, DWORD color);
 	STDMETHODIMP DrawString(BSTR str, IGdiFont* font, DWORD color, float x, float y, float w, float h, DWORD flags);
-	STDMETHODIMP GdiDrawText(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, DWORD format, UINT * p);
+	STDMETHODIMP GdiDrawText(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, DWORD format, VARIANT * p);
 	STDMETHODIMP DrawImage(IGdiBitmap* image, float dstX, float dstY, float dstW, float dstH, float srcX, float srcY, float srcW, float srcH, float angle, BYTE alpha);
 	STDMETHODIMP GdiDrawBitmap(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH);
 	STDMETHODIMP GdiAlphaBlend(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, BYTE alpha);
@@ -530,7 +530,7 @@ public:
 	STDMETHODIMP CreateProfiler(BSTR name, IFbProfiler ** pp);
 	STDMETHODIMP TitleFormat(BSTR expression, IFbTitleFormat** pp);
 	STDMETHODIMP GetNowPlaying(IFbMetadbHandle** pp);
-	STDMETHODIMP GetFocusItem(IFbMetadbHandle** pp);
+	STDMETHODIMP GetFocusItem(VARIANT_BOOL force, IFbMetadbHandle** pp);
 	STDMETHODIMP get_ComponentPath(BSTR* pp);
 	STDMETHODIMP get_FoobarPath(BSTR* pp);
 	STDMETHODIMP get_ProfilePath(BSTR* pp);
@@ -650,6 +650,7 @@ public:
 	STDMETHODIMP ReadTextFile(BSTR filename, BSTR * pp);
 	STDMETHODIMP GetSysColor(UINT index, DWORD * p);
 	STDMETHODIMP GetSystemMetrics(UINT index, INT * p);
+	STDMETHODIMP Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT * p);
 };
 
 class FbTooltip : public IDisposableImpl4<IFbTooltip>
@@ -720,5 +721,4 @@ public:
 	STDMETHODIMP RenderStringRect(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int w, int h, DWORD flags, VARIANT_BOOL * p);
 	// PNG Mode only
 	STDMETHODIMP SetPngImage(IGdiBitmap * img);
-
 };

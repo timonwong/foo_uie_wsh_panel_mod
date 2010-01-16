@@ -215,3 +215,8 @@ void my_playlist_callback::on_playback_order_changed(t_size p_new_index)
 	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_ORDER_CHANGED, 
 		(WPARAM)p_new_index, 0);
 }
+
+void my_playlist_callback::on_playlist_switch()
+{
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_SWITCH, 0, 0);
+}

@@ -517,7 +517,7 @@ STDMETHODIMP GdiGraphics::GdiAlphaBlend(IGdiRawBitmap * bitmap, int dstX, int ds
 	return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, DWORD format, UINT * p)
+STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, DWORD format, VARIANT * p)
 {
 	TRACK_FUNCTION();
 
@@ -546,7 +546,7 @@ STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, in
 	// Well, magic :P
 	if (format & DT_CALCRECT)
 	{
-		RECT rc_calc, rc_old;
+		RECT rc_calc = {0}, rc_old = {0};
 
 		memcpy(&rc_calc, &rc, sizeof(RECT));
 		memcpy(&rc_old, &rc, sizeof(RECT));
@@ -572,8 +572,40 @@ STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, in
 	SelectFont(dc, oldfont);
 	m_ptr->ReleaseHDC(dc);
 
-	// Return characters drawn
-	*p = dpt.uiLengthDrawn;
+	// Returns an VBArray:
+	//   [0] left   (DT_CALCRECT) 
+	//   [1] top    (DT_CALCRECT)
+	//   [2] right  (DT_CALCRECT)
+	//   [3] bottom (DT_CALCRECT)
+	//   [4] characters drawn
+	const INT elements[] = 
+	{
+		rc.left,
+		rc.top,
+		rc.right,
+		rc.bottom,
+		dpt.uiLengthDrawn
+	};
+
+	SAFEARRAY * psa = SafeArrayCreateVector(VT_VARIANT, 0, _countof(elements));
+	if (!psa) return E_OUTOFMEMORY;
+
+	for (t_size i = 0; i <  _countof(elements); ++i)
+	{
+		_variant_t var;
+		var.vt = VT_I4;
+		var.intVal = elements[i];
+
+		if (SafeArrayPutElement(psa, reinterpret_cast<LONG *>(&i), &var))
+		{
+			// deep destroy
+			SafeArrayDestroy(psa);
+			return E_OUTOFMEMORY;
+		}
+	}
+
+	p->vt = VT_ARRAY | VT_VARIANT;
+	p->parray = psa;
 	return S_OK;
 }
 
@@ -1241,7 +1273,7 @@ STDMETHODIMP FbUtils::GetNowPlaying(IFbMetadbHandle** pp)
 	return S_OK;
 }
 
-STDMETHODIMP FbUtils::GetFocusItem(IFbMetadbHandle** pp)
+STDMETHODIMP FbUtils::GetFocusItem(VARIANT_BOOL force, IFbMetadbHandle** pp)
 {
 	TRACK_FUNCTION();
 
@@ -1254,24 +1286,19 @@ STDMETHODIMP FbUtils::GetFocusItem(IFbMetadbHandle** pp)
 		// Get focus item
 		static_api_ptr_t<playlist_manager>()->activeplaylist_get_focus_item_handle(metadb);
 
+		if (force && metadb.is_empty())
+		{
+			// if there's no focused item, just try to get the first item in the *active* playlist
+			static_api_ptr_t<playlist_manager>()->activeplaylist_get_item_handle(metadb, 0);
+		}
+
 		if (metadb.is_empty())
 		{
-
-			// if there's no focused item, just try to get the first item in the playlist
-			static_api_ptr_t<playlist_manager>()->activeplaylist_get_item_handle(metadb, 0);
-
-
-			if (metadb.is_empty())
-			{
-				(*pp) = NULL;
-				return S_OK;
-			}
+			(*pp) = NULL;
+			return S_OK;
 		}
 	}
-	catch (std::exception &)
-	{
-
-	}
+	catch (std::exception &) {}
 
 	(*pp) = new com_object_impl_t<FbMetadbHandle>(metadb);
 	return S_OK;
@@ -1376,7 +1403,6 @@ STDMETHODIMP FbUtils::put_PlaybackOrder(UINT order)
 	static_api_ptr_t<playlist_manager>()->playback_order_set_active(order);
 	return S_OK;
 }
-
 
 STDMETHODIMP FbUtils::get_StopAfterCurrent(VARIANT_BOOL * p)
 {
@@ -2293,6 +2319,57 @@ STDMETHODIMP WSHUtils::GetSystemMetrics(UINT index, INT * p)
 	if (!p) return E_POINTER;
 
 	*p = ::GetSystemMetrics(index);
+	return S_OK;
+}
+
+STDMETHODIMP WSHUtils::Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!pattern) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	pfc::string8_fast path = pfc::stringcvt::string_utf8_from_wide(pattern);
+	const char * fn = path.get_ptr() + path.scan_filename();
+	pfc::string8_fast dir(path.get_ptr(), fn - path.get_ptr());
+	puFindFile ff = uFindFirstFile(path.get_ptr());
+
+	pfc::string_list_impl files;
+
+	if (ff)
+	{
+		do 
+		{
+			DWORD attr = ff->GetAttributes();
+
+			if ((attr & inc_mask) && !(attr & exc_mask))
+			{
+				pfc::string8_fast fullpath = dir;
+				fullpath.add_string(ff->GetFileName());
+				files.add_item(fullpath.get_ptr());
+			}
+		} while (ff->FindNext());
+	}
+
+	SAFEARRAY * psa = SafeArrayCreateVector(VT_VARIANT, 0, files.get_count());
+	if (!psa) return E_OUTOFMEMORY;
+
+	for (t_size i = 0; i < files.get_count(); ++i)
+	{
+		_variant_t var;
+		var.vt = VT_BSTR;
+		var.bstrVal = SysAllocString(pfc::stringcvt::string_wide_from_utf8_fast(files[i]).get_ptr());
+
+		if (SafeArrayPutElement(psa, reinterpret_cast<LONG *>(&i), &var))
+		{
+			// deep destroy
+			SafeArrayDestroy(psa);
+			return E_OUTOFMEMORY;
+		}
+	}
+
+	p->vt = VT_ARRAY | VT_VARIANT;
+	p->parray = psa;
 	return S_OK;
 }
 

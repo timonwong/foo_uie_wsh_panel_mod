@@ -5,6 +5,14 @@
 #define WINVER 0x0501
 #define _WIN32_IE 0x600
 
+// Define this to disable VLD
+#define NO_VISUAL_LEAK_DETECTOR
+
+#if defined(_DEBUG) && !defined(NO_VISUAL_LEAK_DETECTOR)
+#include <vld.h>
+#endif
+
+
 #include <tchar.h>
 #include <Windows.h>
 #include <GdiPlus.h>
@@ -49,6 +57,3 @@
 #ifdef _INC_WINDOWSX
 #undef SubclassWindow
 #endif
-
-#define _TO_STRING(_String) #_String
-#define TO_STRING(_String) _TO_STRING(_String)
