@@ -341,7 +341,9 @@ Methods:
 	ITimerObj CreateTimerInterval(delay); // Period
 	void KillTimer(ITimerObj);
 	// [1.1.1] New: Notify other wsh panels with specified info thru callback function on_notify_data(name, info).
-	// info MUST be strings, numbers, booleans
+	// [1.3.0] Update:
+	//  info can be any type now, but be aware of passing arrays and objects (because they may be unrecognized between
+	//     JScript and VBScript). However, VBArrays, strings, booleans, integers and floats, are safe to use.
 	void NotifyOthers(name, info);
 	// [1.1.3] New: These two methods are in cooperation with callback on_metadb_changed().
 	void WatchMetadb(IFbMetadbHandle);
@@ -440,6 +442,13 @@ Methods:
 	// If you want to convert it to a JScript array, use .toArray() method.
 	// Sample usage: var arr = utils.Glob("C:\\*.*").toArray();
 	VBArray Glob(pattern, exc_mask = FILE_ATTRIBUTE_DIRECTORY, inc_mask = 0xffffffff);
+	// [1.3.0] New
+	// Test a file (or path)
+	// mode:
+	//   "e": If path exists, return true
+	//   "s": Retrieve file size, in bytes
+	//   "d": If path is a directory, return true
+	VARIANT FileTest(path, mode);
 }
 
 // Global variables:

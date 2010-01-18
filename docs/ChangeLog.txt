@@ -11,6 +11,9 @@ v1.3.0
 - ADD: Callback on_playlist_switch() (#Callbacks.txt).
 - ADD: window.GetFontCUI(), window.GetColorCUI(), window.GetFontDUI() and window.GetColorDUI() methods (#Interfaces.txt).
 - ADD: utils.Glob() method (#Interfaces.txt).
+- ADD: utils.FileTest() method (#Interfaces.txt).
+- ADD: on_script_unload() callback.
+- CHG: window.NotifyOthers(name, info), now info can be any type (boolean, string, integer...) (#Interfaces.txt).
 - CHG: Add a option parameter to fb.GetFocusItem(force = true) (#Interfaces.txt).
 - CHG: Return value of IGdiGraphics.GdiDrawText() is changed (#Interfaces.txt).
 - CHG: on_get_album_art_done() (#Callbacks.txt).

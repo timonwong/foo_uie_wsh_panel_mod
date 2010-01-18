@@ -417,7 +417,7 @@ __interface IFbWindow: IDispatch
 	STDMETHOD(CreateTimerTimeout)(UINT timeout, [out,retval] ITimerObj ** pp);
 	STDMETHOD(CreateTimerInterval)(UINT delay, [out,retval] ITimerObj ** pp);
 	STDMETHOD(KillTimer)(ITimerObj * p);
-	STDMETHOD(NotifyOthers)(BSTR name, BSTR info);
+	STDMETHOD(NotifyOthers)(BSTR name, VARIANT info);
 	STDMETHOD(WatchMetadb)(IFbMetadbHandle * handle);
 	STDMETHOD(UnWatchMetadb)();
 	STDMETHOD(CreateTooltip)([out,retval] IFbTooltip ** pp);
@@ -460,5 +460,6 @@ __interface IWSHUtils: IDispatch
 	STDMETHOD(GetSysColor)(UINT index, [out,retval] DWORD * p);
 	STDMETHOD(GetSystemMetrics)(UINT index, [out,retval] int * p);
 	STDMETHOD(Glob)(BSTR pattern, [defaultvalue(FILE_ATTRIBUTE_DIRECTORY)] UINT exc_mask, [defaultvalue(0xffffffff)] UINT inc_mask, [out,retval] VARIANT * p);
+	STDMETHOD(FileTest)(BSTR path, BSTR mode, [out,retval] VARIANT * p);
 };
 _COM_SMARTPTR_TYPEDEF(IWSHUtils, __uuidof(IWSHUtils));

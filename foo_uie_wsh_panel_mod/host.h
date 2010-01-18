@@ -101,7 +101,7 @@ public:
 	STDMETHODIMP CreateTimerTimeout(UINT timeout, ITimerObj ** pp);
 	STDMETHODIMP CreateTimerInterval(UINT delay, ITimerObj ** pp);
 	STDMETHODIMP KillTimer(ITimerObj * p);
-	STDMETHODIMP NotifyOthers(BSTR name, BSTR info);
+	STDMETHODIMP NotifyOthers(BSTR name, VARIANT info);
 	STDMETHODIMP WatchMetadb(IFbMetadbHandle * handle);
 	STDMETHODIMP UnWatchMetadb();
 	STDMETHODIMP CreateTooltip(IFbTooltip ** pp);
@@ -206,11 +206,11 @@ public:
 		script_term();
 	}
 
-	void update_script(const char* name, const char* code);
+	void update_script(const char * name = NULL, const char * code = NULL);
 
 private:
-	HRESULT script_init_pre();
-	bool script_init_post();
+	HRESULT script_pre_init();
+	bool script_init();
 	void script_stop();
 	void script_term();
 	HRESULT script_invoke_v(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);

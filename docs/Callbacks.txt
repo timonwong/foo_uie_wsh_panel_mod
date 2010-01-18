@@ -71,6 +71,7 @@ function on_playback_follow_cursor_changed(state) {}
 
 // [1.1.1] New: Called in other panels after window.NotifyOthers(name, info) is executed
 // name and info is the same as in NotifyOthers()
+// [1.3.0] Updated, see Interfaces.txt for more details.
 function on_notify_data(name, info) {}
 
 // [1.1.10] New:
@@ -149,3 +150,6 @@ function on_font_changed() {}
 
 // [1.3.0] New:
 function on_playlist_switch() {}
+
+// [1.3.0] New:
+function on_script_unload() {}

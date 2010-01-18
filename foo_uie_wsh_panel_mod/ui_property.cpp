@@ -74,7 +74,7 @@ void CDialogProperty::Apply()
 {
 	// Copy back
 	m_parent->get_config_prop().get_val() = m_dup_prop_map;
-	m_parent->update_script(m_parent->get_script_name(), m_parent->get_script_code());
+	m_parent->update_script();
 	LoadProperties();
 }
 

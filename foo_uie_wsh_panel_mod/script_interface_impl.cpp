@@ -377,7 +377,6 @@ STDMETHODIMP GdiGraphics::DrawRoundRect(float x, float y, float w, float h, floa
 	GetRoundRectPath(gp, rect, arc_width, arc_height);
 
 	m_ptr->DrawPath(&pen, &gp);
-
 	return S_OK;
 }
 
@@ -1103,10 +1102,10 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 		if (FAILED(hr = SafeArrayGetElement(p, &n2, &var_value)))
 			return hr;
 
-		if (FAILED(hr = VariantChangeType(&var_field, &var_field, VARIANT_ALPHABOOL, VT_BSTR)))
+		if (FAILED(hr = VariantChangeType(&var_field, &var_field, 0, VT_BSTR)))
 			return hr;
 
-		if (FAILED(hr = VariantChangeType(&var_value, &var_value, VARIANT_ALPHABOOL, VT_BSTR)))
+		if (FAILED(hr = VariantChangeType(&var_value, &var_value, 0, VT_BSTR)))
 			return hr;
 
 		ufield.convert(var_field.bstrVal);
@@ -1123,7 +1122,7 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 		if (FAILED(hr = SafeArrayGetElement(p, &nUBound, &var_multival)))
 			return hr;
 
-		if (FAILED(hr = VariantChangeType(&var_multival, &var_multival, VARIANT_ALPHABOOL, VT_BSTR)))
+		if (FAILED(hr = VariantChangeType(&var_multival, &var_multival, 0, VT_BSTR)))
 			return hr;
 
 		umultival.convert(var_multival.bstrVal);
@@ -1156,7 +1155,7 @@ STDMETHODIMP FbTitleFormat::Eval(VARIANT_BOOL force, BSTR* pp)
 			static_api_ptr_t<metadb> m;
 			
 			// HACK: A fake file handle should be okay
-			m->handle_create(handle, make_playable_location("file://C:\\blah.ogg", 0));
+			m->handle_create(handle, make_playable_location("file://C:\\_____temp_blah____.ogg", 0));
 		}
 		
 		handle->format_title(NULL, text, m_obj, NULL);
@@ -1211,7 +1210,7 @@ STDMETHODIMP FbUtils::trace(SAFEARRAY * p)
 		if (FAILED(SafeArrayGetElement(p, &n, &var)))
 			continue;
 
-		if (FAILED(hr = VariantChangeType(&var, &var, VARIANT_ALPHABOOL, VT_BSTR)))
+		if (FAILED(hr = VariantChangeType(&var, &var, 0, VT_BSTR)))
 			continue;
 
 		utf8.add_string(pfc::stringcvt::string_utf8_from_wide(var.bstrVal));
@@ -2229,7 +2228,7 @@ STDMETHODIMP WSHUtils::ReadINI(BSTR filename, BSTR section, BSTR key, VARIANT de
 	{
 		_variant_t var;
 
-		if (SUCCEEDED(VariantChangeType(&var, &defaultval, VARIANT_ALPHABOOL, VT_BSTR)))
+		if (SUCCEEDED(VariantChangeType(&var, &defaultval, 0, VT_BSTR)))
 		{
 			(*pp) = SysAllocString(var.bstrVal);
 			return S_OK;
@@ -2250,7 +2249,7 @@ STDMETHODIMP WSHUtils::WriteINI(BSTR filename, BSTR section, BSTR key, VARIANT v
 	_variant_t var;
 	HRESULT hr;
 
-	if (FAILED(hr = VariantChangeType(&var, &val, VARIANT_ALPHABOOL, VT_BSTR)))
+	if (FAILED(hr = VariantChangeType(&var, &val, 0, VT_BSTR)))
 		return hr;
 
 	*p = TO_VARIANT_BOOL(WritePrivateProfileString(section, key, var.bstrVal, filename));
@@ -2370,6 +2369,45 @@ STDMETHODIMP WSHUtils::Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT 
 
 	p->vt = VT_ARRAY | VT_VARIANT;
 	p->parray = psa;
+	return S_OK;
+}
+
+STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!path || !mode) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	if (_wcsicmp(mode, L"e") == 0)  // exists
+	{
+		p->vt = VT_BOOL;
+		p->boolVal = TO_VARIANT_BOOL(PathFileExists(path));
+	}
+	else if (_wcsicmp(mode, L"s") == 0)
+	{
+		HANDLE fh = CreateFile(path, FILE_READ_EA, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);  
+		LARGE_INTEGER size = {0};
+
+		if (fh != INVALID_HANDLE_VALUE)  
+		{  
+			GetFileSizeEx(fh, &size);
+			CloseHandle(fh);
+		}
+
+		p->vt = VT_I8;
+		p->llVal = size.QuadPart;
+	}
+	else if (_wcsicmp(mode, L"d") == 0)
+	{
+		p->vt = VT_BOOL;
+		p->boolVal = TO_VARIANT_BOOL(PathIsDirectory(path));
+	}
+	else
+	{
+		return E_INVALIDARG;
+	}
+
 	return S_OK;
 }
 

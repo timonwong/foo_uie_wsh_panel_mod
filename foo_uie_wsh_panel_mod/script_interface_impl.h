@@ -651,6 +651,7 @@ public:
 	STDMETHODIMP GetSysColor(UINT index, DWORD * p);
 	STDMETHODIMP GetSystemMetrics(UINT index, INT * p);
 	STDMETHODIMP Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT * p);
+	STDMETHODIMP FileTest(BSTR path, BSTR mode, VARIANT * p);
 };
 
 class FbTooltip : public IDisposableImpl4<IFbTooltip>

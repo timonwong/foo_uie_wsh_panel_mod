@@ -145,7 +145,7 @@ namespace helpers
 
 	private:
 		metadb_handle_ptr m_handle;
-		CComBSTR m_rawpath;
+		_bstr_t m_rawpath;
 		int m_art_id;
 		VARIANT_BOOL m_need_stub;
 		VARIANT_BOOL m_only_embed;

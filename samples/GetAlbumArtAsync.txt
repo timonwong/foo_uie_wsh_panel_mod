@@ -38,10 +38,10 @@ function on_playback_new_track(metadb) {
 	if (metadb)
 		utils.GetAlbumArtAsync(window.ID, metadb, AlbumArtId.front);
 	g_img = null;
-	window.Repaint();
 }
 
-function on_get_album_art_done(metadb, art_id, image) {
+function on_get_album_art_done(metadb, art_id, image, image_path) {
+	//fb.trace("Path:", image_path);
 	g_img = image;
 	window.Repaint();
 }

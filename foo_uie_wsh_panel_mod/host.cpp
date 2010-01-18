@@ -448,17 +448,26 @@ STDMETHODIMP FbWindow::KillTimer(ITimerObj * p)
 	return S_OK;
 }
 
-STDMETHODIMP FbWindow::NotifyOthers(BSTR name, BSTR info)
+STDMETHODIMP FbWindow::NotifyOthers(BSTR name, VARIANT info)
 {
 	TRACK_FUNCTION();
 
-	if (!name || !info) return E_INVALIDARG;
+	if (!name) return E_INVALIDARG;
 
-	t_simple_callback_data_2<CComBSTR, CComBSTR> * notify_data 
-		= new t_simple_callback_data_2<CComBSTR, CComBSTR>(name, info);
+	HRESULT hr = S_OK;
+	_variant_t var;
 
-	panel_notifier_manager::instance().post_msg_to_others_pointer(m_host->GetHWND(), CALLBACK_UWM_NOTIFY_DATA, 
-		notify_data);
+	hr = VariantCopyInd(&var, &info);
+
+	if (FAILED(hr)) return hr;
+
+	t_simple_callback_data_2<_bstr_t, _variant_t> * notify_data 
+		= new t_simple_callback_data_2<_bstr_t, _variant_t>(name, NULL);
+
+	notify_data->m_item2.Attach(var.Detach());
+
+	panel_notifier_manager::instance().post_msg_to_others_pointer(m_host->GetHWND(), 
+		CALLBACK_UWM_NOTIFY_DATA, notify_data);
 
 	return S_OK;
 }
@@ -781,7 +790,7 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 	LONG  charpos = 0;
 	EXCEPINFO excep = { 0 };
 	WCHAR buf[512] = { 0 };
-	CComBSTR sourceline;
+	_bstr_t sourceline;
 
 	if (FAILED(err->GetSourcePosition(&ctx, &line, &charpos)))
 	{
@@ -789,9 +798,9 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 		charpos = 0;
 	}
 
-	if (FAILED(err->GetSourceLineText(&sourceline)))
+	if (FAILED(err->GetSourceLineText(sourceline.GetAddress())))
 	{
-		sourceline = L"<no source text available>";
+		sourceline = L"<source text only available in compile time>";
 	}
 
 	if (SUCCEEDED(err->GetExceptionInfo(&excep)))
@@ -803,7 +812,7 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 		pfc::stringcvt::string_os_from_utf8 guid_str(pfc::print_guid(m_host->GetGUID()));
 
 		StringCbPrintf(buf, sizeof(buf), _T("WSH Panel Mod (GUID: %s): %s:\n%s\nLn: %d, Col: %d\n%s\n"),
-			guid_str.get_ptr(), excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, sourceline.m_str);
+			guid_str.get_ptr(), excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, sourceline.GetBSTR());
 
 		m_host->OnScriptError(buf);
 
@@ -855,15 +864,19 @@ STDMETHODIMP ScriptSite::QueryContinue()
 	return S_OK;
 }
 
-void wsh_panel_window::update_script(const char* name, const char* code)
+void wsh_panel_window::update_script(const char * name /*= NULL*/, const char * code /*= NULL*/)
 {
-	get_script_name() = name;
-	get_script_code() = code;
+	if (name && code)
+	{
+		get_script_name() = name;
+		get_script_code() = code;
+	}
+
 	script_term();
-	script_init_post();
+	script_init();
 }
 
-HRESULT wsh_panel_window::script_init_pre()
+HRESULT wsh_panel_window::script_pre_init()
 {
 	TRACK_FUNCTION();
 
@@ -906,7 +919,7 @@ HRESULT wsh_panel_window::script_init_pre()
 	return hr;
 }
 
-bool wsh_panel_window::script_init_post()
+bool wsh_panel_window::script_init()
 {
 	TRACK_FUNCTION();
 
@@ -940,7 +953,7 @@ bool wsh_panel_window::script_init_post()
 		return false;
 	}
 
-	HRESULT hr = script_init_pre();
+	HRESULT hr = script_pre_init();
 
 	if (FAILED(hr))
 	{
@@ -996,6 +1009,7 @@ void wsh_panel_window::script_term()
 {
 	TRACK_FUNCTION();
 
+	script_invoke_v(L"on_script_unload");
 	script_stop();
 
 	if (m_script_root)
@@ -1142,7 +1156,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			panel_notifier_manager::instance().add_window(m_hwnd);
 
-			script_init_post();
+			script_init();
 		}
 		return 0;
 
@@ -1161,7 +1175,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case WM_DISPLAYCHANGE:
 		script_term();
-		script_init_post();
+		script_init();
 		return 0;
 
 	case WM_ERASEBKGND:
@@ -1786,10 +1800,10 @@ void wsh_panel_window::on_notify_data(WPARAM wp)
 
 	VARIANTARG args[2];
 
-	callback_data_ptr<t_simple_callback_data_2<CComBSTR, CComBSTR> > data(wp);
+	callback_data_ptr<t_simple_callback_data_2<_bstr_t, _variant_t> > data(wp);
 
-	args[0].vt = VT_BSTR;
-	args[0].bstrVal = data->m_item2;
+	args[0].vt = VT_VARIANT | VT_BYREF;
+	args[0].pvarVal = &data->m_item2.GetVARIANT();
 	args[1].vt = VT_BSTR;
 	args[1].bstrVal = data->m_item1;
 	script_invoke_v(L"on_notify_data", args, _countof(args));
