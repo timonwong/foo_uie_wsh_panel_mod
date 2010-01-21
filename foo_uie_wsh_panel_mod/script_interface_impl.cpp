@@ -2028,26 +2028,6 @@ STDMETHODIMP MeasureStringInfo::get_chars(int * p)
 	return S_OK;
 }
 
-GdiRawBitmap::GdiRawBitmap(Gdiplus::Bitmap * p_bmp)
-{
-	m_hdc = CreateCompatibleDC(NULL);
-	p_bmp->GetHBITMAP(Gdiplus::Color(0, 0, 0), &m_hbmp);
-	m_hbmpold = SelectBitmap(m_hdc, m_hbmp);
-
-	m_width = p_bmp->GetWidth();
-	m_height = p_bmp->GetHeight();
-}
-
-STDMETHODIMP GdiRawBitmap::get__Handle(HDC * p)
-{
-	TRACK_FUNCTION();
-
-	if (!p || !m_hdc) return E_POINTER;
-
-	*p = m_hdc;
-	return S_OK;
-}
-
 STDMETHODIMP GdiRawBitmap::get_Width(UINT* p)
 {
 	TRACK_FUNCTION();
@@ -2066,6 +2046,26 @@ STDMETHODIMP GdiRawBitmap::get_Height(UINT* p)
 
 	*p = m_height;
 	return S_OK;
+}
+
+STDMETHODIMP GdiRawBitmap::get__Handle(HDC * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p || !m_hdc) return E_POINTER;
+
+	*p = m_hdc;
+	return S_OK;
+}
+
+GdiRawBitmap::GdiRawBitmap(Gdiplus::Bitmap * p_bmp)
+{
+	m_hdc = CreateCompatibleDC(NULL);
+	p_bmp->GetHBITMAP(Gdiplus::Color(0, 0, 0), &m_hbmp);
+	m_hbmpold = SelectBitmap(m_hdc, m_hbmp);
+
+	m_width = p_bmp->GetWidth();
+	m_height = p_bmp->GetHeight();
 }
 
 //STDMETHODIMP GdiRawBitmap::GetBitmap(IGdiBitmap ** pp)
@@ -2438,30 +2438,6 @@ FbTooltip::FbTooltip(HWND p_wndparent/*, bool p_want_multiline*/)
 	SendMessage(m_wndtooltip, TTM_ACTIVATE, FALSE, 0);
 }
 
-STDMETHODIMP FbTooltip::Activate()
-{
-	TRACK_FUNCTION();
-
-	SendMessage(m_wndtooltip, TTM_ACTIVATE, TRUE, 0);
-	return S_OK;
-}
-
-STDMETHODIMP FbTooltip::Deactivate()
-{
-	TRACK_FUNCTION();
-
-	SendMessage(m_wndtooltip, TTM_ACTIVATE, FALSE, 0);
-	return S_OK;
-}
-
-STDMETHODIMP FbTooltip::SetMaxWidth(int width)
-{
-	TRACK_FUNCTION();
-
-	SendMessage(m_wndtooltip, TTM_SETMAXTIPWIDTH, 0, width);
-	return S_OK;
-}
-
 STDMETHODIMP FbTooltip::get_Text(BSTR * pp)
 {
 	TRACK_FUNCTION();
@@ -2489,6 +2465,30 @@ STDMETHODIMP FbTooltip::put_Text(BSTR text)
 	ti.uId = (UINT_PTR)m_wndparent;
 	ti.lpszText = m_tip_buffer;
 	SendMessage(m_wndtooltip, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
+	return S_OK;
+}
+
+STDMETHODIMP FbTooltip::Activate()
+{
+	TRACK_FUNCTION();
+
+	SendMessage(m_wndtooltip, TTM_ACTIVATE, TRUE, 0);
+	return S_OK;
+}
+
+STDMETHODIMP FbTooltip::Deactivate()
+{
+	TRACK_FUNCTION();
+
+	SendMessage(m_wndtooltip, TTM_ACTIVATE, FALSE, 0);
+	return S_OK;
+}
+
+STDMETHODIMP FbTooltip::SetMaxWidth(int width)
+{
+	TRACK_FUNCTION();
+
+	SendMessage(m_wndtooltip, TTM_SETMAXTIPWIDTH, 0, width);
 	return S_OK;
 }
 

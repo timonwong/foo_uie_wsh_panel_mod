@@ -681,11 +681,11 @@ protected:
 	}
 
 public:
+	STDMETHODIMP get_Text(BSTR * pp);
+	STDMETHODIMP put_Text(BSTR text);
 	STDMETHODIMP Activate();
 	STDMETHODIMP Deactivate();
 	STDMETHODIMP SetMaxWidth(int width);
-	STDMETHODIMP get_Text(BSTR * pp);
-	STDMETHODIMP put_Text(BSTR text);
 };
 
 // forward declartion

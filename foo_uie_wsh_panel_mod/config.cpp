@@ -109,7 +109,7 @@ void wsh_panel_vars::save_config(stream_writer * writer, abort_callback & abort)
 	}
 }
 
-bool sci_prop_config::g_is_allowed_type(VARTYPE p_vt)
+bool prop_kv_config::g_is_allowed_type(VARTYPE p_vt)
 {
 	switch (p_vt)
 	{
@@ -135,7 +135,7 @@ bool sci_prop_config::g_is_allowed_type(VARTYPE p_vt)
 	return false;
 }
 
-bool sci_prop_config::get_config_item(const char * p_key, VARIANT & p_out)
+bool prop_kv_config::get_config_item(const char * p_key, VARIANT & p_out)
 {
 	t_val val;
 
@@ -154,7 +154,7 @@ bool sci_prop_config::get_config_item(const char * p_key, VARIANT & p_out)
 	return false;
 }
 
-void sci_prop_config::set_config_item(const char * p_key, const VARIANT & p_val)
+void prop_kv_config::set_config_item(const char * p_key, const VARIANT & p_val)
 {
 	if (!g_is_allowed_type(p_val.vt))
 	{
@@ -166,17 +166,17 @@ void sci_prop_config::set_config_item(const char * p_key, const VARIANT & p_val)
 	}
 }
 
-void sci_prop_config::load(stream_reader * reader, abort_callback & abort)
+void prop_kv_config::load(stream_reader * reader, abort_callback & abort)
 {
 	g_load(m_map, reader, abort);
 }
 
-void sci_prop_config::save(stream_writer * writer, abort_callback & abort) const
+void prop_kv_config::save(stream_writer * writer, abort_callback & abort) const
 {
 	g_save(m_map, writer, abort);
 }
 
-void sci_prop_config::g_load(t_map & data, stream_reader * reader, abort_callback & abort) throw()
+void prop_kv_config::g_load(t_map & data, stream_reader * reader, abort_callback & abort) throw()
 {
 	t_size count;
 
@@ -256,7 +256,7 @@ void sci_prop_config::g_load(t_map & data, stream_reader * reader, abort_callbac
 	}
 }
 
-void sci_prop_config::g_save(const t_map & data, stream_writer * writer, abort_callback & abort) throw()
+void prop_kv_config::g_save(const t_map & data, stream_writer * writer, abort_callback & abort) throw()
 {
 	try
 	{

@@ -35,9 +35,10 @@ inline DWORD edge_style_from_config(t_edge_style edge_style)
 	}
 }
 
-class sci_prop_config
+class prop_kv_config
 {
 public:
+	typedef prop_kv_config t_self;
 	typedef pfc::string_simple t_key;
 	typedef _variant_t t_val;
 	typedef pfc::map_t<t_key, t_val, pfc::comparator_stricmp_ascii> t_map;
@@ -61,11 +62,7 @@ public:
 
 private:
 	t_map m_map;
-	static const GUID m_guid;
 };
-
-// {C389FC3A-F4DD-4a93-BC19-47D198338902}
-FOOGUIDDECL const GUID sci_prop_config::m_guid = { 0xc389fc3a, 0xf4dd, 0x4a93, { 0xbc, 0x19, 0x47, 0xd1, 0x98, 0x33, 0x89, 0x2 } };
 
 class wsh_panel_vars
 {
@@ -76,7 +73,7 @@ private:
 	WINDOWPLACEMENT m_wndpl;
 	pfc::string8  m_script_name;
 	pfc::string8  m_script_code;
-	sci_prop_config m_config_prop;
+	prop_kv_config m_config_prop;
 	t_edge_style m_edge_style;
 	GUID m_config_guid;
 
@@ -126,7 +123,7 @@ public:
 		return m_disabled;
 	}
 
-	inline sci_prop_config & get_config_prop()
+	inline prop_kv_config & get_config_prop()
 	{
 		return m_config_prop;
 	}

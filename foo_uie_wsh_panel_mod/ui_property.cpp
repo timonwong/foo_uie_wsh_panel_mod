@@ -50,7 +50,7 @@ LRESULT CDialogProperty::OnPinItemChanged(LPNMHDR pnmh)
 
 	if (m_dup_prop_map.have_item(uname))
 	{
-		sci_prop_config::t_val & val = m_dup_prop_map[uname];
+		prop_kv_config::t_val & val = m_dup_prop_map[uname];
 		_variant_t var;
 
 		if (pnpi->prop->GetValue(&var))
@@ -87,7 +87,7 @@ void CDialogProperty::LoadProperties(bool reload /*= true*/)
 		m_dup_prop_map = m_parent->get_config_prop().get_val();
 	}
 
-	for (sci_prop_config::t_map::const_iterator iter = m_dup_prop_map.first(); iter.is_valid(); ++iter)
+	for (prop_kv_config::t_map::const_iterator iter = m_dup_prop_map.first(); iter.is_valid(); ++iter)
 	{
 		pfc::stringcvt::string_wide_from_utf8_fast wname = iter->m_key;
 		HPROPERTY hProp = NULL;
@@ -151,7 +151,7 @@ LRESULT CDialogProperty::OnImportBnClicked(WORD wNotifyCode, WORD wID, HWND hWnd
 		try
 		{
 			filesystem::g_open_read(io, filename, abort);
-			sci_prop_config::g_load(m_dup_prop_map, io.get_ptr(), abort);
+			prop_kv_config::g_load(m_dup_prop_map, io.get_ptr(), abort);
 		}
 		catch (std::exception &)
 		{
@@ -177,7 +177,7 @@ LRESULT CDialogProperty::OnExportBnClicked(WORD wNotifyCode, WORD wID, HWND hWnd
 		try
 		{
 			filesystem::g_open_write_new(io, path, abort);
-			sci_prop_config::g_save(m_dup_prop_map, io.get_ptr(), abort);
+			prop_kv_config::g_save(m_dup_prop_map, io.get_ptr(), abort);
 		}
 		catch (std::exception &)
 		{

@@ -82,14 +82,6 @@ namespace
 		}
 	};
 
-#ifdef _DEBUG
-	void __cdecl my_purecall_handler(void)
-	{
-		// breakpoint
-		__debugbreak();
-	}
-#endif
-
 	static initquit_factory_t<wsh_initquit> g_initquit;
 	CAppModule _Module;
 
@@ -101,9 +93,6 @@ namespace
 		{
 		case DLL_PROCESS_ATTACH:
 			{
-#ifdef _DEBUG
-				_set_purecall_handler(my_purecall_handler);
-#endif
 				// Load TypeLib
 				TCHAR path[MAX_PATH + 4];
 				DWORD len = GetModuleFileName(ins, path, MAX_PATH);

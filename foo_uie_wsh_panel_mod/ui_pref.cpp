@@ -19,7 +19,7 @@ BOOL CDialogPref::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 	SendDlgItemMessage(IDC_SPIN_TIMEOUT, UDM_SETPOS, 0, MAKELONG(g_cfg_timeout.get_value(), 0));
 
 	// Check "Safe mode"
-	SendDlgItemMessage(IDC_CHECK_SAFE_MODE, BM_SETCHECK, g_cfg_safe_mode ? BST_CHECKED : BST_UNCHECKED, 0);
+	uButton_SetCheck(m_hWnd, IDC_CHECK_SAFE_MODE, g_cfg_safe_mode);
 
 	DoDataExchange();
 
@@ -97,6 +97,7 @@ LRESULT CDialogPref::OnPropNMDblClk(LPNMHDR pnmh)
 			// Update list
 			m_props.SetItemText(pniv->iItem, 1, pfc::stringcvt::string_wide_from_utf8_fast(val));
 			DoDataExchange();
+			HasChanged();
 		}
 	}
 
@@ -142,8 +143,8 @@ void CDialogPref::OnChanged()
 
 bool CDialogPref::HasChanged()
 {
-	return (GetDlgItemInt(IDC_EDIT_TIMEOUT, NULL, FALSE) != g_cfg_timeout)
-		|| ((SendDlgItemMessage(IDC_CHECK_SAFE_MODE, BM_GETCHECK) == BST_CHECKED) != g_cfg_safe_mode);
+	return (GetDlgItemInt(IDC_EDIT_TIMEOUT, NULL, FALSE) != g_cfg_timeout) || 
+		(uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE) != g_cfg_safe_mode);
 }
 
 HWND CDialogPref::get_wnd()
@@ -154,20 +155,27 @@ HWND CDialogPref::get_wnd()
 t_uint32 CDialogPref::get_state()
 {
 	t_uint32 state = preferences_state::resettable;
-	if (HasChanged()) state |= preferences_state::changed;
+
+	if (HasChanged())
+	{
+		state |= preferences_state::changed;
+
+		if (uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE) != g_cfg_safe_mode)
+			state |= preferences_state::needs_restart;
+	}
+	
 	return state;
 }
 
 void CDialogPref::apply()
 {
 	g_cfg_timeout = GetDlgItemInt(IDC_EDIT_TIMEOUT, NULL, FALSE);
-	g_cfg_safe_mode = (SendDlgItemMessage(IDC_CHECK_SAFE_MODE, BM_GETCHECK) == BST_CHECKED);
+	g_cfg_safe_mode = uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE);
 	OnChanged();
 }
 
 void CDialogPref::reset()
 {
-	g_cfg_from_dui_first_time = true;
 	g_cfg_safe_mode = true;
 	g_cfg_timeout = 15;
 	LoadProps(true);

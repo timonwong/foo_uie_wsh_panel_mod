@@ -13,7 +13,6 @@
 
 namespace
 {
-#pragma region my ugly implemetation
 	template<typename TImpl>
 	class my_ui_element_impl : public ui_element 
 	{
@@ -42,7 +41,6 @@ namespace
 				: TImpl(cfg, callback) {}
 		};
 	};
-#pragma endregion
 
 	// CUI panel instance
 	static uie::window_factory<wsh_panel_window_cui> g_wsh_panel_wndow_cui;
@@ -453,11 +451,12 @@ STDMETHODIMP FbWindow::NotifyOthers(BSTR name, VARIANT info)
 	TRACK_FUNCTION();
 
 	if (!name) return E_INVALIDARG;
+	if (info.vt & VT_BYREF) return E_INVALIDARG;
 
 	HRESULT hr = S_OK;
 	_variant_t var;
 
-	hr = VariantCopyInd(&var, &info);
+	hr = VariantCopy(&var, &info);
 
 	if (FAILED(hr)) return hr;
 
@@ -812,7 +811,7 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 		pfc::stringcvt::string_os_from_utf8 guid_str(pfc::print_guid(m_host->GetGUID()));
 
 		StringCbPrintf(buf, sizeof(buf), _T("WSH Panel Mod (GUID: %s): %s:\n%s\nLn: %d, Col: %d\n%s\n"),
-			guid_str.get_ptr(), excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, sourceline.GetBSTR());
+			guid_str.get_ptr(), excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, static_cast<const wchar_t *>(sourceline));
 
 		m_host->OnScriptError(buf);
 
@@ -910,6 +909,7 @@ HRESULT wsh_panel_window::script_pre_init()
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"fb", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
+	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_STARTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
 	// processing "@import"
@@ -1001,6 +1001,8 @@ void wsh_panel_window::script_stop()
 
 	if (m_script_engine)
 	{
+		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
+		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
 		m_script_engine->Close();
 	}
 }
@@ -2152,12 +2154,6 @@ HFONT wsh_panel_window_cui::GetFontCUI(unsigned type, const GUID & guid)
 void wsh_panel_window_dui::initialize_window(HWND parent)
 {
 	t_parent::create(parent);
-
-	// TODO: Announce
-	//if (g_cfg_from_dui_first_time)
-	//{
-		//g_cfg_from_dui_first_time = false;
-	//}
 }
 
 HWND wsh_panel_window_dui::get_wnd()

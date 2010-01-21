@@ -16,7 +16,7 @@ class CDialogProperty
 private:
 	wsh_panel_window * m_parent;
 	CPropertyListCtrl m_properties;
-	sci_prop_config::t_map m_dup_prop_map;
+	prop_kv_config::t_map m_dup_prop_map;
 
 public:
 	CDialogProperty(wsh_panel_window * p_parent) : m_parent(p_parent)

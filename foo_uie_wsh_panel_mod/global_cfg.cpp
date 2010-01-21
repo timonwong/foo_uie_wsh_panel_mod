@@ -20,4 +20,3 @@ namespace guid
 
 cfg_uint g_cfg_timeout(guid::cfg_timeout, 15); // Default is 15 seconds
 cfg_bool g_cfg_safe_mode(guid::cfg_safe_mode, true);
-cfg_bool g_cfg_from_dui_first_time(guid::cfg_from_dui_first_time, true);

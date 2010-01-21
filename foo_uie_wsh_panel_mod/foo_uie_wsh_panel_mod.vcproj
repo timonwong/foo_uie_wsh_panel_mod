@@ -65,6 +65,7 @@
 				AdditionalDependencies="GdiPlus.lib shared.lib shlwapi.lib WinMM.lib SciLexerD.lib Imm32.lib uxtheme.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../shared;../lib"
+				DelayLoadDLLs="uxtheme.dll"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
