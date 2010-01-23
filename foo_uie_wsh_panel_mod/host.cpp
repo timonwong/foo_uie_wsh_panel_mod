@@ -2115,7 +2115,7 @@ void wsh_panel_window_cui::on_bool_changed(t_size mask) const
 
 DWORD wsh_panel_window_cui::GetColorCUI(unsigned type, const GUID & guid)
 {
-	if (type < columns_ui::colours::colour_inactive_selection_background)
+	if (type <= columns_ui::colours::colour_active_item_frame)
 	{
 		columns_ui::colours::helper helper(guid);
 
@@ -2128,9 +2128,9 @@ DWORD wsh_panel_window_cui::GetColorCUI(unsigned type, const GUID & guid)
 
 HFONT wsh_panel_window_cui::GetFontCUI(unsigned type, const GUID & guid)
 {
-	if (guid != pfc::guid_null)
+	if (guid == pfc::guid_null)
 	{
-		if (type < columns_ui::fonts::font_type_labels)
+		if (type <= columns_ui::fonts::font_type_labels)
 		{
 			try
 			{
