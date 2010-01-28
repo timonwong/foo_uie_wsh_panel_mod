@@ -1,6 +1,6 @@
 #pragma once
 
-[module(name="foo_uie_wsh_panel_mod", version="1.5")];
+[module(name="foo_uie_wsh_panel_mod", version="1.6")];
 
 extern ITypeLibPtr g_typelib;
 
@@ -395,6 +395,22 @@ __interface IFbTooltip: IDisposable
 	dual,
 	pointer_default(unique),
 	library_block,
+	uuid("8a14d6a2-4582-4398-a6af-2206f2dabbbe")
+]
+__interface IThemeManager: IDisposable
+{
+	STDMETHOD(SetPartAndStateID)(int partid, int stateid);
+	STDMETHOD(IsThemePartDefined)(int partid, int stateid, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(DrawThemeBackground)(IGdiGraphics * gr, int x, int y, int w, int h);
+	// Vista+
+	//STDMETHOD(DrawThemeTextEx)(IGdiGraphics * gr, BSTR text, int x, int y, int w, int h, [defaultvalue(0)] DWORD format, [out,retval] VARIANT * p);
+};
+
+[
+	object,
+	dual,
+	pointer_default(unique),
+	library_block,
 	uuid("81e1f0c0-1dfe-4996-abd9-ba98dff69e4c")
 ]
 __interface IFbWindow: IDispatch
@@ -432,6 +448,7 @@ __interface IFbWindow: IDispatch
 	STDMETHOD(GetColorDUI)(UINT type, [out,retval] DWORD * p);
 	STDMETHOD(GetFontDUI)(UINT type, [out,retval] IGdiFont ** pp);
 	//STDMETHOD(CreateObject)(BSTR progid_or_clsid, [out,retval] IUnknown ** pp);
+	STDMETHOD(CreateThemeManager)(BSTR classid, [out,retval] IThemeManager ** pp);
 };
 _COM_SMARTPTR_TYPEDEF(IFbWindow, __uuidof(IFbWindow));
 

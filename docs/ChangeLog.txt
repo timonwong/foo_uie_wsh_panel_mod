@@ -1,3 +1,7 @@
+v1.3.1
+- ADD: window.CreateThemeManager() method (and also the IThemeManager interface).
+- FIX: When Layout editing mode is enabled, the context menu may not display the layout editing commands.
+
 v1.3.0
 - CHG: Compiled against new SDK for foobar2000 1.0+, drop support for older versions.
 - CHG: Test versions will be expired after 14 days (no other restrictions, just a popup dialog to prompt user to update).
@@ -14,7 +18,7 @@ v1.3.0
 - ADD: utils.FileTest() method (#Interfaces.txt).
 - ADD: on_script_unload() callback.
 - CHG: window.NotifyOthers(name, info), now info can be any type (boolean, string, integer...) (#Interfaces.txt).
-- CHG: Add a option parameter to fb.GetFocusItem(force = true) (#Interfaces.txt).
+- CHG: Add a optional parameter 'force' to fb.GetFocusItem() (#Interfaces.txt).
 - CHG: Return value of IGdiGraphics.GdiDrawText() is changed (#Interfaces.txt).
 - CHG: on_get_album_art_done() (#Callbacks.txt).
 - CHG: IMenuObj.CheckMenuItem(item_id, check), now parameter 'check' accept boolean value (#Interfaces.txt).

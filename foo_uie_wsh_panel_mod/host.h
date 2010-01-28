@@ -116,6 +116,7 @@ public:
 	STDMETHODIMP GetColorDUI(UINT type, DWORD * p);
 	STDMETHODIMP GetFontDUI(UINT type, IGdiFont ** pp);
 	//STDMETHODIMP CreateObject(BSTR progid_or_clsid, IUnknown ** pp);
+	STDMETHODIMP CreateThemeManager(BSTR classid, IThemeManager ** pp);
 };
 
 class ScriptSite : 
@@ -195,10 +196,9 @@ private:
 	ScriptSite       m_script_site;
 	IGdiGraphicsPtr  m_gr_wrap;
 	bool             m_is_mouse_tracked;
-	bool             m_is_edit_mode;
 
 public:
-	wsh_panel_window() : m_is_mouse_tracked(false), m_is_edit_mode(false), m_script_site(this) {}
+	wsh_panel_window() : m_is_mouse_tracked(false), m_script_site(this) {}
 
 	virtual ~wsh_panel_window()
 	{
@@ -267,8 +267,6 @@ private:
 	void on_changed_sorted(WPARAM wp);
 
 protected:
-	inline void notify_is_edit_mode_changed_(bool enabled) { m_is_edit_mode = enabled; }
-
 	// override me
 	virtual void notify_size_limit_changed_(LPARAM lp) = 0;
 };
@@ -322,6 +320,7 @@ public:
 	wsh_panel_window_dui(ui_element_config::ptr cfg, ui_element_instance_callback::ptr callback) : m_callback(callback)
 	{
 		m_instance_type = KInstanceTypeDUI;
+		m_is_edit_mode = m_callback->is_edit_mode_enabled();
 		set_configuration(cfg);
 	}
 
@@ -361,9 +360,11 @@ public:
 	virtual HFONT GetFontDUI(unsigned type);
 
 private:
+	void notify_is_edit_mode_changed_(bool enabled) { m_is_edit_mode = enabled; }
 	virtual void notify_size_limit_changed_(LPARAM lp);
 
 private:
 	typedef wsh_panel_window t_parent;
 	ui_element_instance_callback::ptr m_callback;
+	bool m_is_edit_mode;
 };

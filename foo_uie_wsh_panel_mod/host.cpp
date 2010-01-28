@@ -716,6 +716,33 @@ STDMETHODIMP FbWindow::GetFontDUI(UINT type, IGdiFont ** pp)
 //	return hr;
 //}
 
+STDMETHODIMP FbWindow::CreateThemeManager(BSTR classid, IThemeManager ** pp)
+{
+	TRACK_FUNCTION();
+
+	if (!classid) return E_INVALIDARG;
+	if (!pp) return E_POINTER;
+
+	IThemeManager * ptheme = NULL;
+
+	try
+	{
+		ptheme = new com_object_impl_t<ThemeManager>(m_host->GetHWND(), classid);
+	}
+	catch (pfc::exception_invalid_params &)
+	{
+		if (ptheme)
+		{
+			ptheme->Dispose();
+			delete ptheme;
+			ptheme = NULL;
+		}
+	}
+
+	*pp = ptheme;
+	return S_OK;
+}
+
 STDMETHODIMP ScriptSite::GetLCID(LCID* plcid)
 {
 	return E_NOTIMPL;
@@ -1062,7 +1089,7 @@ HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, VARIANTARG * argv /*= N
 			console::printf("WSH Panel Mod (GUID: %s): Unhandled Unknown Exception, will crash now...", guid.get_ptr());
 			PRINT_DISPATCH_TRACK_MESSAGE();
 			// breakpoint
-			pfc::crash();
+			__debugbreak();
 		}
 
 		pdisp->Release();
@@ -1275,7 +1302,6 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				break;
 
 			case WM_RBUTTONDOWN:
-				if (m_is_edit_mode) break;
 				script_invoke_v(L"on_mouse_rbtn_down", args, _countof(args));
 				break;
 			}
@@ -1309,7 +1335,6 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			case WM_RBUTTONUP:
 				{
-					if (m_is_edit_mode) break;
 					_variant_t var_result;
 
 					if (SUCCEEDED(script_invoke_v(L"on_mouse_rbtn_up", args, _countof(args), &var_result)))
@@ -1352,7 +1377,6 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				break;
 
 			case WM_RBUTTONDBLCLK:
-				if (m_is_edit_mode) break;
 				script_invoke_v(L"on_mouse_rbtn_dblclk", args, _countof(args));
 				break;
 			}
@@ -1360,12 +1384,8 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		break;
 
 	case WM_CONTEXTMENU:
-		if (!m_is_edit_mode)
-		{
-			on_context_menu(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
-			return 1;
-		}
-		break;
+		on_context_menu(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+		return 1;
 
 	case WM_MOUSEMOVE:
 		{
@@ -2242,7 +2262,15 @@ void wsh_panel_window_dui::notify(const GUID & p_what, t_size p_param1, const vo
 LRESULT wsh_panel_window_dui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	switch (msg)
-	{
+	{	
+	case WM_RBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONDBLCLK:
+	case WM_CONTEXTMENU:
+		if (m_is_edit_mode) 
+			return DefWindowProc(hwnd, msg, wp, lp);
+		break;
+
 	case UWM_SIZELIMITECHANGED:
 		notify_size_limit_changed_(lp);
 		return 0;

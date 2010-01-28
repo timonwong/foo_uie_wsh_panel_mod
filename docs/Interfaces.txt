@@ -315,6 +315,17 @@ Methods:
 	void Dispose();
 }
 
+// [1.3.1] New interface
+interface IThemeManager {
+Methods:
+	// For parts and stats: http://msdn.microsoft.com/en-us/library/bb773210%28VS.85%29.aspx
+	// You get vsstyle.h and vssym32.h (won't included in Flags because they are too large) here:
+	//    http://dl.dropbox.com/u/2451120/vsstyles_h.7z
+	void SetPartAndStateID(partid, stateid);
+	boolean IsThemePartDefined(partid, stateid);
+	void DrawThemeBackground(gr, x, y, w, h);
+}
+
 interface IFbWindow {
 Properties:
 	// [1.1.10] New:
@@ -384,6 +395,10 @@ Methods:
 	// Only valid in DUI
 	// for type, see Flags.txt
 	IGdiFont GetFontDUI(type);
+	// [1.3.1] New:
+	// class list: http://msdn.microsoft.com/en-us/library/bb773210%28VS.85%29.aspx
+	// e.g: var theme = window.CreateThemeManager("Button");
+	IThemeManager CreateThemeManager(classlist);
 }
 
 // [1.1.0] New:
@@ -437,7 +452,7 @@ Methods:
 	// Returns 0 if failed.
 	int GetSystemMetrics(index);
 	// [1.3.0] New
-	// for mask, see Flags.txt
+	// for masks, see Flags.txt
 	// VBArray is supported natived in VBScript and JScript: http://msdn.microsoft.com/en-us/library/3s0fw3t2%28VS.80%29.aspx
 	// If you want to convert it to a JScript array, use .toArray() method.
 	// Sample usage: var arr = utils.Glob("C:\\*.*").toArray();

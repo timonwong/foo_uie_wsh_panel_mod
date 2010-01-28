@@ -2691,3 +2691,48 @@ STDMETHODIMP StyleTextRender::SetPngImage(IGdiBitmap * img)
 
 	return S_OK;
 }
+
+STDMETHODIMP ThemeManager::SetPartAndStateID(int partid, int stateid)
+{
+	TRACK_FUNCTION();
+
+	if (!m_theme) return E_POINTER;
+
+	m_partid = partid;
+	m_stateid = stateid;
+	return S_OK;
+}
+
+STDMETHODIMP ThemeManager::IsThemePartDefined(int partid, int stateid, VARIANT_BOOL * p)
+{
+	TRACK_FUNCTION();
+
+	if (!m_theme) return E_POINTER;
+	if (!p) return E_POINTER;
+
+	*p = TO_VARIANT_BOOL(::IsThemePartDefined(m_theme, partid, stateid));
+	return S_OK;
+}
+
+STDMETHODIMP ThemeManager::DrawThemeBackground(IGdiGraphics * gr, int x, int y, int w, int h)
+{
+	TRACK_FUNCTION();
+
+	if (!m_theme) return E_POINTER;
+	if (!gr) return E_INVALIDARG;
+
+	Gdiplus::Graphics * graphics = NULL;
+
+	gr->get__ptr((void **)&graphics);
+
+	if (!graphics) return E_INVALIDARG;
+
+	RECT rc = { x, y, x + w, y + h};
+
+	HDC dc = graphics->GetHDC();
+
+	HRESULT hr = ::DrawThemeBackground(m_theme, dc, m_partid, m_stateid, &rc, NULL);
+
+	graphics->ReleaseHDC(dc);
+	return hr;
+}

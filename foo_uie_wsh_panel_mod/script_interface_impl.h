@@ -723,3 +723,34 @@ public:
 	// PNG Mode only
 	STDMETHODIMP SetPngImage(IGdiBitmap * img);
 };
+
+class ThemeManager : public IDisposableImpl4<IThemeManager>
+{
+protected:
+	HTHEME m_theme;
+	int m_partid;
+	int m_stateid;
+
+	ThemeManager(HWND hwnd, BSTR classlist) : m_theme(NULL), m_partid(0), m_stateid(0)
+	{
+		m_theme = OpenThemeData(hwnd, classlist);
+
+		if (!m_theme) throw pfc::exception_invalid_params();
+	}
+
+	virtual ~ThemeManager() {}
+
+	virtual void FinalRelease()
+	{
+		if (m_theme)
+		{
+			CloseThemeData(m_theme);
+			m_theme = NULL;
+		}
+	}
+
+public:
+	STDMETHODIMP SetPartAndStateID(int partid, int stateid);
+	STDMETHODIMP IsThemePartDefined(int partid, int stateid, VARIANT_BOOL * p);
+	STDMETHODIMP DrawThemeBackground(IGdiGraphics * gr, int x, int y, int w, int h);
+};

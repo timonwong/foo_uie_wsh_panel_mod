@@ -26,6 +26,7 @@ window.GetColorCUI(type[, client_guid]);
 window.GetFontCUI(type[, client_guid]);
 window.GetColorDUI(type);
 window.GetFontDUI(type);
+window.CreateThemeManager(classlist);
 
 gdi.Font(name, ptSize[, style])
 gdi.Image(path)
