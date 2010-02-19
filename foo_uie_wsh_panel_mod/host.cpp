@@ -11,8 +11,10 @@
 #include "popup_msg.h"
 #include "dbgtrace.h"
 
+
 namespace
 {
+	// Just because I don't want to include the helpers
 	template<typename TImpl>
 	class my_ui_element_impl : public ui_element 
 	{
@@ -50,7 +52,8 @@ namespace
 
 
 HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_bmp(NULL), m_bk_updating(false), 
-	m_paint_pending(false), m_accuracy(0), m_sstate(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false), m_instance_type(KInstanceTypeCUI)
+	m_paint_pending(false), m_accuracy(0), m_script_state(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false), 
+	m_instance_type(KInstanceTypeCUI), m_dlg_code(0)
 {
 	m_max_size.x = INT_MAX;
 	m_max_size.y = INT_MAX;
@@ -71,44 +74,6 @@ HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_
 HostComm::~HostComm()
 {
 	timeEndPeriod(m_accuracy);
-}
-
-GUID HostComm::GetGUID()
-{
-	GUID guid;
-
-	SendMessage(m_hwnd, UWM_GETCONFIGGUID, 0, (LPARAM)&guid);
-	return guid;
-}
-
-HWND HostComm::GetHWND()
-{
-	return m_hwnd;
-}
-
-UINT HostComm::GetWidth()
-{
-	return m_width;
-}
-
-UINT HostComm::GetInstanceType()
-{
-	return m_instance_type;
-}
-
-UINT HostComm::GetHeight()
-{
-	return m_height;
-}
-
-POINT & HostComm::GetMaxSize()
-{
-	return m_max_size;
-}
-
-POINT & HostComm::GetMinSize()
-{
-	return m_min_size;
 }
 
 void HostComm::Redraw()
@@ -233,11 +198,6 @@ void HostComm::KillTimer(ITimerObj * p)
 	timeKillEvent(id); 
 }
 
-metadb_handle_ptr & HostComm::GetWatchedMetadbHandle()
-{
-	return m_watched_handle;
-}
-
 IGdiBitmap * HostComm::GetBackgroundImage()
 {
 	Gdiplus::Bitmap * bitmap = NULL;
@@ -261,19 +221,9 @@ IGdiBitmap * HostComm::GetBackgroundImage()
 
 void CALLBACK HostComm::g_timer_proc(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
 {
-	HostComm * p = (HostComm *)dwUser;
+	HostComm * p = reinterpret_cast<HostComm *>(dwUser);
 
 	SendMessage(p->m_hwnd, UWM_TIMER, uTimerID, 0);
-}
-
-SCRIPTSTATE & HostComm::GetScriptState()
-{
-	return m_sstate;
-}
-
-bool & HostComm::GetQueryContinue()
-{
-	return m_query_continue;
 }
 
 STDMETHODIMP FbWindow::get_ID(UINT* p)
@@ -390,6 +340,24 @@ STDMETHODIMP FbWindow::put_MinHeight(UINT height)
 	return S_OK;
 }
 
+STDMETHODIMP FbWindow::get_DlgCode(UINT* p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = m_host->GetDlgCode();
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::put_DlgCode(UINT code)
+{
+	TRACK_FUNCTION();
+
+	m_host->GetDlgCode() = code;
+	return S_OK;
+}
+
 STDMETHODIMP FbWindow::Repaint(VARIANT_BOOL force)
 {
 	TRACK_FUNCTION();
@@ -465,7 +433,7 @@ STDMETHODIMP FbWindow::NotifyOthers(BSTR name, VARIANT info)
 
 	notify_data->m_item2.Attach(var.Detach());
 
-	panel_notifier_manager::instance().post_msg_to_others_pointer(m_host->GetHWND(), 
+	panel_notifier_manager::instance().send_msg_to_others_pointer(m_host->GetHWND(), 
 		CALLBACK_UWM_NOTIFY_DATA, notify_data);
 
 	return S_OK;
@@ -936,7 +904,7 @@ HRESULT wsh_panel_window::script_pre_init()
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"fb", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
-	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_STARTED);
+	//if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_STARTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
 	// processing "@import"
@@ -1028,7 +996,7 @@ void wsh_panel_window::script_stop()
 
 	if (m_script_engine)
 	{
-		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
+		//m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
 		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
 		m_script_engine->Close();
 	}
@@ -1196,21 +1164,25 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		panel_notifier_manager::instance().remove_window(m_hwnd);
 
 		if (m_gr_wrap)
+		{
 			m_gr_wrap.Release();
+		}
 
 		delete_context();
 		ReleaseDC(m_hwnd, m_hdc);
 		return 0;
 
-	case WM_DISPLAYCHANGE:
+	case UWM_SCRIPT_TERM:
 		script_term();
-		script_init();
+		return 0;
+
+	case WM_DISPLAYCHANGE:
+		update_script();
 		return 0;
 
 	case WM_ERASEBKGND:
 		if (get_pseudo_transparent())
 			PostMessage(m_hwnd, UWM_REFRESHBK, 0, 0);
-
 		return 1;
 
 	case UWM_REFRESHBK:
@@ -1272,6 +1244,9 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			memcpy(&pmmi->ptMinTrackSize, &GetMinSize(), sizeof(POINT));
 		}
 		return 0;
+
+	case WM_GETDLGCODE:
+		return GetDlgCode();
 
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
@@ -1335,17 +1310,14 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			case WM_RBUTTONUP:
 				{
-					_variant_t var_result;
+					_variant_t result;
 
-					if (SUCCEEDED(script_invoke_v(L"on_mouse_rbtn_up", args, _countof(args), &var_result)))
+					if (SUCCEEDED(script_invoke_v(L"on_mouse_rbtn_up", args, _countof(args), &result)))
 					{
-						_variant_t var_suppress_menu;
+						result.ChangeType(VT_BOOL);
 
-						if (SUCCEEDED(VariantChangeType(&var_suppress_menu, &var_result, 0, VT_BOOL)))
-						{
-							if ((var_suppress_menu.boolVal != FALSE))
-								return 0;
-						}
+						if ((result.boolVal != VARIANT_FALSE))
+							return 0;
 					}
 				}
 				break;
@@ -1440,16 +1412,38 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		{
 			static_api_ptr_t<keyboard_shortcut_manager_v2>  ksm;
 
-			if (!ksm->process_keydown_simple(wp))
-			{
-				VARIANTARG args[1];
+			if (ksm->process_keydown_simple(wp))
+				return 0;
 
-				args[0].vt = VT_UI4;
-				args[0].ulVal = (ULONG) wp;
-				script_invoke_v(L"on_key_down", args, _countof(args));
-			}
+			VARIANTARG args[1];
+
+			args[0].vt = VT_UI4;
+			args[0].ulVal = (ULONG)wp;
+
+			script_invoke_v(L"on_key_down", args, _countof(args));
 		}
-		break;
+		return 0;
+
+	case WM_KEYUP:
+		{
+			VARIANTARG args[1];
+
+			args[0].vt = VT_UI4;
+			args[0].ulVal = (ULONG)wp;
+
+			script_invoke_v(L"on_key_up", args, _countof(args));
+		}
+		return 0;
+
+	case WM_CHAR:
+		{
+			VARIANTARG args[1];
+
+			args[0].vt = VT_UI4;
+			args[0].ulVal = (ULONG)wp;
+			script_invoke_v(L"on_char", args, _countof(args));
+		}
+		return 0;
 
 	case WM_SETFOCUS:
 		{
@@ -1525,13 +1519,6 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		GetQueryContinue() = (wp != 0);
 		return 0;
 
-	case UWM_GETCONFIGGUID:
-		{
-			GUID * guid_ptr = reinterpret_cast<GUID *>(lp);
-			memcpy(guid_ptr, &get_config_guid(), sizeof(GUID));
-		}
-		return 0;
-
 	case CALLBACK_UWM_PLAYLIST_STOP_AFTER_CURRENT:
 		on_playlist_stop_after_current_changed(wp);
 		return 0;
@@ -1566,6 +1553,10 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case CALLBACK_UWM_ON_CHANGED_SORTED:
 		on_changed_sorted(wp);
+		return 0;
+
+	case CALLBACK_UWM_ON_SELECTION_CHANGED:
+		on_selection_changed(wp);
 		return 0;
 
 	case CALLBACK_UWM_ON_PLAYBACK_STARTING:
@@ -1985,7 +1976,7 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	callback_data_ptr<metadb_changed_callback::t_on_changed_sorted_data > data(wp);
+	callback_data_ptr<nonautoregister_callbacks::t_on_changed_sorted_data > data(wp);
 
 	if (m_watched_handle.is_empty() || !data->m_items_sorted.have_item(m_watched_handle))
 		return;
@@ -2000,6 +1991,31 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 	script_invoke_v(L"on_metadb_changed", args, _countof(args));
 
 	handle->Release();
+}
+
+void wsh_panel_window::on_selection_changed(WPARAM wp)
+{
+	TRACK_FUNCTION();
+
+	FbMetadbHandle * handle = NULL; 
+	
+	if (wp != 0)
+	{
+		callback_data_ptr<t_simple_callback_data<metadb_handle_ptr> > data(wp);
+
+		handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
+	}
+
+	VARIANTARG args[1];
+
+	args[0].vt = VT_DISPATCH;
+	args[0].pdispVal = handle;
+	script_invoke_v(L"on_selection_changed", args, _countof(args));
+
+	if (handle)
+	{
+		handle->Release();
+	}
 }
 
 const GUID& wsh_panel_window_cui::get_extension_guid() const
@@ -2060,15 +2076,23 @@ LRESULT wsh_panel_window_cui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 		{
 			// Using in Default UI and dockable panels without Columns UI installed?
 			static bool g_reported = false;
+			const char warning[] = "Warning: At least one of WSH Panel Mod instance running in CUI containers"
+								   " (dockable panels or Func UI?), however, some essential services provided"
+								   " by the Columns UI cannot be found (haven't been installed or have a very"
+								   " old version is installed?).\n"
+								   "Please download and install a newer version of Columns UI:\n"
+								   "http://yuo.be/columns.php";
 
-			if (!g_reported)
+			if (!g_cfg_cui_warning_reported)
 			{
-				popup_msg::g_show("Warning: At least one of WSH Panel Mod instance running in the CUI-like"
-								  " container (dockable panels?) but cannot use some essential services"
-								  " provided by the Columns UI (don't have or use a very old version of"
-								  " Columns UI?). Please download and install the latest version of Columns UI", 
+				popup_msg::g_show(pfc::string_formatter(warning) << "\n\n[This popup message will be shown only once]", 
 								  "WSH Panel Mod");
 
+				g_cfg_cui_warning_reported = true;
+			}
+			else if (!g_reported)
+			{
+				console::formatter() << "\nWSH Panel Mod: " << warning << "\n\n";
 				g_reported = true;
 			}
 		}
@@ -2187,6 +2211,12 @@ void wsh_panel_window_dui::set_configuration(ui_element_config::ptr data)
 	abort_callback_dummy abort;
 
 	load_config(&parser.m_stream, parser.get_remaining(), abort);
+
+	// FIX: If window already created, DUI won't destroy it and create it again.
+	if (m_hwnd)
+	{
+		update_script();
+	}
 }
 
 ui_element_config::ptr wsh_panel_window_dui::g_get_default_configuration()

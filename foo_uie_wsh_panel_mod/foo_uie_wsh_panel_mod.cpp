@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "simple_thread.h"
 #include "popup_msg.h"
+#include "panel_notifier.h"
+#include "user_message.h"
 #include "version.h"
 
 
@@ -79,6 +81,7 @@ namespace
 		void on_quit()
 		{
 			simple_thread_manager::instance().remove_all();
+			panel_notifier_manager::instance().send_msg_to_all(UWM_SCRIPT_TERM, 0, 0);
 		}
 	};
 

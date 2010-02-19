@@ -283,7 +283,7 @@ class GdiGraphics : public GdiObj<IGdiGraphics, Gdiplus::Graphics>
 protected:
 	GdiGraphics(): GdiObj<IGdiGraphics, Gdiplus::Graphics>(NULL) {}
 
-	void GetRoundRectPath(Gdiplus::GraphicsPath & gp, Gdiplus::RectF & rect, float arc_width, float arc_height);
+	static void GetRoundRectPath(Gdiplus::GraphicsPath & gp, Gdiplus::RectF & rect, float arc_width, float arc_height);
 
 public:
 	STDMETHODIMP Dispose()
@@ -531,6 +531,8 @@ public:
 	STDMETHODIMP TitleFormat(BSTR expression, IFbTitleFormat** pp);
 	STDMETHODIMP GetNowPlaying(IFbMetadbHandle** pp);
 	STDMETHODIMP GetFocusItem(VARIANT_BOOL force, IFbMetadbHandle** pp);
+	STDMETHODIMP GetSelection(IFbMetadbHandle** pp);
+	STDMETHODIMP GetSelectionType(UINT* p);
 	STDMETHODIMP get_ComponentPath(BSTR* pp);
 	STDMETHODIMP get_FoobarPath(BSTR* pp);
 	STDMETHODIMP get_ProfilePath(BSTR* pp);
@@ -652,6 +654,7 @@ public:
 	STDMETHODIMP GetSystemMetrics(UINT index, INT * p);
 	STDMETHODIMP Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT * p);
 	STDMETHODIMP FileTest(BSTR path, BSTR mode, VARIANT * p);
+	STDMETHODIMP MapVirtualKey(UINT code, UINT maptype, UINT * p);
 };
 
 class FbTooltip : public IDisposableImpl4<IFbTooltip>

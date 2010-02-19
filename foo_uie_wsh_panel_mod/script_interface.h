@@ -1,6 +1,6 @@
 #pragma once
 
-[module(name="foo_uie_wsh_panel_mod", version="1.6")];
+[module(name="foo_uie_wsh_panel_mod", version="1.7")];
 
 extern ITypeLibPtr g_typelib;
 
@@ -115,10 +115,14 @@ __interface IGdiGraphics: IGdiObj
 	STDMETHOD(FillGradRect)(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2);
 	STDMETHOD(FillRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, DWORD color);
 	STDMETHOD(FillEllipse)(float x, float y, float w, float h, DWORD color);
+	//STDMETHOD(FillPolygon)(DWORD color, [range(0, 1)]INT fillmode, [satype(VARIANT)] SAFEARRAY * p);
+
 	STDMETHOD(DrawLine)(float x1, float y1, float x2, float y2, float line_width, DWORD color);
 	STDMETHOD(DrawRect)(float x, float y, float w, float h, float line_width, DWORD color);
 	STDMETHOD(DrawRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, DWORD color);
 	STDMETHOD(DrawEllipse)(float x, float y, float w, float h, float line_width, DWORD color);
+	//STDMETHOD(DrawPolygon)(DWORD color, [satype(VARIANT)] SAFEARRAY * p);
+
 	STDMETHOD(DrawString)(BSTR str, IGdiFont* font, DWORD color, float x, float y, float w, float h, [defaultvalue(0)] DWORD flags);
 	STDMETHOD(GdiDrawText)(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, [defaultvalue(0)] DWORD format, [out,retval] VARIANT * p);
 	STDMETHOD(DrawImage)(IGdiBitmap* image, float dstX, float dstY, float dstW, float dstH, float srcX, float srcY, float srcW, float srcH, [defaultvalue(0)]float angle, [defaultvalue(255)]BYTE alpha);
@@ -314,6 +318,9 @@ __interface IFbUtils: IDispatch
 	STDMETHOD(TitleFormat)(BSTR expression, [out,retval] IFbTitleFormat** pp);
 	STDMETHOD(GetNowPlaying)([out,retval] IFbMetadbHandle** pp);
 	STDMETHOD(GetFocusItem)([defaultvalue(-1)] VARIANT_BOOL force, [out,retval] IFbMetadbHandle** pp);
+	STDMETHOD(GetSelection)([out,retval] IFbMetadbHandle** pp);
+	STDMETHOD(GetSelectionType)([out,retval] UINT* p);
+
 	[propget] STDMETHOD(ComponentPath)([out,retval] BSTR* pp);
 	[propget] STDMETHOD(FoobarPath)([out,retval] BSTR* pp);
 	[propget] STDMETHOD(ProfilePath)([out,retval] BSTR* pp);
@@ -427,6 +434,8 @@ __interface IFbWindow: IDispatch
 	[propput] STDMETHOD(MinWidth)(UINT width);
 	[propget] STDMETHOD(MinHeight)([out,retval] UINT* p);
 	[propput] STDMETHOD(MinHeight)(UINT height);
+	[propget] STDMETHOD(DlgCode)([out,retval] UINT* p);
+	[propput] STDMETHOD(DlgCode)(UINT code);
 	STDMETHOD(Repaint)([defaultvalue(0)] VARIANT_BOOL force);
 	STDMETHOD(RepaintRect)(UINT x, UINT y, UINT w, UINT h, [defaultvalue(0)] VARIANT_BOOL force);
 	STDMETHOD(CreatePopupMenu)([out,retval] IMenuObj ** pp);
@@ -478,5 +487,6 @@ __interface IWSHUtils: IDispatch
 	STDMETHOD(GetSystemMetrics)(UINT index, [out,retval] int * p);
 	STDMETHOD(Glob)(BSTR pattern, [defaultvalue(FILE_ATTRIBUTE_DIRECTORY)] UINT exc_mask, [defaultvalue(0xffffffff)] UINT inc_mask, [out,retval] VARIANT * p);
 	STDMETHOD(FileTest)(BSTR path, BSTR mode, [out,retval] VARIANT * p);
+	STDMETHOD(MapVirtualKey)(UINT code, UINT maptype, [out,retval] UINT * p);
 };
 _COM_SMARTPTR_TYPEDEF(IWSHUtils, __uuidof(IWSHUtils));

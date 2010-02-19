@@ -11,8 +11,13 @@ namespace guid
 	// {8826D886-6E34-4796-9B61-1FEA996730F0}
 	static const GUID cfg_safe_mode = 
 	{ 0x8826d886, 0x6e34, 0x4796, { 0x9b, 0x61, 0x1f, 0xea, 0x99, 0x67, 0x30, 0xf0 } };
+
+	// {E0521E81-C2A4-4a3e-A5FC-A1E62B187053}
+	static const GUID cfg_cui_warning_reported = 
+	{ 0xe0521e81, 0xc2a4, 0x4a3e, { 0xa5, 0xfc, 0xa1, 0xe6, 0x2b, 0x18, 0x70, 0x53 } };
 }
 
 
 cfg_uint g_cfg_timeout(guid::cfg_timeout, 15); // Default is 15 seconds
 cfg_bool g_cfg_safe_mode(guid::cfg_safe_mode, true);
+cfg_bool g_cfg_cui_warning_reported(guid::cfg_cui_warning_reported, false);

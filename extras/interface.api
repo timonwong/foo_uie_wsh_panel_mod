@@ -6,6 +6,7 @@ window.MinWidth
 window.MinHeight
 window.MaxWidth
 window.MaxHeight
+window.DlgCode
 window.Repaint([force])
 window.RepaintRect(x, y, w, h[, force])
 window.CreatePopupMenu()
@@ -51,6 +52,8 @@ fb.CreateProfiler([name])
 fb.TitleFormat(expression)
 fb.GetNowPlaying()
 fb.GetFocusItem([force])
+fb.GetSelection()
+fb.GetSelectionType()
 fb.Exit()
 fb.Play()
 fb.Stop()
@@ -91,3 +94,4 @@ utils.GetSysColor(index)
 utils.GetSystemMetrics(index)
 utils.Glob(pattern[, exc_mask, inc_mask])
 utils.FileTest(path, mode)
+utils.MapVirtualKey(code, maptype)

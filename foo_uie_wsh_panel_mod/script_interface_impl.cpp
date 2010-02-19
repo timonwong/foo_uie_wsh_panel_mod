@@ -126,42 +126,35 @@ STDMETHODIMP GdiBitmap::ApplyMask(IGdiBitmap * mask, VARIANT_BOOL * p)
 
 	mask->get__ptr((void **)&bitmap);
 
-	if (!bitmap || bitmap->GetHeight() != m_ptr->GetHeight() || 
-		bitmap->GetWidth() != m_ptr->GetWidth())
+	if (!bitmap || bitmap->GetHeight() != m_ptr->GetHeight() || bitmap->GetWidth() != m_ptr->GetWidth())
+	{
 		return E_INVALIDARG;
+	}
 
 	Gdiplus::Rect rect(0, 0, m_ptr->GetWidth(), m_ptr->GetHeight());
 	Gdiplus::BitmapData bmpdata_src = { 0 }, bmpdata_dst = { 0 };
 
-	if (bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead, 
-		PixelFormat32bppARGB, &bmpdata_src) != Gdiplus::Ok)
+	if (bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &bmpdata_src) != Gdiplus::Ok)
 	{
 		return S_OK;
 	}
 
-	if (m_ptr->LockBits(&rect, Gdiplus::ImageLockModeWrite,
-		PixelFormat32bppARGB, &bmpdata_dst) != Gdiplus::Ok)
+	if (m_ptr->LockBits(&rect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpdata_dst) != Gdiplus::Ok)
 	{
 		bitmap->UnlockBits(&bmpdata_src);
 
 		return S_OK;
 	}
 
-	t_uint32 * src = reinterpret_cast<t_uint32 *>(bmpdata_src.Scan0);
-	t_uint32 * dst = reinterpret_cast<t_uint32 *>(bmpdata_dst.Scan0);
-	t_uint32 pixels = rect.Width * rect.Height;
-	t_uint32 * src_end = src + pixels;
-	t_uint32 alpha;
-	t_uint8 mask_byte, alpha_byte;
+	register t_uint32 * src = reinterpret_cast<t_uint32 *>(bmpdata_src.Scan0);
+	register t_uint32 * dst = reinterpret_cast<t_uint32 *>(bmpdata_dst.Scan0);
+	const t_uint32 * src_end = src + rect.Width * rect.Height;
+	register t_uint32 alpha;
 
 	while (src < src_end)
 	{
-		mask_byte = 0xff - ((*src) & 0xff);
-		alpha_byte = *dst >> 24;
-
-		alpha = mask_byte * alpha_byte + 0x80;
-		alpha = (((alpha >> 8) + alpha) & 0xff00) << 16;
-		*dst = alpha | (*dst & 0xffffff);
+		alpha = (~((*src) & 0xff)) * (*dst >> 24) + 0x80;
+		*dst = ((((alpha >> 8) + alpha) & 0xff00) << 16) | (*dst & 0xffffff);
 
 		++src;
 		++dst;
@@ -298,9 +291,12 @@ STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float
 
 	if (!m_ptr) return E_POINTER;
 
-	Gdiplus::LinearGradientBrush brush(Gdiplus::RectF(x, y, w, h), color1, color2, angle, TRUE);
+	Gdiplus::RectF rect(x, y, w, h);
+	// HACK: Workaround for one pixel black line problem.
+	rect.Inflate(0.1f, 0.1f);
+	Gdiplus::LinearGradientBrush brush(rect, color1, color2, angle, TRUE);
 
-	m_ptr->FillRectangle(&brush, x, y, w, h);
+	m_ptr->FillRectangle(&brush, rect);
 	return S_OK;
 }
 
@@ -376,6 +372,8 @@ STDMETHODIMP GdiGraphics::DrawRoundRect(float x, float y, float w, float h, floa
 	
 	GetRoundRectPath(gp, rect, arc_width, arc_height);
 
+	pen.SetStartCap(Gdiplus::LineCapRound);
+	pen.SetEndCap(Gdiplus::LineCapRound);
 	m_ptr->DrawPath(&pen, &gp);
 	return S_OK;
 }
@@ -1300,6 +1298,59 @@ STDMETHODIMP FbUtils::GetFocusItem(VARIANT_BOOL force, IFbMetadbHandle** pp)
 	catch (std::exception &) {}
 
 	(*pp) = new com_object_impl_t<FbMetadbHandle>(metadb);
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::GetSelection(IFbMetadbHandle** pp)
+{
+	TRACK_FUNCTION();
+
+	if (!pp) return E_POINTER;
+
+	metadb_handle_list items;
+
+	static_api_ptr_t<ui_selection_manager_v2>()->get_selection(items, 0);
+	
+	if (items.get_count() > 0)
+	{
+		(*pp) = new com_object_impl_t<FbMetadbHandle>(items[0]);
+	}
+	else
+	{
+		(*pp) = NULL;
+	}
+
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::GetSelectionType(UINT* p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	const GUID * guids[] = {
+		&contextmenu_item::caller_undefined,
+		&contextmenu_item::caller_active_playlist_selection,
+		&contextmenu_item::caller_active_playlist,
+		&contextmenu_item::caller_playlist_manager, 
+		&contextmenu_item::caller_now_playing, 
+		&contextmenu_item::caller_keyboard_shortcut_list, 
+		&contextmenu_item::caller_media_library_viewer,
+	};
+
+	*p = 0;
+	GUID type = static_api_ptr_t<ui_selection_manager_v2>()->get_selection_type(0);
+
+	for (t_size i = 0; i < _countof(guids); ++i)
+	{
+		if (*guids[i] == type)
+		{
+			*p = i;
+			break;
+		}
+	}
+	
 	return S_OK;
 }
 
@@ -2408,6 +2459,16 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
 		return E_INVALIDARG;
 	}
 
+	return S_OK;
+}
+
+STDMETHODIMP WSHUtils::MapVirtualKey(UINT code, UINT maptype, UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = ::MapVirtualKey(code, maptype);
 	return S_OK;
 }
 

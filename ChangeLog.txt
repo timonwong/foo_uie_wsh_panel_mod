@@ -1,5 +1,17 @@
+v1.3.2
+- ADD: on_key_up() callback.
+- ADD: on_char() callback.
+- ADD: on_selection_changed() callback.
+- ADD: fb.GetSelection() and fb.GetSelectionType() method.
+- ADD: utils.MapVirtualKey() method.
+- ADD: window.DlgCode property.
+- CHG: window.NotifyOthers() is changed back to synchronous (since 1.2.1).
+- FIX: Workaround for FillGradRect() which may draw a black line.
+- FIX: Script won't be updated in DUI after importing theme.
+
 v1.3.1
 - ADD: window.CreateThemeManager() method (and also the IThemeManager interface).
+- ADD: SimpleThemedButton.txt sample.
 - FIX: When Layout editing mode is enabled, the context menu may not display the layout editing commands.
 
 v1.3.0

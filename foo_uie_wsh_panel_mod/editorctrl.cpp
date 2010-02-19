@@ -1048,13 +1048,13 @@ void CScriptEditorCtrl::SetLanguage(const char * lang)
 
 void CScriptEditorCtrl::SetJScript()
 {
-	const char js_keywords[] = "abstract boolean break byte case catch char class const continue \
-							   debugger default delete do double else enum export extends false final \
-							   finally float for function goto if implements import in instanceof int \
-							   interface long native new null package private protected public return \
-							   short static super switch synchronized this throw throws transient true \
-							   try typeof var void while with enum byvalue cast future generic inner \
-							   operator outer rest var Array Math RegExp window fb gdi utils";
+	const char js_keywords[] = "abstract boolean break byte case catch char class const continue"
+							   " debugger default delete do double else enum export extends false final"
+							   " finally float for function goto if implements import in instanceof int"
+							   " interface long native new null package private protected public return"
+							   " short static super switch synchronized this throw throws transient true"
+							   " try typeof var void while with enum byvalue cast future generic inner"
+							   " operator outer rest var Array Math RegExp window fb gdi utils";
 
 	RestoreDefaultStyle();
 
@@ -1070,15 +1070,15 @@ void CScriptEditorCtrl::SetJScript()
 
 void CScriptEditorCtrl::SetVBScript()
 {
-	const char vbs_keywords[] = "addressof alias and as attribute base begin binary boolean byref byte byval call case cdbl \
-								cint clng compare const csng cstr currency date decimal declare defbool defbyte defcur \
-								defdate defdbl defdec defint deflng defobj defsng defstr defvar dim do double each else \
-								elseif empty end enum eqv erase error event exit explicit false for friend function get \
-								global gosub goto if imp implements in input integer is len let lib like load lock long \
-								loop lset me mid midb mod new next not nothing null object on option optional or paramarray \
-								preserve print private property public raiseevent randomize redim rem resume return rset \
-								seek select set single static step stop string sub text then time to true type typeof \
-								unload until variant wend while with withevents xor";
+	const char vbs_keywords[] = "addressof alias and as attribute base begin binary boolean byref byte byval call case cdbl"
+								" cint clng compare const csng cstr currency date decimal declare defbool defbyte defcur"
+								" defdate defdbl defdec defint deflng defobj defsng defstr defvar dim do double each else"
+								" elseif empty end enum eqv erase error event exit explicit false for friend function get"
+								" global gosub goto if imp implements in input integer is len let lib like load lock long"
+								" loop lset me mid midb mod new next not nothing null object on option optional or paramarray"
+								" preserve print private property public raiseevent randomize redim rem resume return rset"
+								" seek select set single static step stop string sub text then time to true type typeof"
+								" unload until variant wend while with withevents xor window fb gdi utils";
 
 	RestoreDefaultStyle();
 

@@ -15,6 +15,7 @@ protected:
 	UINT              m_height;
 	POINT             m_max_size;
 	POINT             m_min_size;
+	UINT              m_dlg_code;
 	HDC               m_hdc;
 	HBITMAP           m_gr_bmp;
 	HBITMAP           m_gr_bmp_bk;
@@ -25,7 +26,7 @@ protected:
 
 	IActiveScriptPtr  m_script_engine;
 	IDispatchPtr      m_script_root;
-	SCRIPTSTATE       m_sstate;
+	SCRIPTSTATE       m_script_state;
 	bool              m_query_continue;
 	int               m_instance_type;
 
@@ -38,17 +39,19 @@ public:
 		KInstanceTypeDUI,
 	};
 
-	GUID GetGUID();
-	HWND GetHWND();
-	UINT GetWidth();
-	UINT GetHeight();
-	UINT GetInstanceType();
-	POINT & GetMaxSize();
-	POINT & GetMinSize();
-	SCRIPTSTATE & GetScriptState();
-	metadb_handle_ptr & GetWatchedMetadbHandle();
+	GUID GetGUID() { return get_config_guid(); }
+	inline HDC GetHDC() { return m_hdc; }
+	inline HWND GetHWND() { return m_hwnd; }
+	inline UINT GetWidth() { return m_width; }
+	inline UINT GetHeight() { return m_height; }
+	inline UINT GetInstanceType() { return m_instance_type; }
+	inline POINT & GetMaxSize() { return m_max_size; }
+	inline POINT & GetMinSize() { return m_min_size; }
+	inline UINT & GetDlgCode() { return m_dlg_code; }
+	inline metadb_handle_ptr & GetWatchedMetadbHandle() { return m_watched_handle; }
+	inline SCRIPTSTATE & GetScriptState() { return m_script_state; }
+	inline bool & GetQueryContinue() { return m_query_continue; }
 	IGdiBitmap * GetBackgroundImage();
-	bool & GetQueryContinue();
 
 	void Redraw();
 	void Repaint(bool force = false);
@@ -67,9 +70,6 @@ public:
 	virtual DWORD GetColorDUI(unsigned type) = 0;
 	virtual HFONT GetFontDUI(unsigned type) = 0;
 	
-	HDC GetHDC() { return m_hdc; }
-	//void ToggleQueryContinue(bool enable) { m_query_continue = enable; }
-
 	static void CALLBACK g_timer_proc(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
 };
 
@@ -95,6 +95,8 @@ public:
 	STDMETHODIMP put_MinWidth(UINT width);
 	STDMETHODIMP get_MinHeight(UINT* p);
 	STDMETHODIMP put_MinHeight(UINT height);
+	STDMETHODIMP get_DlgCode(UINT* p);
+	STDMETHODIMP put_DlgCode(UINT code);
 	STDMETHODIMP Repaint(VARIANT_BOOL force);
 	STDMETHODIMP RepaintRect(UINT x, UINT y, UINT w, UINT h, VARIANT_BOOL force);
 	STDMETHODIMP CreatePopupMenu(IMenuObj ** pp);
@@ -203,7 +205,7 @@ public:
 	virtual ~wsh_panel_window()
 	{
 		// Ensure active scripting is closed
-		script_term();
+		// script_term();
 	}
 
 	void update_script(const char * name = NULL, const char * code = NULL);
@@ -266,6 +268,9 @@ private:
 	// metadb_io_callback_dynamic
 	void on_changed_sorted(WPARAM wp);
 
+	// ui_selection_callback
+	void on_selection_changed(WPARAM wp);
+
 protected:
 	// override me
 	virtual void notify_size_limit_changed_(LPARAM lp) = 0;
@@ -313,8 +318,7 @@ private:
 	uie::window_host_ptr m_host;
 };
 
-class wsh_panel_window_dui : public wsh_panel_window, 
-	public ui_element_instance
+class wsh_panel_window_dui : public wsh_panel_window, public ui_element_instance
 {
 public:
 	wsh_panel_window_dui(ui_element_config::ptr cfg, ui_element_instance_callback::ptr callback) : m_callback(callback)

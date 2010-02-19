@@ -37,7 +37,8 @@ public:
 	}
 
 	void send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
-	void post_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param);
+	void send_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param);
+	//void post_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param);
 	void post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
 	void post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_root * p_param);
 
@@ -110,7 +111,7 @@ public:
 	virtual void on_item_played(metadb_handle_ptr p_item);
 };
 
-class metadb_changed_callback : public metadb_io_callback_dynamic, public initquit
+class nonautoregister_callbacks : public initquit, public metadb_io_callback_dynamic, public ui_selection_callback
 {
 public:
 	struct t_on_changed_sorted_data : public pfc::refcounted_object_root
@@ -124,12 +125,24 @@ public:
 		{}
 	};
 
+	// initquit
+	virtual void on_init()
+	{
+		static_api_ptr_t<metadb_io_v3>()->register_callback(this);
+		static_api_ptr_t<ui_selection_manager_v2>()->register_callback(this, 0);
+	}
+
+	virtual void on_quit()
+	{
+		static_api_ptr_t<ui_selection_manager_v2>()->unregister_callback(this);
+		static_api_ptr_t<metadb_io_v3>()->unregister_callback(this);
+	}
+
 	// metadb_io_callback_dynamic
 	virtual void on_changed_sorted(metadb_handle_list_cref p_items_sorted, bool p_fromhook);
 
-	// initquit
-	virtual void on_init();
-	virtual void on_quit();
+	// ui_selection_callback
+	virtual void on_selection_changed(metadb_handle_list_cref p_selection);
 };
 
 class my_play_callback : public play_callback_static 

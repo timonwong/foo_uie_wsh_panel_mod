@@ -6,6 +6,7 @@ class simple_thread
 public:
 	simple_thread() : m_thread(NULL), m_tid(0) { }
 
+	// REMEBER: all classes derived from this must call close() in their destructor.
 	virtual ~simple_thread() { close(); }
 
 	void start();
@@ -23,7 +24,7 @@ public:
 	}
 
 protected:
-	virtual void thread_proc() = 0;
+	virtual void thread_proc() { PFC_ASSERT(!"Should not go here"); }
 
 private:
 	static unsigned int CALLBACK g_entry(void* p_instance);

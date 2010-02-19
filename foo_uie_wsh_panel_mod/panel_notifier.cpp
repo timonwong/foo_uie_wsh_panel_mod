@@ -12,7 +12,7 @@ namespace
 	static playback_statistics_collector_factory_t<playback_stat_callback> g_stat_collector_callback;
 	static play_callback_static_factory_t<my_play_callback > g_my_play_callback;
 	static service_factory_single_t<my_playlist_callback> g_my_playlist_callback;
-	static initquit_factory_t<metadb_changed_callback> g_metadb_changed_callback;
+	static initquit_factory_t<nonautoregister_callbacks> g_nonautoregister_callbacks;
 }
 
 void panel_notifier_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
@@ -23,7 +23,7 @@ void panel_notifier_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_l
 	}
 }
 
-void panel_notifier_manager::post_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param)
+void panel_notifier_manager::send_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param)
 {
 	t_size count = m_hwnds.get_count();
 
@@ -39,7 +39,7 @@ void panel_notifier_manager::post_msg_to_others_pointer(HWND p_wnd_except, UINT 
 
 		if (wnd != p_wnd_except)
 		{
-			PostMessage(wnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0);
+			SendMessage(wnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0);
 		}
 	}
 }
@@ -117,7 +117,7 @@ void playback_stat_callback::on_item_played(metadb_handle_ptr p_item)
 		on_item_played_data);
 }
 
-void metadb_changed_callback::on_changed_sorted(metadb_handle_list_cref p_items_sorted, bool p_fromhook)
+void nonautoregister_callbacks::on_changed_sorted(metadb_handle_list_cref p_items_sorted, bool p_fromhook)
 {
 	t_on_changed_sorted_data * on_changed_sorted_data = new t_on_changed_sorted_data(p_items_sorted, p_fromhook);
 
@@ -125,16 +125,20 @@ void metadb_changed_callback::on_changed_sorted(metadb_handle_list_cref p_items_
 		on_changed_sorted_data);
 }
 
-void metadb_changed_callback::on_init()
+void nonautoregister_callbacks::on_selection_changed(metadb_handle_list_cref p_selection)
 {
-	static_api_ptr_t<metadb_io_v3> io;
-	io->register_callback(this);
-}
+	if (p_selection.get_count() > 0)
+	{
+		t_simple_callback_data<metadb_handle_ptr> * on_selection_changed_data 
+			= new t_simple_callback_data<metadb_handle_ptr>(p_selection[0]);
 
-void metadb_changed_callback::on_quit()
-{
-	static_api_ptr_t<metadb_io_v3> io;
-	io->unregister_callback(this);
+		panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_SELECTION_CHANGED, 
+			on_selection_changed_data);
+	}
+	else
+	{
+		panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_SELECTION_CHANGED, 0, 0);
+	}
 }
 
 void my_play_callback::on_playback_starting(play_control::t_track_command cmd, bool paused)

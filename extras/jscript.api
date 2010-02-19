@@ -153,6 +153,7 @@ String(string) Creates a new String Object
 String.charAt(index) Returns the character at the specified index.
 String.charCodeAt(index) Returns a number indicating the Unicode value of the character at the given index.
 String.concat(string2, string3[, ..., stringN]) Combines the text of two strings and returns a new string.
+String.fromCharCode() Converts Unicode values to characters.
 String.indexOf(searchValue[, fromIndex]) Returns the index within the calling String object of the first occurrence of the specified value, or -1 if not found.
 String.lastIndexOf(searchValue[, fromIndex]) Returns the index within the calling String object of the last occurrence of the specified value, or -1 if not found.
 String.match(regexp) Used to match a regular expression against a string.
