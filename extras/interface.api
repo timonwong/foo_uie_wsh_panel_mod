@@ -23,11 +23,11 @@ window.GetProperty(name[, defaultval])
 window.SetProperty(name, val)
 window.GetBackgroundImage()
 window.SetCursor(id)
-window.GetColorCUI(type[, client_guid]);
-window.GetFontCUI(type[, client_guid]);
-window.GetColorDUI(type);
-window.GetFontDUI(type);
-window.CreateThemeManager(classlist);
+window.GetColorCUI(type[, client_guid])
+window.GetFontCUI(type[, client_guid])
+window.GetColorDUI(type)
+window.GetFontDUI(type)
+window.CreateThemeManager(classlist)
 
 gdi.Font(name, ptSize[, style])
 gdi.Image(path)
@@ -94,4 +94,3 @@ utils.GetSysColor(index)
 utils.GetSystemMetrics(index)
 utils.Glob(pattern[, exc_mask, inc_mask])
 utils.FileTest(path, mode)
-utils.MapVirtualKey(code, maptype)

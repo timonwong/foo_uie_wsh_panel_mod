@@ -24,6 +24,8 @@ protected:
 	UINT              m_accuracy;
 	metadb_handle_ptr m_watched_handle;
 
+	ui_selection_holder::ptr m_selection_holder;
+
 	IActiveScriptPtr  m_script_engine;
 	IDispatchPtr      m_script_root;
 	SCRIPTSTATE       m_script_state;
@@ -52,6 +54,8 @@ public:
 	inline SCRIPTSTATE & GetScriptState() { return m_script_state; }
 	inline bool & GetQueryContinue() { return m_query_continue; }
 	IGdiBitmap * GetBackgroundImage();
+
+	inline void PreserveSelection() { m_selection_holder = static_api_ptr_t<ui_selection_manager_v2>()->acquire(); }
 
 	void Redraw();
 	void Repaint(bool force = false);

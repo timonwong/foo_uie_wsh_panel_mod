@@ -3,7 +3,7 @@
  3. Don't call repaint functions such as window.Repaint() in callback function on_size() {}, especially in pseudo transparent mode.
  4. Don't try to assign parameter "gr" from function on_paint(gr) {} with other value, nor try to store "gr" in another variable.
  5. CollectGarbage() is useful in JScript when you want to free memory immediately. (But please also refer to #12)
- 6. It's better to retrieve window width and height in callback function on_size(), it's not necessary to retrieve them during startup.
+ 6. It's better to retrieve window width and height in callback function on_size(), because their values during startup is not reliable.
  7. It's NOT recommended to create objects in callback function on_paint(), since it's called frenquently.
  8. Since v1.1.0, functions /methods which use IFbFileInfo Interface is replaced with IFbMetadbHandle Inferface.
  9. [OBSOLETE] Do NOT update tags in global callbacks, see Callbacks.txt for details.

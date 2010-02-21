@@ -225,8 +225,9 @@ __interface IFbMetadbHandle: IDisposable
 	[propget] STDMETHOD(FileSize)([out,retval] LONGLONG* p);
 	[propget] STDMETHOD(Length)([out,retval] double* p);
 	STDMETHOD(GetFileInfo)([out,retval] IFbFileInfo ** pp);
-	STDMETHOD(UpdateFileInfo)(IFbFileInfo * p);
+	STDMETHOD(UpdateFileInfo)(IFbFileInfo * fileinfo);
 	[vararg] STDMETHOD(UpdateFileInfoSimple)([satype(VARIANT)] SAFEARRAY * p);
+	STDMETHOD(Compare)(IFbMetadbHandle * handle, [out,retval] VARIANT_BOOL * p);
 };
 
 [
@@ -487,6 +488,6 @@ __interface IWSHUtils: IDispatch
 	STDMETHOD(GetSystemMetrics)(UINT index, [out,retval] int * p);
 	STDMETHOD(Glob)(BSTR pattern, [defaultvalue(FILE_ATTRIBUTE_DIRECTORY)] UINT exc_mask, [defaultvalue(0xffffffff)] UINT inc_mask, [out,retval] VARIANT * p);
 	STDMETHOD(FileTest)(BSTR path, BSTR mode, [out,retval] VARIANT * p);
-	STDMETHOD(MapVirtualKey)(UINT code, UINT maptype, [out,retval] UINT * p);
+	//STDMETHOD(MapVirtualKey)(UINT code, UINT maptype, [out,retval] UINT * p);
 };
 _COM_SMARTPTR_TYPEDEF(IWSHUtils, __uuidof(IWSHUtils));

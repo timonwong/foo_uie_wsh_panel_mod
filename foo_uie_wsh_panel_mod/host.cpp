@@ -445,7 +445,7 @@ STDMETHODIMP FbWindow::WatchMetadb(IFbMetadbHandle * handle)
 
 	if (!handle) return E_INVALIDARG;
 
-	metadb_handle * ptr;
+	metadb_handle * ptr = NULL;
 
 	handle->get__ptr((void**)&ptr);
 
@@ -939,8 +939,6 @@ bool wsh_panel_window::script_init()
 	m_min_size.x = 0;
 	PostMessage(m_hwnd, UWM_SIZELIMITECHANGED, 0, uie::size_limit_all);
 
-	m_watched_handle.release();
-
 	if (get_disabled())
 	{
 		PostMessage(m_hwnd, UWM_SCRIPT_DISABLE, 0, 0);
@@ -1000,6 +998,9 @@ void wsh_panel_window::script_stop()
 		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
 		m_script_engine->Close();
 	}
+
+	m_watched_handle.release();
+	m_selection_holder.release();
 }
 
 void wsh_panel_window::script_term()
@@ -1447,6 +1448,8 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case WM_SETFOCUS:
 		{
+			PreserveSelection();
+
 			VARIANTARG args[1];
 
 			args[0].vt = VT_BOOL;
@@ -1457,6 +1460,8 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case WM_KILLFOCUS:
 		{
+			m_selection_holder.release();
+
 			VARIANTARG args[1];
 
 			args[0].vt = VT_BOOL;

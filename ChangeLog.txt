@@ -3,7 +3,7 @@ v1.3.2
 - ADD: on_char() callback.
 - ADD: on_selection_changed() callback.
 - ADD: fb.GetSelection() and fb.GetSelectionType() method.
-- ADD: utils.MapVirtualKey() method.
+- ADD: IFbMetadbHandle.Compare() method.
 - ADD: window.DlgCode property.
 - CHG: window.NotifyOthers() is changed back to synchronous (since 1.2.1).
 - FIX: Workaround for FillGradRect() which may draw a black line.

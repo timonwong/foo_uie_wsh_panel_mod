@@ -437,8 +437,9 @@ public:
 	STDMETHODIMP get_FileSize(LONGLONG* p);
 	STDMETHODIMP get_Length(double* p);
 	STDMETHODIMP GetFileInfo(IFbFileInfo ** pp);
-	STDMETHODIMP UpdateFileInfo(IFbFileInfo * p);
+	STDMETHODIMP UpdateFileInfo(IFbFileInfo * fileinfo);
 	STDMETHODIMP UpdateFileInfoSimple(SAFEARRAY * p);
+	STDMETHODIMP Compare(IFbMetadbHandle * handle, VARIANT_BOOL * p);
 };
 
 class FbTitleFormat : public IDisposableImpl4<IFbTitleFormat>
@@ -654,7 +655,7 @@ public:
 	STDMETHODIMP GetSystemMetrics(UINT index, INT * p);
 	STDMETHODIMP Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT * p);
 	STDMETHODIMP FileTest(BSTR path, BSTR mode, VARIANT * p);
-	STDMETHODIMP MapVirtualKey(UINT code, UINT maptype, UINT * p);
+	//STDMETHODIMP MapVirtualKey(UINT code, UINT maptype, UINT * p);
 };
 
 class FbTooltip : public IDisposableImpl4<IFbTooltip>

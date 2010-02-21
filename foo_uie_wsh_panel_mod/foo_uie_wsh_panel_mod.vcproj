@@ -90,7 +90,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(TargetPath) &quot;D:\foobar2000\components\&quot;"
+				CommandLine="copy $(TargetPath) &quot;D:\foobar2000\components\&quot;;&#x0D;&#x0A;copy $(SolutionDir)extras\*.api &quot;D:\foobar2000\components\&quot;"
 			/>
 		</Configuration>
 		<Configuration

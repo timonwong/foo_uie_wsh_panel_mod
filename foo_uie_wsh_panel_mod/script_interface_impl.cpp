@@ -124,7 +124,7 @@ STDMETHODIMP GdiBitmap::ApplyMask(IGdiBitmap * mask, VARIANT_BOOL * p)
 
 	Gdiplus::Bitmap * bitmap = NULL;
 
-	mask->get__ptr((void **)&bitmap);
+	mask->get__ptr((void**)&bitmap);
 
 	if (!bitmap || bitmap->GetHeight() != m_ptr->GetHeight() || bitmap->GetWidth() != m_ptr->GetWidth())
 	{
@@ -1043,17 +1043,17 @@ STDMETHODIMP FbMetadbHandle::GetFileInfo(IFbFileInfo ** pp)
 	return S_OK;
 }
 
-STDMETHODIMP FbMetadbHandle::UpdateFileInfo(IFbFileInfo * p)
+STDMETHODIMP FbMetadbHandle::UpdateFileInfo(IFbFileInfo * fileinfo)
 {
 	TRACK_FUNCTION();
 
 	if (m_handle.is_empty()) return E_POINTER;
-	if (!p) return E_INVALIDARG;
+	if (!fileinfo) return E_INVALIDARG;
 
 	static_api_ptr_t<metadb_io_v2> io;
 	file_info_impl * info_ptr = NULL;
 
-	p->get__ptr((void**)&info_ptr);
+	fileinfo->get__ptr((void**)&info_ptr);
 
 	if (!info_ptr) return E_INVALIDARG;
 
@@ -1135,6 +1135,26 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 	return S_OK;
 }
 
+STDMETHODIMP FbMetadbHandle::Compare(IFbMetadbHandle * handle, VARIANT_BOOL * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = VARIANT_FALSE;
+
+	if (handle)
+	{
+		metadb_handle * ptr = NULL;
+
+		handle->get__ptr((void **)&ptr);
+
+		*p = TO_VARIANT_BOOL(ptr == m_handle.get_ptr());
+	}
+
+	return S_OK;
+}
+
 STDMETHODIMP FbTitleFormat::Eval(VARIANT_BOOL force, BSTR* pp)
 {
 	TRACK_FUNCTION();
@@ -1190,7 +1210,7 @@ STDMETHODIMP FbUtils::trace(SAFEARRAY * p)
 
 	if (!p) return E_INVALIDARG;
 
-	pfc::string8_fast utf8;
+	pfc::string8_fast str;
 	LONG nLBound, nUBound;
 	HRESULT hr;
 
@@ -1208,14 +1228,14 @@ STDMETHODIMP FbUtils::trace(SAFEARRAY * p)
 		if (FAILED(SafeArrayGetElement(p, &n, &var)))
 			continue;
 
-		if (FAILED(hr = VariantChangeType(&var, &var, 0, VT_BSTR)))
+		if (FAILED(hr = VariantChangeType(&var, &var, VARIANT_ALPHABOOL, VT_BSTR)))
 			continue;
 
-		utf8.add_string(pfc::stringcvt::string_utf8_from_wide(var.bstrVal));
-		utf8.add_byte(' ');
+		str.add_string(pfc::stringcvt::string_utf8_from_wide(var.bstrVal));
+		str.add_byte(' ');
 	}
 	
-	console::info(utf8);
+	console::info(str);
 	return S_OK;
 }
 
@@ -2462,15 +2482,15 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
 	return S_OK;
 }
 
-STDMETHODIMP WSHUtils::MapVirtualKey(UINT code, UINT maptype, UINT * p)
-{
-	TRACK_FUNCTION();
-
-	if (!p) return E_POINTER;
-
-	*p = ::MapVirtualKey(code, maptype);
-	return S_OK;
-}
+//STDMETHODIMP WSHUtils::MapVirtualKey(UINT code, UINT maptype, UINT * p)
+//{
+//	TRACK_FUNCTION();
+//
+//	if (!p) return E_POINTER;
+//
+//	*p = ::MapVirtualKey(code, maptype);
+//	return S_OK;
+//}
 
 FbTooltip::FbTooltip(HWND p_wndparent/*, bool p_want_multiline*/) 
 : m_wndparent(p_wndparent)
