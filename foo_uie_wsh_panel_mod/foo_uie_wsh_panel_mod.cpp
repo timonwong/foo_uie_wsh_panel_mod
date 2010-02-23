@@ -47,11 +47,18 @@ namespace
 		{
 			// HACK: popup_message services will not be initialized soon after start.
 			popup_msg::g_set_service_initialized();
-			check_error();
+			check_error_();
 			popup_msg::g_process_pendings();
 		}
 
-		void check_error() 
+		void on_quit()
+		{
+			simple_thread_manager::instance().remove_all();
+			panel_notifier_manager::instance().send_msg_to_all(UWM_SCRIPT_TERM, 0, 0);
+		}
+
+	private:
+		void check_error_() 
 		{
 			// Check and show error message
 			pfc::string8 err_msg;
@@ -76,12 +83,6 @@ namespace
 
 			if (!err_msg.is_empty())
 				popup_msg::g_show(err_msg, "WSH Panel Mod", popup_message::icon_error);
-		}
-
-		void on_quit()
-		{
-			simple_thread_manager::instance().remove_all();
-			panel_notifier_manager::instance().send_msg_to_all(UWM_SCRIPT_TERM, 0, 0);
 		}
 	};
 

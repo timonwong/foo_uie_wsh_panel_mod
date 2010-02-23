@@ -1,3 +1,5 @@
+// vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
+
 // This is a demo show how on_metadb_changed(metadb, fromhook), 
 // window.WatchMetadb(metadb)  and window.UnWatchMetadb() works.
 
@@ -8,11 +10,13 @@ var g_handle = fb.GetFocusItem();
 window.WatchMetadb(g_handle);
 
 // Unwatch
+
 function on_mouse_lbtn_up(x, y, mask) {
-	window.UnWatchMetadb();
+    window.UnWatchMetadb();
 }
 
 // Callback
+
 function on_metadb_changed(metadb, fromhook) {
-	fb.ShowPopupMessage("Get Notified");
+    fb.ShowPopupMessage("metadb changed");
 }

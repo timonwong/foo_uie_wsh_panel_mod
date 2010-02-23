@@ -19,6 +19,7 @@ Methods:
 	// Changes will be saved in current bitmap
 	boolean ApplyMask(IGdiBitmap);
 	IGdiRawBitmap CreateRawBitmap(); // Create a DDB bitmap from IGdiBitmap, which is used in GdiDrawBitmap()
+	// NOTE: Don't forget to use ReleaseGraphics() after operations on IGdiGraphics interface is done.
 	IGdiGraphics GetGraphics();
 	void ReleaseGraphics(IGdiGraphics);
 	void BoxBlur(radius, iteration = 1);
@@ -197,10 +198,17 @@ Properties:
 Methods:
 	void AppendMenuItem(flags, item_id, text);
 	void AppendMenuSeparator();
-	void EnableMenuItem(item_id, enable);
-	// [1.3.0] Changed: check is now a boolean value.
-	void CheckMenuItem(item_id, check);
-	void CheckMenuRadioItem(first, last, check);
+	// [1.3.2] Changed:
+	// Add bypos parameter.
+	void EnableMenuItem(id_or_pos, enable, bypos = false);
+	// [1.3.0] Changed: 
+	// check is now a boolean value.
+	// [1.3.2] Changed:
+	// Add bypos parameter.
+	void CheckMenuItem(id_or_pos, check, bypos = false);
+	// [1.3.2] Changed:
+	// Add bypos parameter.
+	void CheckMenuRadioItem(first, last, check, bypos = false);
 	int TrackPopupMenu(x, y);
 	// [1.1.10] New:
 	void Dispose();
@@ -208,7 +216,7 @@ Methods:
 
 interface IContextMenuManager {
 Methods:
-	// [1.1.8] Added:
+	// [1.1.8] New:
 	void InitContext(IFbMetadbHandle);
 	void InitNowPlaying();
 	void BuildMenu(IMenuObj, base_id, max_id);
@@ -256,6 +264,12 @@ Properties:
 	// [1.1.1] New:
 	(read, write) boolean PlaybackFollowCursor;
 	(read, write) float Volume;
+	// [1.3.2] New:
+	(readonly) unsigned PlaylistCount;
+	// [1.3.2] New:
+	(read, write) unsigned int ActivePlaylist;
+	// [1.3.2] New:
+	(read, write) unsigned int PlayingPlaylist;
 
 Methods:
 	// [1.1.4] Updated:
@@ -312,6 +326,18 @@ Methods:
 	IContextMenuManager CreateContextMenuManager();
 	// [1.1.7] New:
 	boolean IsMetadbInMediaLibrary(metadb);
+	// [1.3.2] New:
+	String GetPlaylistName(idx);
+	// [1.3.2] New:
+	// if name is "", then Create a playlist autonamed with "New Playlist <number>".
+	// return the index of the created playlist.
+	unsigned int CreatePlaylist(idx, name);
+	// [1.3.2] New:
+	boolean RemovePlaylist(idx);
+	// [1.3.2] New:
+	boolean MovePlaylist(from, to);
+	// [1.3.2] New:
+	boolean RenamePlaylist(idx, name);
 }
 
 interface ITimerObj {
@@ -347,7 +373,7 @@ Methods:
 	//    http://dl.dropbox.com/u/2451120/vsstyles_h.7z
 	void SetPartAndStateID(partid, stateid);
 	boolean IsThemePartDefined(partid, stateid);
-	void DrawThemeBackground(gr, x, y, w, h);
+	void DrawThemeBackground(IGdiGraphics, x, y, w, h);
 }
 
 interface IFbWindow {

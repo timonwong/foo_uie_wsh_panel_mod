@@ -111,7 +111,9 @@ public:
 	virtual void on_item_played(metadb_handle_ptr p_item);
 };
 
-class nonautoregister_callbacks : public initquit, public metadb_io_callback_dynamic, public ui_selection_callback
+class nonautoregister_callbacks : public initquit, 
+	public metadb_io_callback_dynamic, 
+	public ui_selection_callback
 {
 public:
 	struct t_on_changed_sorted_data : public pfc::refcounted_object_root
@@ -163,28 +165,65 @@ public:
 	virtual void on_volume_change(float newval);
 };
 
-class my_playlist_callback : public playlist_callback_single_static
+class my_playlist_callback : public playlist_callback_static
 {
 public:
-	virtual unsigned get_flags() { return flag_on_item_focus_change | flag_on_playback_order_changed; }
+	virtual unsigned get_flags() 
+	{
+		return flag_on_item_focus_change | flag_on_playlist_activate | 
+			flag_on_playlist_created | flag_on_playlists_reorder |
+			flag_on_playlists_removed | flag_on_playlist_renamed |
+			flag_on_playback_order_changed ; 
+	}
 
-	virtual void on_items_added(t_size p_base, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection) {}
-	virtual void on_items_reordered(const t_size * p_order,t_size p_count) {}
-	virtual void on_items_removing(const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
-	virtual void on_items_removed(const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
-	virtual void on_items_selection_change(const bit_array & p_affected,const bit_array & p_state) {}
+	virtual void on_items_added(t_size p_playlist,t_size p_start, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection) {}
+	virtual void on_items_reordered(t_size p_playlist,const t_size * p_order,t_size p_count) {}
+	virtual void on_items_removing(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
+	virtual void on_items_removed(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
+	virtual void on_items_selection_change(t_size p_playlist,const bit_array & p_affected,const bit_array & p_state) {}
 	// impl
-	virtual void on_item_focus_change(t_size p_from,t_size p_to);
-	virtual void on_items_modified(const bit_array & p_mask) {}
-	virtual void on_items_modified_fromplayback(const bit_array & p_mask,play_control::t_display_level p_level) {}
-	virtual void on_items_replaced(const bit_array & p_mask,const pfc::list_base_const_t<playlist_callback::t_on_items_replaced_entry> & p_data) {}
-	virtual void on_item_ensure_visible(t_size p_idx) {}
+	virtual void on_item_focus_change(t_size p_playlist,t_size p_from,t_size p_to);
+	virtual void on_items_modified(t_size p_playlist,const bit_array & p_mask) {}
+	virtual void on_items_modified_fromplayback(t_size p_playlist,const bit_array & p_mask,play_control::t_display_level p_level) {}
+	virtual void on_items_replaced(t_size p_playlist,const bit_array & p_mask,const pfc::list_base_const_t<t_on_items_replaced_entry> & p_data) {}
+	virtual void on_item_ensure_visible(t_size p_playlist,t_size p_idx) {}
 	// impl
-	virtual void on_playlist_switch();
-	virtual void on_playlist_renamed(const char * p_new_name,t_size p_new_name_len) {}
-	virtual void on_playlist_locked(bool p_locked) {}
-
+	virtual void on_playlist_activate(t_size p_old,t_size p_new) 
+	{ 
+		// redirect
+		if (p_old != p_new) on_playlist_switch();
+	}
+	// impl
+	virtual void on_playlist_created(t_size p_index,const char * p_name,t_size p_name_len)
+	{
+		// redirect
+		on_playlists_changed();
+	}
+	// impl
+	virtual void on_playlists_reorder(const t_size * p_order,t_size p_count)
+	{
+		// redirect
+		on_playlists_changed();
+	}
+	virtual void on_playlists_removing(const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
+	// impl
+	virtual void on_playlists_removed(const bit_array & p_mask,t_size p_old_count,t_size p_new_count)
+	{
+		// redirect
+		on_playlists_changed();
+	}
+	// impl
+	virtual void on_playlist_renamed(t_size p_index,const char * p_new_name,t_size p_new_name_len)
+	{
+		// redirect
+		on_playlists_changed();
+	}
 	virtual void on_default_format_changed() {}
 	// impl
 	virtual void on_playback_order_changed(t_size p_new_index);
+	virtual void on_playlist_locked(t_size p_playlist,bool p_locked) {}
+	
+private:
+	void on_playlist_switch();
+	void on_playlists_changed();
 };

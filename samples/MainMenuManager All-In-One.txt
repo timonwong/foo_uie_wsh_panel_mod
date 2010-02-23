@@ -1,3 +1,5 @@
+// vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
+
 // Created by YBStone
 // Modded by T.P Wang
 // Flags, used by Menu
@@ -15,7 +17,7 @@ function on_mouse_lbtn_up(x, y) {
 
     var basemenu = window.CreatePopupMenu();
     var contextman = fb.CreateContextMenuManager();
-	
+
     contextman.InitNowPlaying();
 
     var child1 = window.CreatePopupMenu(); //File
@@ -25,7 +27,7 @@ function on_mouse_lbtn_up(x, y) {
     var child5 = window.CreatePopupMenu(); //Library
     var child6 = window.CreatePopupMenu(); //Help
     var child7 = window.CreatePopupMenu(); //Now playing
-	
+
     var menuman1 = fb.CreateMainMenuManager();
     var menuman2 = fb.CreateMainMenuManager();
     var menuman3 = fb.CreateMainMenuManager();
@@ -62,35 +64,34 @@ function on_mouse_lbtn_up(x, y) {
     ret = basemenu.TrackPopupMenu(x, y);
 
     // fb.trace(ret);
-    switch (true)
-    {
-    case (ret >= 1 && ret < 201):
+    switch (true) {
+    case(ret >= 1 && ret < 201):
         menuman1.ExecuteByID(ret - 1);
-    	break;
+        break;
 
     case (ret >= 201 && ret < 401):
         menuman2.ExecuteByID(ret - 201);
         break;
 
-	case (ret >= 401 && ret < 601):
+    case (ret >= 401 && ret < 601):
         menuman3.ExecuteByID(ret - 401);
-		break;
-	
+        break;
+
     case (ret >= 601 && ret < 901):
         menuman4.ExecuteByID(ret - 601);
-		break;
-	
+        break;
+
     case (ret >= 901 && ret < 1201):
         menuman5.ExecuteByID(ret - 901);
-		break;
-	
+        break;
+
     case (ret >= 1201 && ret < 1301):
         menuman6.ExecuteByID(ret - 1201);
-		break;
-    
+        break;
+
     case (ret >= 1301):
         contextman.ExecuteByID(ret - 1301);
-		break;
+        break;
     }
 
     basemenu.Dispose();

@@ -5,6 +5,10 @@ v1.3.2
 - ADD: fb.GetSelection() and fb.GetSelectionType() method.
 - ADD: IFbMetadbHandle.Compare() method.
 - ADD: window.DlgCode property.
+- ADD: on_playlists_changed() callback.
+- ADD: Properties fb.PlaylistCount, fb.ActivePlaylist and fb.PlayingPlaylist.
+- ADD: Methods fb.GetPlaylistName(), fb.CreatePlaylist(), fb.RemovePlaylist(), fb.MovePlaylist() and fb.RenamePlaylist().
+- ADD: Sample Themed Progress Bar.txt
 - CHG: window.NotifyOthers() is changed back to synchronous (since 1.2.1).
 - FIX: Workaround for FillGradRect() which may draw a black line.
 - FIX: Script won't be updated in DUI after importing theme.

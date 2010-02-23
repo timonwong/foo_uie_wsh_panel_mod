@@ -209,7 +209,7 @@ void my_play_callback::on_volume_change(float newval)
 		on_volume_change_data);
 }
 
-void my_playlist_callback::on_item_focus_change(t_size p_from,t_size p_to)
+void my_playlist_callback::on_item_focus_change(t_size p_playlist,t_size p_from,t_size p_to)
 {
 	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_ITEM_FOCUS_CHANGE, 0, 0);
 }
@@ -223,4 +223,9 @@ void my_playlist_callback::on_playback_order_changed(t_size p_new_index)
 void my_playlist_callback::on_playlist_switch()
 {
 	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_SWITCH, 0, 0);
+}
+
+void my_playlist_callback::on_playlists_changed()
+{
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLISTS_CHANGED, 0, 0);
 }

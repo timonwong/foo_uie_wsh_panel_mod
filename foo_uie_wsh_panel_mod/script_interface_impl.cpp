@@ -587,13 +587,13 @@ STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, in
 	SAFEARRAY * psa = SafeArrayCreateVector(VT_VARIANT, 0, _countof(elements));
 	if (!psa) return E_OUTOFMEMORY;
 
-	for (t_size i = 0; i <  _countof(elements); ++i)
+	for (t_size i = 0; i < _countof(elements); ++i)
 	{
 		_variant_t var;
 		var.vt = VT_I4;
 		var.intVal = elements[i];
 
-		if (SafeArrayPutElement(psa, reinterpret_cast<LONG *>(&i), &var))
+		if (FAILED(SafeArrayPutElement(psa, reinterpret_cast<LONG *>(&i), &var)))
 		{
 			// deep destroy
 			SafeArrayDestroy(psa);
@@ -1211,7 +1211,7 @@ STDMETHODIMP FbUtils::trace(SAFEARRAY * p)
 	if (!p) return E_INVALIDARG;
 
 	pfc::string8_fast str;
-	LONG nLBound, nUBound;
+	LONG nLBound = 0, nUBound = -1;
 	HRESULT hr;
 
 	if (FAILED(hr = SafeArrayGetLBound(p, 1, &nLBound)))
@@ -1801,6 +1801,144 @@ STDMETHODIMP FbUtils::IsMetadbInMediaLibrary(IFbMetadbHandle * handle, VARIANT_B
 	return S_OK;
 }
 
+STDMETHODIMP FbUtils::get_ActivePlaylist(UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = static_api_ptr_t<playlist_manager>()->get_active_playlist();
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::put_ActivePlaylist(UINT idx)
+{
+	TRACK_FUNCTION();
+
+	static_api_ptr_t<playlist_manager> pm;
+	t_size index = (idx < pm->get_playlist_count()) ? idx : pfc::infinite_size;
+
+	pm->set_active_playlist(index);
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::get_PlayingPlaylist(UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = static_api_ptr_t<playlist_manager>()->get_playing_playlist();
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::put_PlayingPlaylist(UINT idx)
+{
+	TRACK_FUNCTION();
+
+	static_api_ptr_t<playlist_manager> pm;
+	t_size index = (idx < pm->get_playlist_count()) ? idx : pfc::infinite_size;
+
+	pm->set_playing_playlist(index);
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::get_PlaylistCount(UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = static_api_ptr_t<playlist_manager>()->get_playlist_count();
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::GetPlaylistName(UINT idx, BSTR * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	pfc::string8_fast temp;
+
+	static_api_ptr_t<playlist_manager>()->playlist_get_name(idx, temp);
+	*p = SysAllocString(pfc::stringcvt::string_wide_from_utf8(temp));
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::CreatePlaylist(UINT idx, BSTR name, UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!name) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	if (*name)
+	{
+		pfc::stringcvt::string_utf8_from_wide uname(name);
+
+		*p = static_api_ptr_t<playlist_manager>()->create_playlist(uname, uname.length(), idx);
+	}
+	else
+	{
+		*p = static_api_ptr_t<playlist_manager>()->create_playlist_autoname(idx);
+	}
+
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::RemovePlaylist(UINT idx, VARIANT_BOOL * p)
+{
+	TRACK_FUNCTION();
+
+	if (!idx) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	*p = TO_VARIANT_BOOL(static_api_ptr_t<playlist_manager>()->remove_playlist(idx));
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::MovePlaylist(UINT from, UINT to, VARIANT_BOOL * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	static_api_ptr_t<playlist_manager> pm;
+	order_helper order(pm->get_playlist_count());
+
+	if ((from >= order.get_count()) || (to >= order.get_count()))
+	{
+		*p = VARIANT_FALSE;
+		return S_OK;
+	}
+
+	int inc = (from < to) ? 1 : -1;
+
+	for (t_size i = from; i != to; i += inc)
+	{
+		order[i] = order[i + inc];
+	}
+
+	order[to] = from;
+
+	*p = TO_VARIANT_BOOL(pm->reorder(order.get_ptr(), order.get_count()));
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::RenamePlaylist(UINT idx, BSTR name, VARIANT_BOOL * p)
+{
+	TRACK_FUNCTION();
+
+	if (!name) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	pfc::stringcvt::string_utf8_from_wide uname(name);
+
+	*p = TO_VARIANT_BOOL(static_api_ptr_t<playlist_manager>()->playlist_rename(idx, uname, uname.length()));
+	return S_OK;
+}
+
 STDMETHODIMP MenuObj::get_ID(UINT * p)
 {
 	TRACK_FUNCTION();
@@ -1817,7 +1955,7 @@ STDMETHODIMP MenuObj::AppendMenuItem(UINT flags, UINT item_id, BSTR text)
 	TRACK_FUNCTION();
 
 	if (!m_hMenu) return E_POINTER;
-	if (!text) return E_INVALIDARG;
+	if ((flags & MF_STRING) && !text) return E_INVALIDARG;
 
 	::AppendMenu(m_hMenu, flags, item_id, text);
 	return S_OK;
@@ -1833,36 +1971,39 @@ STDMETHODIMP MenuObj::AppendMenuSeparator()
 	return S_OK;
 }
 
-STDMETHODIMP MenuObj::EnableMenuItem(UINT item_id, UINT enable)
+STDMETHODIMP MenuObj::EnableMenuItem(UINT id_or_pos, UINT enable, VARIANT_BOOL bypos)
 {
 	TRACK_FUNCTION();
 
 	if (!m_hMenu) return E_POINTER;
 
-	::EnableMenuItem(m_hMenu, item_id, enable);
+	enable &= ~(MF_BYPOSITION | MF_BYCOMMAND);
+	enable |= bypos ? MF_BYPOSITION : MF_BYCOMMAND;
+
+	::EnableMenuItem(m_hMenu, id_or_pos, enable);
 	return S_OK;
 }
 
-STDMETHODIMP MenuObj::CheckMenuItem(UINT item_id, VARIANT_BOOL check)
+STDMETHODIMP MenuObj::CheckMenuItem(UINT id_or_pos, VARIANT_BOOL check, VARIANT_BOOL bypos)
 {
 	TRACK_FUNCTION();
 
 	if (!m_hMenu) return E_POINTER;
 
-	UINT ucheck = 0;
+	UINT ucheck = bypos ? MF_BYPOSITION : MF_BYCOMMAND;
 	if (check) ucheck = MF_CHECKED;
 
-	::CheckMenuItem(m_hMenu, item_id, ucheck);
+	::CheckMenuItem(m_hMenu, id_or_pos, ucheck);
 	return S_OK;
 }
 
-STDMETHODIMP MenuObj::CheckMenuRadioItem(UINT first, UINT last, UINT check)
+STDMETHODIMP MenuObj::CheckMenuRadioItem(UINT first, UINT last, UINT check, VARIANT_BOOL bypos)
 {
 	TRACK_FUNCTION();
 
 	if (!m_hMenu) return E_POINTER;
 
-	::CheckMenuRadioItem(m_hMenu, first, last, check, MF_BYCOMMAND);
+	::CheckMenuRadioItem(m_hMenu, first, last, check, bypos ? MF_BYPOSITION : MF_BYCOMMAND);
 	return S_OK;
 }
 
@@ -1881,6 +2022,67 @@ STDMETHODIMP MenuObj::TrackPopupMenu(int x, int y, UINT * item_id)
 	SendMessage(m_wnd_parent, UWM_TOGGLEQUERYCONTINUE, 0, true);
 	return S_OK;
 }
+
+//STDMETHODIMP MenuObj::GetMenuItemCount(INT * p)
+//{
+//	TRACK_FUNCTION();
+//
+//	if (!m_hMenu || !p) return E_POINTER;
+//
+//	*p = ::GetMenuItemCount(m_hMenu);
+//	return S_OK;
+//}
+//
+//STDMETHODIMP MenuObj::GetMenuItemID(int pos, UINT * p)
+//{
+//	TRACK_FUNCTION();
+//
+//	if (!m_hMenu || !p) return E_POINTER;
+//
+//	*p = ::GetMenuItemID(m_hMenu, pos);
+//	return S_OK;
+//}
+//
+//STDMETHODIMP MenuObj::GetMenuItemState(UINT id_or_pos, VARIANT_BOOL bypos, UINT * p)
+//{
+//	TRACK_FUNCTION();
+//
+//	if (!m_hMenu || !p) return E_POINTER;
+//
+//	*p = ::GetMenuState(m_hMenu, id_or_pos, bypos ? MF_BYPOSITION : MF_BYCOMMAND);
+//	return S_OK;
+//}
+//
+//STDMETHODIMP MenuObj::GetMenuItemString(UINT id_or_pos, VARIANT_BOOL bypos, BSTR * pp)
+//{
+//	TRACK_FUNCTION();
+//
+//	if (!m_hMenu || !pp) return E_POINTER;
+//
+//	pfc::array_t<wchar_t> buff;
+//	int len = ::GetMenuString(m_hMenu, id_or_pos, NULL, 0, bypos ? MF_BYPOSITION : MF_BYCOMMAND);
+//	
+//	buff.set_size(len + 1);
+//	::GetMenuString(m_hMenu, id_or_pos, buff.get_ptr(), len, bypos ? MF_BYPOSITION : MF_BYCOMMAND);
+//	buff[len] = 0;
+//
+//	*pp = SysAllocString(buff.get_ptr());
+//	return S_OK;
+//}
+//
+//STDMETHODIMP MenuObj::InsertMenuItem(UINT id_or_pos, UINT flags, UINT item_id, BSTR text, VARIANT_BOOL bypos)
+//{
+//	TRACK_FUNCTION();
+//
+//	if (!m_hMenu) return E_POINTER;
+//	if ((flags & MF_STRING) && !text) return E_INVALIDARG;
+//
+//	flags &= ~(MF_BYPOSITION | MF_BYCOMMAND);
+//	flags |= bypos ? MF_BYPOSITION : MF_BYCOMMAND;
+//
+//	::InsertMenu(m_hMenu, id_or_pos, flags, item_id, text);
+//	return S_OK;
+//}
 
 STDMETHODIMP ContextMenuManager::InitContext(IFbMetadbHandle * handle)
 {
@@ -2430,7 +2632,7 @@ STDMETHODIMP WSHUtils::Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT 
 		var.vt = VT_BSTR;
 		var.bstrVal = SysAllocString(pfc::stringcvt::string_wide_from_utf8_fast(files[i]).get_ptr());
 
-		if (SafeArrayPutElement(psa, reinterpret_cast<LONG *>(&i), &var))
+		if (FAILED(SafeArrayPutElement(psa, reinterpret_cast<LONG *>(&i), &var)))
 		{
 			// deep destroy
 			SafeArrayDestroy(psa);

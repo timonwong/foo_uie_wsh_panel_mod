@@ -255,10 +255,15 @@ __interface IMenuObj: IDisposable
 	[propget] STDMETHOD(ID)([out,retval] UINT * p);
 	STDMETHOD(AppendMenuItem)(UINT flags, UINT item_id, BSTR text);
 	STDMETHOD(AppendMenuSeparator)();
-	STDMETHOD(EnableMenuItem)(UINT item_id, UINT enable);
-	STDMETHOD(CheckMenuItem)(UINT item_id, VARIANT_BOOL check);
-	STDMETHOD(CheckMenuRadioItem)(UINT first, UINT last, UINT check);
+	STDMETHOD(EnableMenuItem)(UINT id_or_pos, UINT enable, [defaultvalue(0)] VARIANT_BOOL bypos);
+	STDMETHOD(CheckMenuItem)(UINT id_or_pos, VARIANT_BOOL check, [defaultvalue(0)] VARIANT_BOOL bypos);
+	STDMETHOD(CheckMenuRadioItem)(UINT first, UINT last, UINT check, [defaultvalue(0)] VARIANT_BOOL bypos);
 	STDMETHOD(TrackPopupMenu)(int x, int y, [out,retval] UINT * item_id);
+	//STDMETHOD(GetMenuItemCount)([out,retval] INT * p);
+	//STDMETHOD(GetMenuItemID)(int pos, [out,retval] UINT * p);
+	//STDMETHOD(GetMenuItemState)(UINT id_or_pos, [defaultvalue(0)] VARIANT_BOOL bypos, [out,retval] UINT * p);
+	//STDMETHOD(GetMenuItemString)(UINT id_or_pos, [defaultvalue(0)] VARIANT_BOOL bypos, [out,retval] BSTR * pp);
+	//STDMETHOD(InsertMenuItem)(UINT id_or_pos, UINT flags, UINT item_id, BSTR text, [defaultvalue(0)] VARIANT_BOOL bypos);
 };
 
 [
@@ -321,7 +326,7 @@ __interface IFbUtils: IDispatch
 	STDMETHOD(GetFocusItem)([defaultvalue(-1)] VARIANT_BOOL force, [out,retval] IFbMetadbHandle** pp);
 	STDMETHOD(GetSelection)([out,retval] IFbMetadbHandle** pp);
 	STDMETHOD(GetSelectionType)([out,retval] UINT* p);
-
+	//
 	[propget] STDMETHOD(ComponentPath)([out,retval] BSTR* pp);
 	[propget] STDMETHOD(FoobarPath)([out,retval] BSTR* pp);
 	[propget] STDMETHOD(ProfilePath)([out,retval] BSTR* pp);
@@ -365,6 +370,17 @@ __interface IFbUtils: IDispatch
 	STDMETHOD(CreateContextMenuManager)([out,retval] IContextMenuManager ** pp);
 	STDMETHOD(CreateMainMenuManager)([out,retval] IMainMenuManager ** pp);
 	STDMETHOD(IsMetadbInMediaLibrary)(IFbMetadbHandle * handle, [out,retval] VARIANT_BOOL * p);
+	//
+	[propget] STDMETHOD(ActivePlaylist)([out,retval] UINT * p);
+	[propput] STDMETHOD(ActivePlaylist)(UINT idx);
+	[propget] STDMETHOD(PlayingPlaylist)([out,retval] UINT * p);
+	[propput] STDMETHOD(PlayingPlaylist)(UINT idx);
+	[propget] STDMETHOD(PlaylistCount)([out,retval] UINT * p);
+	STDMETHOD(GetPlaylistName)(UINT idx, [out,retval] BSTR * p);
+	STDMETHOD(CreatePlaylist)(UINT idx, BSTR name, [out,retval] UINT * p);
+	STDMETHOD(RemovePlaylist)(UINT idx, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(MovePlaylist)(UINT from, UINT to, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(RenamePlaylist)(UINT idx, BSTR name, [out,retval] VARIANT_BOOL * p);
 };
 _COM_SMARTPTR_TYPEDEF(IFbUtils, __uuidof(IFbUtils));
 

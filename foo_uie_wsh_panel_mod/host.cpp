@@ -1615,6 +1615,10 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case CALLBACK_UWM_ON_PLAYLIST_SWITCH:
 		on_playlist_switch();
 		return 0;
+
+	case CALLBACK_UWM_ON_PLAYLISTS_CHANGED:
+		on_playlists_changed();
+		return 0;
 	}
 
 	return uDefWindowProc(hwnd, msg, wp, lp);
@@ -1977,6 +1981,13 @@ void wsh_panel_window::on_playlist_switch()
 	script_invoke_v(L"on_playlist_switch");
 }
 
+void wsh_panel_window::on_playlists_changed()
+{
+	TRACK_FUNCTION();
+
+	script_invoke_v(L"on_playlists_changed");
+}
+
 void wsh_panel_window::on_changed_sorted(WPARAM wp)
 {
 	TRACK_FUNCTION();
@@ -2101,6 +2112,9 @@ LRESULT wsh_panel_window_cui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 				g_reported = true;
 			}
 		}
+		catch (...)
+		{
+		}
 		break;
 
 	case WM_DESTROY:
@@ -2109,7 +2123,7 @@ LRESULT wsh_panel_window_cui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 			static_api_ptr_t<columns_ui::fonts::manager>()->deregister_common_callback(this);
 			static_api_ptr_t<columns_ui::colours::manager>()->deregister_common_callback(this);
 		}
-		catch (exception_service_not_found &)
+		catch (...)
 		{
 		}
 		break;

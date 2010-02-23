@@ -534,6 +534,7 @@ public:
 	STDMETHODIMP GetFocusItem(VARIANT_BOOL force, IFbMetadbHandle** pp);
 	STDMETHODIMP GetSelection(IFbMetadbHandle** pp);
 	STDMETHODIMP GetSelectionType(UINT* p);
+
 	STDMETHODIMP get_ComponentPath(BSTR* pp);
 	STDMETHODIMP get_FoobarPath(BSTR* pp);
 	STDMETHODIMP get_ProfilePath(BSTR* pp);
@@ -552,6 +553,7 @@ public:
 	STDMETHODIMP put_PlaybackFollowCursor(VARIANT_BOOL p);
 	STDMETHODIMP get_Volume(float* p);
 	STDMETHODIMP put_Volume(float value);
+
 	STDMETHODIMP Exit();
 	STDMETHODIMP Play();
 	STDMETHODIMP Stop();
@@ -576,6 +578,17 @@ public:
 	STDMETHODIMP CreateContextMenuManager(IContextMenuManager ** pp);
 	STDMETHODIMP CreateMainMenuManager(IMainMenuManager ** pp);
 	STDMETHODIMP IsMetadbInMediaLibrary(IFbMetadbHandle * handle, VARIANT_BOOL * p);
+
+	STDMETHODIMP get_ActivePlaylist(UINT * p);
+	STDMETHODIMP put_ActivePlaylist(UINT idx);
+	STDMETHODIMP get_PlayingPlaylist(UINT * p);
+	STDMETHODIMP put_PlayingPlaylist(UINT idx);
+	STDMETHODIMP get_PlaylistCount(UINT * p);
+	STDMETHODIMP GetPlaylistName(UINT idx, BSTR * p);
+	STDMETHODIMP CreatePlaylist(UINT idx, BSTR name, UINT * p);
+	STDMETHODIMP RemovePlaylist(UINT idx, VARIANT_BOOL * p);
+	STDMETHODIMP MovePlaylist(UINT from, UINT to, VARIANT_BOOL * p);
+	STDMETHODIMP RenamePlaylist(UINT idx, BSTR name, VARIANT_BOOL * p);
 };
 
 class MenuObj : public IDisposableImpl4<IMenuObj>
@@ -604,10 +617,15 @@ public:
 	STDMETHODIMP get_ID(UINT * p);
 	STDMETHODIMP AppendMenuItem(UINT flags, UINT item_id, BSTR text);
 	STDMETHODIMP AppendMenuSeparator();
-	STDMETHODIMP EnableMenuItem(UINT item_id, UINT enable);
-	STDMETHODIMP CheckMenuItem(UINT item_id, VARIANT_BOOL check);
-	STDMETHODIMP CheckMenuRadioItem(UINT first, UINT last, UINT check);
+	STDMETHODIMP EnableMenuItem(UINT id_or_pos, UINT enable, VARIANT_BOOL bypos);
+	STDMETHODIMP CheckMenuItem(UINT id_or_pos, VARIANT_BOOL check, VARIANT_BOOL bypos);
+	STDMETHODIMP CheckMenuRadioItem(UINT first, UINT last, UINT check, VARIANT_BOOL bypos);
 	STDMETHODIMP TrackPopupMenu(int x, int y, UINT * item_id);
+	//STDMETHODIMP GetMenuItemCount(INT * p);
+	//STDMETHODIMP GetMenuItemID(int pos, UINT * p);
+	//STDMETHODIMP GetMenuItemState(UINT id_or_pos, VARIANT_BOOL bypos, UINT * p);
+	//STDMETHODIMP GetMenuItemString(UINT id_or_pos, VARIANT_BOOL bypos, BSTR * pp);
+	//STDMETHODIMP InsertMenuItem(UINT id_or_pos, UINT flags, UINT item_id, BSTR text, VARIANT_BOOL bypos);
 };
 
 class TimerObj : public IDisposableImpl4<ITimerObj>
