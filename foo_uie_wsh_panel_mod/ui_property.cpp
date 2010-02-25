@@ -109,7 +109,7 @@ void CDialogProperty::LoadProperties(bool reload /*= true*/)
 		case VT_I8:
 		case VT_UI8:
 			var.ChangeType(VT_I4, &v);
-			hProp = PropCreateSimple(wname, var.intVal);
+			hProp = PropCreateSimple(wname, var.lVal);
 			break;
 
 		case VT_BSTR:

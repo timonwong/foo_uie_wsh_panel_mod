@@ -273,9 +273,6 @@ namespace helpers
 
 	HRESULT get_album_art(BSTR rawpath, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub)
 	{
-		if (!rawpath) return E_INVALIDARG;
-		if (!pp) return E_POINTER;
-
 		GUID what;
 		album_art_data_ptr data;
 		album_art_manager_instance_ptr aami = static_api_ptr_t<album_art_manager>()->instantiate();
@@ -314,10 +311,9 @@ namespace helpers
 		return S_OK;
 	}
 
-	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub, pfc::string_base * image_path_ptr /*= NULL*/)
+	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub)
 	{
 		if (handle.is_empty()) return E_INVALIDARG;
-		if (!pp) return E_POINTER;
 
 		GUID what;
 		abort_callback_dummy abort;
@@ -337,16 +333,6 @@ namespace helpers
 
 			if (helpers::read_album_art_into_bitmap(data, &bitmap))
 			{
-				if (image_path_ptr)
-				{
-					album_art_path_list::ptr list = aaeiv2->query_paths(what, abort);
-
-					if (list->get_count() > 0)
-					{
-						image_path_ptr->set_string(list->get_path(0));
-					}
-				}
-
 				ret = new com_object_impl_t<GdiBitmap>(bitmap);
 			}
 		}
@@ -363,16 +349,6 @@ namespace helpers
 
 					if (helpers::read_album_art_into_bitmap(data, &bitmap))
 					{
-						if (image_path_ptr)
-						{
-							album_art_path_list::ptr list = aaeiv2_stub->query_paths(what, abort);
-
-							if (list->get_count() > 0)
-							{
-								image_path_ptr->set_string(list->get_path(0));
-							}
-						}
-
 						ret = new com_object_impl_t<GdiBitmap>(bitmap);
 					}
 				} catch (std::exception &) {}
@@ -385,9 +361,6 @@ namespace helpers
 
 	HRESULT get_album_art_embedded(BSTR rawpath, IGdiBitmap ** pp, int art_id)
 	{
-		if (!rawpath) return E_INVALIDARG;
-		if (!pp) return E_POINTER;
-
 		service_enum_t<album_art_extractor> e;
 		service_ptr_t<album_art_extractor> ptr;
 		pfc::stringcvt::string_utf8_from_wide urawpath(rawpath);
@@ -681,7 +654,6 @@ namespace helpers
 
 	void album_art_async::thread_proc()
 	{
-		pfc::string8_fast image_path;
 		FbMetadbHandle * handle = NULL;
 		IGdiBitmap * bitmap = NULL;
 
@@ -690,18 +662,36 @@ namespace helpers
 			if (m_only_embed)
 			{
 				get_album_art_embedded(m_rawpath, &bitmap, m_art_id);
-				image_path = m_handle->get_path();
 			}
 			else
 			{
-				get_album_art_v2(m_handle, &bitmap, m_art_id, m_need_stub, &image_path);
+				get_album_art_v2(m_handle, &bitmap, m_art_id, m_need_stub);
 			}
 
 			handle = new com_object_impl_t<FbMetadbHandle>(m_handle);
 		}
 
-		t_param param(handle, m_art_id, bitmap, file_path_display(image_path));
+		t_param param(handle, m_art_id, bitmap);
 
 		SendMessage(m_notify_hwnd, CALLBACK_UWM_GETALBUMARTASYNCDONE, 0, (LPARAM)&param);
+	}
+
+	void load_image_async::thread_proc()
+	{
+		IGdiBitmap * bitmap = NULL;
+		Gdiplus::Bitmap * img = new Gdiplus::Bitmap(m_path);
+
+		if (!helpers::ensure_gdiplus_object(img))
+		{
+			if (img) delete img;
+		}
+		else
+		{
+			bitmap = new com_object_impl_t<GdiBitmap>(img);
+		}
+
+		t_param param(get_tid(), bitmap);
+
+		SendMessage(m_notify_hwnd, CALLBACK_UWM_LOADIMAGEASYNCDONE, 0, (LPARAM)&param);
 	}
 }

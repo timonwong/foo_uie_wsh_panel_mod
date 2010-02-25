@@ -33,6 +33,7 @@ gdi.Font(name, ptSize[, style])
 gdi.Image(path)
 gdi.CreateImage(w, h)
 gdi.CreateStyleTextRender([pngmode])
+gdi.LoadImageAsync(window_id, path)
 
 fb.ComponentPath
 fb.FoobarPath

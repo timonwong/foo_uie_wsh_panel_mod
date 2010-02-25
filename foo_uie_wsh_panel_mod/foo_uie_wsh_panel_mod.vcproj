@@ -90,7 +90,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(TargetPath) &quot;D:\foobar2000\components\&quot;;&#x0D;&#x0A;copy $(SolutionDir)extras\*.api &quot;D:\foobar2000\components\&quot;"
+				CommandLine="copy $(TargetPath) &quot;D:\foobar2000\components\&quot;;&#x0D;&#x0A;copy $(SolutionDir)extras\*.api &quot;D:\foobar2000\components\&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -285,6 +285,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\com_array.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\helpers.cpp"
 					>
 				</File>
@@ -456,6 +460,10 @@
 				>
 				<File
 					RelativePath=".\boxblurfilter.h"
+					>
+				</File>
+				<File
+					RelativePath=".\com_array.h"
 					>
 				</File>
 				<File

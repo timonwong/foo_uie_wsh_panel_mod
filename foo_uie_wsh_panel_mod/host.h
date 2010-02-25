@@ -243,6 +243,7 @@ protected:
 private:
 	// callbacks
 	void on_get_album_art_done(LPARAM lp);
+	void on_load_image_done(LPARAM lp);
 	void on_item_played(WPARAM wp);
 	void on_playlist_stop_after_current_changed(WPARAM wp);
 	void on_cursor_follow_playback_changed(WPARAM wp);

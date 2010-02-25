@@ -115,13 +115,13 @@ __interface IGdiGraphics: IGdiObj
 	STDMETHOD(FillGradRect)(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2);
 	STDMETHOD(FillRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, DWORD color);
 	STDMETHOD(FillEllipse)(float x, float y, float w, float h, DWORD color);
-	//STDMETHOD(FillPolygon)(DWORD color, [range(0, 1)]INT fillmode, [satype(VARIANT)] SAFEARRAY * p);
+	STDMETHOD(FillPolygon)(DWORD color, [range(0, 1)]INT fillmode, VARIANT points);
 
 	STDMETHOD(DrawLine)(float x1, float y1, float x2, float y2, float line_width, DWORD color);
 	STDMETHOD(DrawRect)(float x, float y, float w, float h, float line_width, DWORD color);
 	STDMETHOD(DrawRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, DWORD color);
 	STDMETHOD(DrawEllipse)(float x, float y, float w, float h, float line_width, DWORD color);
-	//STDMETHOD(DrawPolygon)(DWORD color, [satype(VARIANT)] SAFEARRAY * p);
+	STDMETHOD(DrawPolygon)(DWORD color, float line_width, VARIANT points);
 
 	STDMETHOD(DrawString)(BSTR str, IGdiFont* font, DWORD color, float x, float y, float w, float h, [defaultvalue(0)] DWORD flags);
 	STDMETHOD(GdiDrawText)(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, [defaultvalue(0)] DWORD format, [out,retval] VARIANT * p);
@@ -151,6 +151,7 @@ __interface IGdiUtils: IDispatch
 	STDMETHOD(Image)(BSTR path, [out,retval] IGdiBitmap** pp);
 	STDMETHOD(CreateImage)(int w, int h, [out,retval] IGdiBitmap** pp);
 	STDMETHOD(CreateStyleTextRender)([defaultvalue(0)] VARIANT_BOOL pngmode, [out,retval] __interface IStyleTextRender ** pp);
+	STDMETHOD(LoadImageAsync)(UINT window_id, BSTR path, [out,retval] UINT * p);
 };
 _COM_SMARTPTR_TYPEDEF(IGdiUtils, __uuidof(IGdiUtils));
 
@@ -425,7 +426,7 @@ __interface IThemeManager: IDisposable
 {
 	STDMETHOD(SetPartAndStateID)(int partid, int stateid);
 	STDMETHOD(IsThemePartDefined)(int partid, int stateid, [out,retval] VARIANT_BOOL * p);
-	STDMETHOD(DrawThemeBackground)(IGdiGraphics * gr, int x, int y, int w, int h);
+	STDMETHOD(DrawThemeBackground)(IGdiGraphics * gr, int x, int y, int w, int h, [defaultvalue(0)] int clip_x, [defaultvalue(0)] int clip_y, [defaultvalue(0)] int clip_w, [defaultvalue(0)] int clip_h);
 	// Vista+
 	//STDMETHOD(DrawThemeTextEx)(IGdiGraphics * gr, BSTR text, int x, int y, int w, int h, [defaultvalue(0)] DWORD format, [out,retval] VARIANT * p);
 };

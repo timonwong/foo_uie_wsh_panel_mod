@@ -296,10 +296,14 @@ public:
 	STDMETHODIMP FillGradRect(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2);
 	STDMETHODIMP FillRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, DWORD color);
 	STDMETHODIMP FillEllipse(float x, float y, float w, float h, DWORD color);
+	STDMETHODIMP FillPolygon(DWORD color, INT fillmode, VARIANT points);
+
 	STDMETHODIMP DrawLine(float x1, float y1, float x2, float y2, float line_width, DWORD color);
 	STDMETHODIMP DrawRect(float x, float y, float w, float h, float line_width, DWORD color);
 	STDMETHODIMP DrawRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, DWORD color);
 	STDMETHODIMP DrawEllipse(float x, float y, float w, float h, float line_width, DWORD color);
+	STDMETHODIMP DrawPolygon(DWORD color, float line_width, VARIANT points);
+
 	STDMETHODIMP DrawString(BSTR str, IGdiFont* font, DWORD color, float x, float y, float w, float h, DWORD flags);
 	STDMETHODIMP GdiDrawText(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, DWORD format, VARIANT * p);
 	STDMETHODIMP DrawImage(IGdiBitmap* image, float dstX, float dstY, float dstW, float dstH, float srcX, float srcY, float srcW, float srcH, float angle, BYTE alpha);
@@ -376,6 +380,7 @@ public:
 	STDMETHODIMP Image(BSTR path, IGdiBitmap** pp);
 	STDMETHODIMP CreateImage(int w, int h, IGdiBitmap ** pp);
 	STDMETHODIMP CreateStyleTextRender(VARIANT_BOOL pngmode, IStyleTextRender ** pp);
+	STDMETHODIMP LoadImageAsync(UINT window_id, BSTR path, UINT * p);
 };
 
 class FbFileInfo : public IDisposableImpl4<IFbFileInfo>
@@ -774,5 +779,5 @@ protected:
 public:
 	STDMETHODIMP SetPartAndStateID(int partid, int stateid);
 	STDMETHODIMP IsThemePartDefined(int partid, int stateid, VARIANT_BOOL * p);
-	STDMETHODIMP DrawThemeBackground(IGdiGraphics * gr, int x, int y, int w, int h);
+	STDMETHODIMP DrawThemeBackground(IGdiGraphics * gr, int x, int y, int w, int h, int clip_x, int clip_y, int clip_w, int clip_h);
 };

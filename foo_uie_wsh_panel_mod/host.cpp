@@ -1544,6 +1544,10 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		on_get_album_art_done(lp);
 		return 0;
 
+	case CALLBACK_UWM_LOADIMAGEASYNCDONE:
+		on_load_image_done(lp);
+		return 0;
+
 	case CALLBACK_UWM_FONT_CHANGED:
 		on_font_changed();
 		return 0;
@@ -1770,17 +1774,30 @@ void wsh_panel_window::on_get_album_art_done(LPARAM lp)
 
 	using namespace helpers;
 	album_art_async::t_param * param = reinterpret_cast<album_art_async::t_param *>(lp);
-	VARIANTARG args[4];
+	VARIANTARG args[3];
 
-	args[0].vt = VT_BSTR;
-	args[0].bstrVal = SysAllocString(param->image_path);
-	args[1].vt = VT_DISPATCH;
-	args[1].pdispVal = param->bitmap;
-	args[2].vt = VT_I4;
-	args[2].lVal = param->art_id;
-	args[3].vt = VT_DISPATCH;
-	args[3].pdispVal = param->handle;
+	args[0].vt = VT_DISPATCH;
+	args[0].pdispVal = param->bitmap;
+	args[1].vt = VT_I4;
+	args[1].lVal = param->art_id;
+	args[2].vt = VT_DISPATCH;
+	args[2].pdispVal = param->handle;
 	script_invoke_v(L"on_get_album_art_done", args, _countof(args));
+}
+
+void wsh_panel_window::on_load_image_done(LPARAM lp)
+{
+	TRACK_FUNCTION();
+
+	using namespace helpers;
+	load_image_async::t_param * param = reinterpret_cast<load_image_async::t_param *>(lp);
+	VARIANTARG args[2];
+
+	args[0].vt = VT_DISPATCH;
+	args[0].pdispVal = param->bitmap;
+	args[1].vt = VT_I4;
+	args[1].lVal = param->tid;
+	script_invoke_v(L"on_load_image_done", args, _countof(args));
 }
 
 void wsh_panel_window::on_playlist_stop_after_current_changed(WPARAM wp)

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "script_interface_impl.h"
 #include "helpers.h"
+#include "com_array.h"
 #include "boxblurfilter.h"
 #include "user_message.h"
 #include "popup_msg.h"
@@ -332,6 +333,39 @@ STDMETHODIMP GdiGraphics::FillEllipse(float x, float y, float w, float h, DWORD 
 	return S_OK;
 }
 
+STDMETHODIMP GdiGraphics::FillPolygon(DWORD color, INT fillmode, VARIANT points)
+{
+	TRACK_FUNCTION();
+
+	if (!m_ptr) return E_POINTER;
+
+	Gdiplus::SolidBrush br(color);
+	helpers::com_array_reader helper;
+	pfc::array_t<Gdiplus::PointF> point_array;
+
+	if (!helper.convert(&points)) return E_INVALIDARG;
+	if ((helper.get_count() % 2) != 0) return E_INVALIDARG;
+
+	point_array.set_count(helper.get_count() >> 1);
+	
+	for (long i = 0; i < static_cast<long>(point_array.get_count()); ++i)
+	{
+		_variant_t varX, varY;
+
+		helper.get_item(i * 2, &varX);
+		helper.get_item(i * 2 + 1, &varY);
+
+		if (FAILED(VariantChangeType(&varX, &varX, 0, VT_R4))) return E_INVALIDARG;
+		if (FAILED(VariantChangeType(&varY, &varY, 0, VT_R4))) return E_INVALIDARG;
+
+		point_array[i].X = varX.fltVal;
+		point_array[i].Y = varY.fltVal;
+	}
+
+	m_ptr->FillPolygon(&br, point_array.get_ptr(), point_array.get_count(), (Gdiplus::FillMode)fillmode);
+	return S_OK;
+}
+
 STDMETHODIMP GdiGraphics::DrawLine(float x1, float y1, float x2, float y2, float line_width, DWORD color)
 {
 	TRACK_FUNCTION();
@@ -387,6 +421,41 @@ STDMETHODIMP GdiGraphics::DrawEllipse(float x, float y, float w, float h, float 
 	Gdiplus::Pen pen(color, line_width);
 
 	m_ptr->DrawEllipse(&pen, x, y, w, h);
+	return S_OK;
+}
+
+STDMETHODIMP GdiGraphics::DrawPolygon(DWORD color, float line_width, VARIANT points)
+{
+	TRACK_FUNCTION();
+
+	if (!m_ptr) return E_POINTER;
+
+	Gdiplus::SolidBrush br(color);
+	helpers::com_array_reader helper;
+	pfc::array_t<Gdiplus::PointF> point_array;
+
+	if (!helper.convert(&points)) return E_INVALIDARG;
+	if ((helper.get_count() % 2) != 0) return E_INVALIDARG;
+
+	point_array.set_count(helper.get_count() >> 1);
+
+	for (long i = 0; i < static_cast<long>(point_array.get_count()); ++i)
+	{
+		_variant_t varX, varY;
+
+		helper.get_item(i * 2, &varX);
+		helper.get_item(i * 2 + 1, &varY);
+
+		if (FAILED(VariantChangeType(&varX, &varX, 0, VT_R4))) return E_INVALIDARG;
+		if (FAILED(VariantChangeType(&varY, &varY, 0, VT_R4))) return E_INVALIDARG;
+
+		point_array[i].X = varX.fltVal;
+		point_array[i].Y = varY.fltVal;
+	}
+
+	Gdiplus::Pen pen(color, line_width);
+	
+	m_ptr->DrawPolygon(&pen, point_array.get_ptr(), point_array.get_count());
 	return S_OK;
 }
 
@@ -587,13 +656,13 @@ STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, in
 	SAFEARRAY * psa = SafeArrayCreateVector(VT_VARIANT, 0, _countof(elements));
 	if (!psa) return E_OUTOFMEMORY;
 
-	for (t_size i = 0; i < _countof(elements); ++i)
+	for (long i = 0; i < _countof(elements); ++i)
 	{
 		_variant_t var;
 		var.vt = VT_I4;
-		var.intVal = elements[i];
+		var.lVal = elements[i];
 
-		if (FAILED(SafeArrayPutElement(psa, reinterpret_cast<LONG *>(&i), &var)))
+		if (FAILED(SafeArrayPutElement(psa, &i, &var)))
 		{
 			// deep destroy
 			SafeArrayDestroy(psa);
@@ -767,6 +836,28 @@ STDMETHODIMP GdiUtils::CreateStyleTextRender(VARIANT_BOOL pngmode, IStyleTextRen
 	if (!pp) return E_POINTER;
 
 	(*pp) = new com_object_impl_t<StyleTextRender>(pngmode != VARIANT_FALSE);
+	return S_OK;
+}
+
+STDMETHODIMP GdiUtils::LoadImageAsync(UINT window_id, BSTR path, UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!path) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	unsigned tid = 0;
+
+	try
+	{
+		helpers::load_image_async * thread = new helpers::load_image_async((HWND)window_id, path);
+
+		thread->start();
+		tid = thread->get_tid();
+	}
+	catch (std::exception &) {}
+
+	(*p) = tid;
 	return S_OK;
 }
 
@@ -1074,7 +1165,7 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 	helpers::file_info_pairs_filter::t_field_value_map field_value_map;
 	pfc::stringcvt::string_utf8_from_wide ufield, uvalue, umultival;
 	HRESULT hr;
-	LONG nLBound, nUBound;
+	LONG nLBound = 0, nUBound = -1;
 	LONG nCount;
 
 	if (FAILED(hr = SafeArrayGetLBound(p, 1, &nLBound)))
@@ -1215,10 +1306,10 @@ STDMETHODIMP FbUtils::trace(SAFEARRAY * p)
 	HRESULT hr;
 
 	if (FAILED(hr = SafeArrayGetLBound(p, 1, &nLBound)))
-		return E_INVALIDARG;
+		return hr;
 
 	if (FAILED(hr = SafeArrayGetUBound(p, 1, &nUBound)))
-		return E_INVALIDARG;
+		return hr;
 
 	for (LONG i = nLBound; i <= nUBound; ++i)
 	{
@@ -2426,6 +2517,9 @@ STDMETHODIMP WSHUtils::GetAlbumArt(BSTR rawpath, int art_id, VARIANT_BOOL need_s
 {
 	TRACK_FUNCTION();
 
+	if (!rawpath) return E_INVALIDARG;
+	if (!pp) return E_POINTER;
+
 	return helpers::get_album_art(rawpath, pp, art_id, need_stub);
 }
 
@@ -2434,6 +2528,7 @@ STDMETHODIMP WSHUtils::GetAlbumArtV2(IFbMetadbHandle * handle, int art_id, VARIA
 	TRACK_FUNCTION();
 
 	if (!handle) return E_INVALIDARG;
+	if (!pp) return E_POINTER;
 
 	metadb_handle * ptr = NULL;
 
@@ -2445,6 +2540,9 @@ STDMETHODIMP WSHUtils::GetAlbumArtV2(IFbMetadbHandle * handle, int art_id, VARIA
 STDMETHODIMP WSHUtils::GetAlbumArtEmbedded(BSTR rawpath, int art_id, IGdiBitmap ** pp)
 {
 	TRACK_FUNCTION();
+
+	if (!rawpath) return E_INVALIDARG;
+	if (!pp) return E_POINTER;
 
 	return helpers::get_album_art_embedded(rawpath, pp, art_id);
 }
@@ -2626,13 +2724,13 @@ STDMETHODIMP WSHUtils::Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT 
 	SAFEARRAY * psa = SafeArrayCreateVector(VT_VARIANT, 0, files.get_count());
 	if (!psa) return E_OUTOFMEMORY;
 
-	for (t_size i = 0; i < files.get_count(); ++i)
+	for (long i = 0; i < static_cast<long>(files.get_count()); ++i)
 	{
 		_variant_t var;
 		var.vt = VT_BSTR;
 		var.bstrVal = SysAllocString(pfc::stringcvt::string_wide_from_utf8_fast(files[i]).get_ptr());
 
-		if (FAILED(SafeArrayPutElement(psa, reinterpret_cast<LONG *>(&i), &var)))
+		if (FAILED(SafeArrayPutElement(psa, &i, &var)))
 		{
 			// deep destroy
 			SafeArrayDestroy(psa);
@@ -2997,7 +3095,7 @@ STDMETHODIMP ThemeManager::IsThemePartDefined(int partid, int stateid, VARIANT_B
 	return S_OK;
 }
 
-STDMETHODIMP ThemeManager::DrawThemeBackground(IGdiGraphics * gr, int x, int y, int w, int h)
+STDMETHODIMP ThemeManager::DrawThemeBackground(IGdiGraphics * gr, int x, int y, int w, int h, int clip_x, int clip_y, int clip_w, int clip_h)
 {
 	TRACK_FUNCTION();
 
@@ -3011,10 +3109,16 @@ STDMETHODIMP ThemeManager::DrawThemeBackground(IGdiGraphics * gr, int x, int y, 
 	if (!graphics) return E_INVALIDARG;
 
 	RECT rc = { x, y, x + w, y + h};
-
+	RECT clip_rc = { clip_x, clip_y, clip_x + clip_w, clip_y + clip_h};
+	LPCRECT pclip_rc = &clip_rc;
 	HDC dc = graphics->GetHDC();
 
-	HRESULT hr = ::DrawThemeBackground(m_theme, dc, m_partid, m_stateid, &rc, NULL);
+	if (clip_x == 0 && clip_y == 0 && clip_w == 0 && clip_h == 0)
+	{
+		pclip_rc = NULL;
+	}
+
+	HRESULT hr = ::DrawThemeBackground(m_theme, dc, m_partid, m_stateid, &rc, pclip_rc);
 
 	graphics->ReleaseHDC(dc);
 	return hr;

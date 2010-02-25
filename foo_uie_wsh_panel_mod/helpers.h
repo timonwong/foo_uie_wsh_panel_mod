@@ -42,7 +42,7 @@ namespace helpers
 	// bitmap must be NULL
 	bool read_album_art_into_bitmap(const album_art_data_ptr & data, Gdiplus::Bitmap ** bitmap);
 	HRESULT get_album_art(BSTR rawpath, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub);
-	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub, pfc::string_base * image_path_ptr = NULL);
+	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub);
 	HRESULT get_album_art_embedded(BSTR rawpath, IGdiBitmap ** pp, int art_id);
 
 	static bool get_is_vista_or_later()
@@ -126,10 +126,9 @@ namespace helpers
 			IFbMetadbHandle * handle;
 			int art_id;
 			IGdiBitmap * bitmap;
-			pfc::stringcvt::string_wide_from_utf8 image_path;
 
-			t_param(IFbMetadbHandle * p_handle, int p_art_id, IGdiBitmap * p_bitmap, const char * p_image_path) 
-				: handle(p_handle), art_id(p_art_id), bitmap(p_bitmap), image_path(p_image_path)
+			t_param(IFbMetadbHandle * p_handle, int p_art_id, IGdiBitmap * p_bitmap) 
+				: handle(p_handle), art_id(p_art_id), bitmap(p_bitmap)
 			{
 			}
 
@@ -142,14 +141,6 @@ namespace helpers
 					bitmap->Release();
 			}
 		};
-
-	private:
-		metadb_handle_ptr m_handle;
-		_bstr_t m_rawpath;
-		int m_art_id;
-		VARIANT_BOOL m_need_stub;
-		VARIANT_BOOL m_only_embed;
-		HWND m_notify_hwnd;
 
 	public:
 		album_art_async(HWND notify_hwnd, metadb_handle * handle, int art_id, 
@@ -171,5 +162,48 @@ namespace helpers
 
 	private:
 		virtual void thread_proc();
+
+	private:
+		metadb_handle_ptr m_handle;
+		_bstr_t m_rawpath;
+		int m_art_id;
+		VARIANT_BOOL m_need_stub;
+		VARIANT_BOOL m_only_embed;
+		HWND m_notify_hwnd;
+	};
+
+	class load_image_async : public simple_thread
+	{
+	public:
+		struct t_param
+		{
+			int tid;
+			IGdiBitmap * bitmap;
+
+			t_param(int p_tid, IGdiBitmap * p_bitmap) 
+				:  tid(p_tid), bitmap(p_bitmap)
+			{
+			}
+
+			~t_param()
+			{
+				if (bitmap)
+					bitmap->Release();
+			}
+		};
+
+	public:
+		load_image_async(HWND notify_wnd, BSTR path) 
+			: m_notify_hwnd(notify_wnd), m_path(path)
+		{}
+
+		virtual ~load_image_async() { close(); }
+
+	private:
+		virtual void thread_proc();
+
+	private:
+		HWND m_notify_hwnd;
+		_bstr_t m_path;
 	};
 }
