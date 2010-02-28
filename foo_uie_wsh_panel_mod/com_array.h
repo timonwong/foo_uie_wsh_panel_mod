@@ -17,6 +17,16 @@ namespace helpers
 			convert(pVarSrc);
 		}
 
+		~com_array_reader()
+		{
+			reset();
+		}
+
+		inline SAFEARRAY * get_ptr()
+		{
+			return m_psa;
+		}
+
 		inline long get_lbound()
 		{
 			return m_lbound;
@@ -32,21 +42,19 @@ namespace helpers
 			return get_ubound() - get_lbound() + 1;
 		}
 
-		bool get_item(long idx, VARIANT * dest)
+		inline bool get_item(long idx, VARIANT & dest)
 		{
-			if (!m_psa || !dest) return false;
+			if (!m_psa) return false;
 			if (idx < m_lbound || idx > m_ubound) return false;
 
-			LONG n = idx;
-
-			return SUCCEEDED(SafeArrayGetElement(m_psa, &n, dest));
+			return SUCCEEDED(SafeArrayGetElement(m_psa, &idx, &dest));
 		}
 
 		inline VARIANT operator[](long idx)
 		{
 			_variant_t var;
 
-			if (!get_item(idx, &var))
+			if (!get_item(idx, var))
 			{
 				throw std::out_of_range("Out of range");
 			}
@@ -76,5 +84,68 @@ namespace helpers
 	private:
 		SAFEARRAY * m_psa;
 		long m_lbound, m_ubound;
+	};
+
+	// 1D
+	template <bool managed = false>
+	class com_array_writer
+	{
+	public:
+		com_array_writer() : m_psa(NULL)
+		{
+			reset();
+		}
+
+		~com_array_writer()
+		{
+			if (managed)
+			{
+				reset();
+			}
+		}
+
+		inline SAFEARRAY * get_ptr()
+		{
+			return m_psa;
+		}
+
+		inline long get_count()
+		{
+			return m_count;
+		}
+
+		inline bool create(long count)
+		{
+			reset();
+
+			m_psa = SafeArrayCreateVector(VT_VARIANT, 0, count);
+			m_count = count;
+			return (m_psa != NULL);
+		}
+
+		inline HRESULT put(long idx, VARIANT & pVar)
+		{
+			if (idx >= m_count) return E_INVALIDARG;
+			if (!m_psa) return E_POINTER;
+
+			HRESULT hr = SafeArrayPutElement(m_psa, &idx, &pVar);;
+			return hr;
+		}
+
+	public:
+		void reset()
+		{
+			m_count = 0;
+
+			if (m_psa)
+			{
+				SafeArrayDestroy(m_psa);
+				m_psa = NULL;
+			}
+		}
+
+	private:
+		SAFEARRAY * m_psa;
+		long m_count;
 	};
 }

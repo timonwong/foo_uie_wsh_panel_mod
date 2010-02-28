@@ -6,7 +6,6 @@
 #include "user_message.h"
 #include "popup_msg.h"
 #include "dbgtrace.h"
-
 #include "../TextDesinger/OutlineText.h"
 #include "../TextDesinger/PngOutlineText.h"
 
@@ -63,7 +62,7 @@ STDMETHODIMP GdiBitmap::Clone(float x, float y, float w, float h, IGdiBitmap** p
 	if (!m_ptr) return E_POINTER;
 
 	Gdiplus::Bitmap * img = m_ptr->Clone(x, y, w, h, PixelFormatDontCare);
-	
+
 	if (!helpers::ensure_gdiplus_object(img))
 	{
 		if (img) delete img;
@@ -187,7 +186,7 @@ STDMETHODIMP GdiBitmap::GetGraphics(IGdiGraphics ** pp)
 	if (!m_ptr) return E_POINTER;
 
 	Gdiplus::Graphics * g = new Gdiplus::Graphics(m_ptr);
-	
+
 	(*pp) = new com_object_impl_t<GdiGraphics>();
 	(*pp)->put__ptr(g);
 	return S_OK;
@@ -247,7 +246,7 @@ void GdiGraphics::GetRoundRectPath(Gdiplus::GraphicsPath & gp, Gdiplus::RectF & 
 	Gdiplus::RectF corner(rect.X, rect.Y, arc_dia_w, arc_dia_h);
 
 	gp.Reset();
-	
+
 	// top left
 	gp.AddArc(corner, 180, 90);
 
@@ -347,13 +346,13 @@ STDMETHODIMP GdiGraphics::FillPolygon(DWORD color, INT fillmode, VARIANT points)
 	if ((helper.get_count() % 2) != 0) return E_INVALIDARG;
 
 	point_array.set_count(helper.get_count() >> 1);
-	
+
 	for (long i = 0; i < static_cast<long>(point_array.get_count()); ++i)
 	{
 		_variant_t varX, varY;
 
-		helper.get_item(i * 2, &varX);
-		helper.get_item(i * 2 + 1, &varY);
+		helper.get_item(i * 2, varX);
+		helper.get_item(i * 2 + 1, varY);
 
 		if (FAILED(VariantChangeType(&varX, &varX, 0, VT_R4))) return E_INVALIDARG;
 		if (FAILED(VariantChangeType(&varY, &varY, 0, VT_R4))) return E_INVALIDARG;
@@ -403,7 +402,7 @@ STDMETHODIMP GdiGraphics::DrawRoundRect(float x, float y, float w, float h, floa
 	Gdiplus::Pen pen(color, line_width);
 	Gdiplus::GraphicsPath gp;
 	Gdiplus::RectF rect(x, y, w, h);
-	
+
 	GetRoundRectPath(gp, rect, arc_width, arc_height);
 
 	pen.SetStartCap(Gdiplus::LineCapRound);
@@ -443,8 +442,8 @@ STDMETHODIMP GdiGraphics::DrawPolygon(DWORD color, float line_width, VARIANT poi
 	{
 		_variant_t varX, varY;
 
-		helper.get_item(i * 2, &varX);
-		helper.get_item(i * 2 + 1, &varY);
+		helper.get_item(i * 2, varX);
+		helper.get_item(i * 2 + 1, varY);
 
 		if (FAILED(VariantChangeType(&varX, &varX, 0, VT_R4))) return E_INVALIDARG;
 		if (FAILED(VariantChangeType(&varY, &varY, 0, VT_R4))) return E_INVALIDARG;
@@ -454,7 +453,7 @@ STDMETHODIMP GdiGraphics::DrawPolygon(DWORD color, float line_width, VARIANT poi
 	}
 
 	Gdiplus::Pen pen(color, line_width);
-	
+
 	m_ptr->DrawPolygon(&pen, point_array.get_ptr(), point_array.get_count());
 	return S_OK;
 }
@@ -548,7 +547,7 @@ STDMETHODIMP GdiGraphics::GdiDrawBitmap(IGdiRawBitmap * bitmap, int dstX, int ds
 	if (!src_dc) return E_INVALIDARG;
 
 	HDC dc = m_ptr->GetHDC();
-	
+
 	if (dstW == srcW && dstH == srcH)
 	{
 		BitBlt(dc, dstX, dstY, dstW, dstH, src_dc, srcX, srcY, SRCCOPY);
@@ -644,7 +643,7 @@ STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, in
 	//   [2] right  (DT_CALCRECT)
 	//   [3] bottom (DT_CALCRECT)
 	//   [4] characters drawn
-	const INT elements[] = 
+	const int elements[] = 
 	{
 		rc.left,
 		rc.top,
@@ -653,25 +652,26 @@ STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, in
 		dpt.uiLengthDrawn
 	};
 
-	SAFEARRAY * psa = SafeArrayCreateVector(VT_VARIANT, 0, _countof(elements));
-	if (!psa) return E_OUTOFMEMORY;
+	helpers::com_array_writer<> helper;
 
-	for (long i = 0; i < _countof(elements); ++i)
+	if (!helper.create(_countof(elements)))
+		return E_OUTOFMEMORY;
+
+	for (long i = 0; i < helper.get_count(); ++i)
 	{
 		_variant_t var;
 		var.vt = VT_I4;
 		var.lVal = elements[i];
 
-		if (FAILED(SafeArrayPutElement(psa, &i, &var)))
+		if (FAILED(helper.put(i, var)))
 		{
-			// deep destroy
-			SafeArrayDestroy(psa);
+			helper.reset();
 			return E_OUTOFMEMORY;
 		}
 	}
 
 	p->vt = VT_ARRAY | VT_VARIANT;
-	p->parray = psa;
+	p->parray = helper.get_ptr();
 	return S_OK;
 }
 
@@ -796,7 +796,7 @@ STDMETHODIMP GdiUtils::Image(BSTR path, IGdiBitmap** pp)
 	if (!pp) return E_POINTER;
 
 	Gdiplus::Bitmap * img = new Gdiplus::Bitmap(path);
-	
+
 	if (!helpers::ensure_gdiplus_object(img))
 	{
 		if (img) delete img;
@@ -1056,7 +1056,7 @@ STDMETHODIMP FbFileInfo::MetaSet(BSTR name, BSTR value)
 STDMETHODIMP FbMetadbHandle::get__ptr(void ** pp)
 {
 	TRACK_FUNCTION();
-	
+
 	(*pp) = m_handle.get_ptr();
 	return S_OK;
 }
@@ -1064,12 +1064,12 @@ STDMETHODIMP FbMetadbHandle::get__ptr(void ** pp)
 STDMETHODIMP FbMetadbHandle::get_Path(BSTR* pp)
 {
 	TRACK_FUNCTION();
-	
+
 	if (m_handle.is_empty()) return E_POINTER;
 	if (!pp) return E_POINTER;
-	
+
 	pfc::stringcvt::string_wide_from_utf8_fast ucs = file_path_display(m_handle->get_path());
-	
+
 	(*pp) = SysAllocString(ucs);
 	return S_OK;
 }
@@ -1090,10 +1090,10 @@ STDMETHODIMP FbMetadbHandle::get_RawPath(BSTR * pp)
 STDMETHODIMP FbMetadbHandle::get_SubSong(UINT* p)
 {
 	TRACK_FUNCTION();
-	
+
 	if (m_handle.is_empty()) return E_POINTER;
 	if (!p) return E_POINTER;
-	
+
 	*p = m_handle->get_subsong_index();
 	return S_OK;
 }
@@ -1101,10 +1101,10 @@ STDMETHODIMP FbMetadbHandle::get_SubSong(UINT* p)
 STDMETHODIMP FbMetadbHandle::get_FileSize(LONGLONG* p)
 {
 	TRACK_FUNCTION();
-	
+
 	if (m_handle.is_empty()) return E_POINTER;
 	if (!p) return E_POINTER;
-	
+
 	*p = m_handle->get_filesize();
 	return S_OK;
 }
@@ -1112,10 +1112,10 @@ STDMETHODIMP FbMetadbHandle::get_FileSize(LONGLONG* p)
 STDMETHODIMP FbMetadbHandle::get_Length(double* p)
 {
 	TRACK_FUNCTION();
-	
+
 	if (m_handle.is_empty()) return E_POINTER;
 	if (!p) return E_POINTER;
-	
+
 	*p = m_handle->get_length();
 	return S_OK;
 }
@@ -1123,10 +1123,10 @@ STDMETHODIMP FbMetadbHandle::get_Length(double* p)
 STDMETHODIMP FbMetadbHandle::GetFileInfo(IFbFileInfo ** pp)
 {
 	TRACK_FUNCTION();
-	
+
 	if (m_handle.is_empty()) return E_POINTER;
 	if (!pp) return E_POINTER;
-	
+
 	file_info_impl * info_ptr = new file_info_impl;
 
 	m_handle->get_info(*info_ptr);
@@ -1184,7 +1184,7 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 		_variant_t var_field, var_value;
 		LONG n1 = i;
 		LONG n2 = i + 1;
-		
+
 		if (FAILED(hr = SafeArrayGetElement(p, &n1, &var_field)))
 			return hr;
 
@@ -1220,8 +1220,8 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 	static_api_ptr_t<metadb_io_v2> io;
 
 	io->update_info_async(pfc::list_single_ref_t<metadb_handle_ptr>(m_handle), 
-				new service_impl_t<helpers::file_info_pairs_filter>(m_handle, field_value_map, umultival), 
-				core_api::get_main_window(), metadb_io_v2::op_flag_delay_ui, NULL);
+		new service_impl_t<helpers::file_info_pairs_filter>(m_handle, field_value_map, umultival), 
+		core_api::get_main_window(), metadb_io_v2::op_flag_delay_ui, NULL);
 
 	return S_OK;
 }
@@ -1258,15 +1258,15 @@ STDMETHODIMP FbTitleFormat::Eval(VARIANT_BOOL force, BSTR* pp)
 	if (!static_api_ptr_t<playback_control>()->playback_format_title(NULL, text, m_obj, NULL, playback_control::display_level_all) && force)
 	{
 		metadb_handle_ptr handle;
- 
+
 		if (!metadb::g_get_random_handle(handle))
 		{
 			static_api_ptr_t<metadb> m;
-			
+
 			// HACK: A fake file handle should be okay
 			m->handle_create(handle, make_playable_location("file://C:\\_____temp_blah____.ogg", 0));
 		}
-		
+
 		handle->format_title(NULL, text, m_obj, NULL);
 	}
 
@@ -1325,7 +1325,7 @@ STDMETHODIMP FbUtils::trace(SAFEARRAY * p)
 		str.add_string(pfc::stringcvt::string_utf8_from_wide(var.bstrVal));
 		str.add_byte(' ');
 	}
-	
+
 	console::info(str);
 	return S_OK;
 }
@@ -1421,7 +1421,7 @@ STDMETHODIMP FbUtils::GetSelection(IFbMetadbHandle** pp)
 	metadb_handle_list items;
 
 	static_api_ptr_t<ui_selection_manager_v2>()->get_selection(items, 0);
-	
+
 	if (items.get_count() > 0)
 	{
 		(*pp) = new com_object_impl_t<FbMetadbHandle>(items[0]);
@@ -1461,7 +1461,7 @@ STDMETHODIMP FbUtils::GetSelectionType(UINT* p)
 			break;
 		}
 	}
-	
+
 	return S_OK;
 }
 
@@ -1805,7 +1805,7 @@ STDMETHODIMP FbUtils::RunMainMenuCommand(BSTR command, VARIANT_BOOL * p)
 	{
 		*p = VARIANT_FALSE;
 	}
-	
+
 	return S_OK;
 }
 
@@ -1827,7 +1827,7 @@ STDMETHODIMP FbUtils::RunContextCommand(BSTR command, VARIANT_BOOL * p)
 	{
 		*p = VARIANT_FALSE;
 	}
-	
+
 	return S_OK;
 }
 
@@ -2207,7 +2207,7 @@ STDMETHODIMP ContextMenuManager::BuildMenu(IMenuObj * p, int base_id, int max_id
 
 	UINT menuid;
 	contextmenu_node * parent = parent = m_cm->get_root();
-	
+
 	p->get_ID(&menuid);
 	m_cm->win32_build_menu((HMENU)menuid, parent, base_id, max_id);
 	return S_OK;
@@ -2464,7 +2464,7 @@ STDMETHODIMP WSHUtils::CheckComponent(BSTR name, VARIANT_BOOL is_dll, VARIANT_BO
 			ptr->get_file_name(temp);
 		else
 			ptr->get_component_name(temp);
-		
+
 		if (!_stricmp(temp, uname))
 		{
 			*p = VARIANT_TRUE;
@@ -2488,11 +2488,11 @@ STDMETHODIMP WSHUtils::CheckFont(BSTR name, VARIANT_BOOL * p)
 	Gdiplus::FontFamily * font_families;
 	int count = font_collection.GetFamilyCount();
 	int recv;
-	
+
 	*p = VARIANT_FALSE;
 	font_families = new Gdiplus::FontFamily[count];
 	font_collection.GetFamilies(count, font_families, &recv);
-	
+
 	if (recv == count)
 	{
 		// Find
@@ -2512,13 +2512,10 @@ STDMETHODIMP WSHUtils::CheckFont(BSTR name, VARIANT_BOOL * p)
 	delete [] font_families;
 	return S_OK;
 }
- 
+
 STDMETHODIMP WSHUtils::GetAlbumArt(BSTR rawpath, int art_id, VARIANT_BOOL need_stub, IGdiBitmap ** pp)
 {
 	TRACK_FUNCTION();
-
-	if (!rawpath) return E_INVALIDARG;
-	if (!pp) return E_POINTER;
 
 	return helpers::get_album_art(rawpath, pp, art_id, need_stub);
 }
@@ -2528,7 +2525,6 @@ STDMETHODIMP WSHUtils::GetAlbumArtV2(IFbMetadbHandle * handle, int art_id, VARIA
 	TRACK_FUNCTION();
 
 	if (!handle) return E_INVALIDARG;
-	if (!pp) return E_POINTER;
 
 	metadb_handle * ptr = NULL;
 
@@ -2540,9 +2536,6 @@ STDMETHODIMP WSHUtils::GetAlbumArtV2(IFbMetadbHandle * handle, int art_id, VARIA
 STDMETHODIMP WSHUtils::GetAlbumArtEmbedded(BSTR rawpath, int art_id, IGdiBitmap ** pp)
 {
 	TRACK_FUNCTION();
-
-	if (!rawpath) return E_INVALIDARG;
-	if (!pp) return E_POINTER;
 
 	return helpers::get_album_art_embedded(rawpath, pp, art_id);
 }
@@ -2721,25 +2714,27 @@ STDMETHODIMP WSHUtils::Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT 
 		} while (ff->FindNext());
 	}
 
-	SAFEARRAY * psa = SafeArrayCreateVector(VT_VARIANT, 0, files.get_count());
-	if (!psa) return E_OUTOFMEMORY;
+	helpers::com_array_writer<> helper;
 
-	for (long i = 0; i < static_cast<long>(files.get_count()); ++i)
+	if (!helper.create(files.get_count())) 
+		return E_OUTOFMEMORY;
+
+	for (long i = 0; i < helper.get_count(); ++i)
 	{
 		_variant_t var;
 		var.vt = VT_BSTR;
 		var.bstrVal = SysAllocString(pfc::stringcvt::string_wide_from_utf8_fast(files[i]).get_ptr());
 
-		if (FAILED(SafeArrayPutElement(psa, &i, &var)))
+		if (FAILED(helper.put(i, var)))
 		{
 			// deep destroy
-			SafeArrayDestroy(psa);
+			helper.reset();
 			return E_OUTOFMEMORY;
 		}
 	}
 
 	p->vt = VT_ARRAY | VT_VARIANT;
-	p->parray = psa;
+	p->parray = helper.get_ptr();
 	return S_OK;
 }
 
@@ -2750,29 +2745,104 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
 	if (!path || !mode) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
-	if (_wcsicmp(mode, L"e") == 0)  // exists
+	if (wcscmp(mode, L"e") == 0)  // exists
 	{
 		p->vt = VT_BOOL;
 		p->boolVal = TO_VARIANT_BOOL(PathFileExists(path));
 	}
-	else if (_wcsicmp(mode, L"s") == 0)
+	else if (wcscmp(mode, L"s") == 0)
 	{
-		HANDLE fh = CreateFile(path, FILE_READ_EA, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);  
+		HANDLE fh = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);  
 		LARGE_INTEGER size = {0};
 
-		if (fh != INVALID_HANDLE_VALUE)  
-		{  
+		if (fh != INVALID_HANDLE_VALUE)
+		{
 			GetFileSizeEx(fh, &size);
 			CloseHandle(fh);
 		}
 
-		p->vt = VT_I8;
-		p->llVal = size.QuadPart;
+		if (size.HighPart)
+		{
+			p->vt = VT_I8;
+			p->llVal = size.QuadPart;
+		}
+		else
+		{
+			p->vt = VT_UI4;
+			p->ulVal = size.LowPart;
+		}
 	}
-	else if (_wcsicmp(mode, L"d") == 0)
+	else if (wcscmp(mode, L"d") == 0)
 	{
 		p->vt = VT_BOOL;
 		p->boolVal = TO_VARIANT_BOOL(PathIsDirectory(path));
+	}
+	//else if (_wcsicmp(mode, L"pretty") == 0)
+	//{
+	//	wchar_t buff[MAX_PATH] = {0};
+	//	wchar_t buff_out[MAX_PATH] = {0};
+	//	wchar_t * s = buff;
+
+	//	StringCchCopy(buff, _countof(buff), path);
+
+	//	while (*s)
+	//	{
+	//		if (*s == '/')
+	//			*s = '\\';
+
+	//		++s;
+	//	}
+
+	//	int x = PathCanonicalize(buff_out, buff);
+
+	//	p->vt = VT_BSTR;
+	//	p->bstrVal = SysAllocString(buff_out);
+	//}
+	else if (wcscmp(mode, L"split") == 0)
+	{
+		const wchar_t * fn = PathFindFileName(path);
+		const wchar_t * ext = PathFindExtension(fn);
+		wchar_t dir[MAX_PATH] = {0};
+		helpers::com_array_writer<> helper;
+		_variant_t vars[3];
+
+		if (!helper.create(_countof(vars))) return E_OUTOFMEMORY;
+
+		vars[0].vt = VT_BSTR;
+		vars[0].bstrVal = NULL;
+		vars[1].vt = VT_BSTR;
+		vars[1].bstrVal = NULL;
+		vars[2].vt = VT_BSTR;
+		vars[2].bstrVal = NULL;
+
+		if (PathIsFileSpec(fn))
+		{
+			StringCchCopyN(dir, _countof(dir), path, fn - path);
+			PathAddBackslash(dir);
+
+			vars[0].bstrVal = SysAllocString(dir);
+			vars[1].bstrVal = SysAllocStringLen(fn, ext - fn);
+			vars[2].bstrVal = SysAllocString(ext);
+		}
+		else
+		{
+			StringCchCopy(dir, _countof(dir), path);
+			PathAddBackslash(dir);
+
+			vars[0].bstrVal = SysAllocString(dir);
+		}
+
+		for (long i = 0; i < helper.get_count(); ++i)
+		{
+			if (FAILED(helper.put(i, vars[i])))
+			{
+				helper.reset();
+				return E_OUTOFMEMORY;
+			}
+		}
+
+		p->vt = VT_VARIANT | VT_ARRAY;
+		p->parray = helper.get_ptr();
 	}
 	else
 	{

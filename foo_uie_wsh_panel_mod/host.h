@@ -4,6 +4,7 @@
 #include "script_interface_impl.h"
 #include "config.h"
 
+
 _COM_SMARTPTR_TYPEDEF(IActiveScriptParse, IID_IActiveScriptParse);
 
 

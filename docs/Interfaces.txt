@@ -523,11 +523,17 @@ Methods:
 	// Sample usage: var arr = utils.Glob("C:\\*.*").toArray();
 	VBArray Glob(pattern, exc_mask = FILE_ATTRIBUTE_DIRECTORY, inc_mask = 0xffffffff);
 	// [1.3.0] New
+	// [1.3.2] Updated
 	// Test a file (or path)
-	// mode:
+	// modes (NOTE: Case sensitive):
 	//   "e": If path exists, return true
 	//   "s": Retrieve file size, in bytes
 	//   "d": If path is a directory, return true
+	//   "split": retuan a VBArray, array[0] is the directory, arr[1] is the file basename, arr[2] is the file extension.
+	//          e.g: var arr = FileTest("D:\\Somdir\\Somefile.txt", "split").toArray();
+	//           arr[0] <= "D:\\Somedir\\" (always include backslash at the end)
+	//           arr[1] <= "Somefile"
+	//           arr[2] <= ".txt"
 	VARIANT FileTest(path, mode);
 }
 

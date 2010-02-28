@@ -1,7 +1,7 @@
 #pragma once
 
 #define WSPM_VERSION_NUMBER_MAIN "1.3.2"
-#define WSPM_TEST_VERSION 1
+#define WSPM_TEST_VERSION 0
 
 #ifdef _DEBUG
 #	define WSPM_DEBUG_SUFFIX " (DEBUG)"

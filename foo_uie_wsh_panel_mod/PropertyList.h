@@ -442,7 +442,6 @@ public:
 	}
 
 	// Message map and handlers
-
 	BEGIN_MSG_MAP(CPropertyListImpl)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)

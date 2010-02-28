@@ -172,7 +172,7 @@ void HostComm::RefreshBackground(LPRECT lprcUpdate /*= NULL*/)
 
 ITimerObj * HostComm::CreateTimerTimeout(UINT timeout)
 {
-	UINT id = timeSetEvent(timeout, m_accuracy, g_timer_proc, (DWORD_PTR)this, TIME_ONESHOT);
+	UINT id = timeSetEvent(timeout, m_accuracy, g_timer_proc, reinterpret_cast<DWORD_PTR>(m_hwnd), TIME_ONESHOT);
 
 	if (id == NULL) return NULL;
 
@@ -182,7 +182,7 @@ ITimerObj * HostComm::CreateTimerTimeout(UINT timeout)
 
 ITimerObj * HostComm::CreateTimerInterval(UINT delay)
 {
-	UINT id = timeSetEvent(delay, m_accuracy, g_timer_proc, (DWORD_PTR)this, TIME_PERIODIC);
+	UINT id = timeSetEvent(delay, m_accuracy, g_timer_proc, reinterpret_cast<DWORD_PTR>(m_hwnd), TIME_PERIODIC);
 
 	if (id == NULL) return NULL;
 
@@ -221,9 +221,9 @@ IGdiBitmap * HostComm::GetBackgroundImage()
 
 void CALLBACK HostComm::g_timer_proc(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
 {
-	HostComm * p = reinterpret_cast<HostComm *>(dwUser);
+	HWND wnd = reinterpret_cast<HWND>(dwUser);
 
-	SendMessage(p->m_hwnd, UWM_TIMER, uTimerID, 0);
+	SendMessage(wnd, UWM_TIMER, uTimerID, 0);
 }
 
 STDMETHODIMP FbWindow::get_ID(UINT* p)
@@ -958,7 +958,7 @@ bool wsh_panel_window::script_init()
 			<< pfc::print_guid(get_config_guid()) << ", CODE: 0x" 
 			<< pfc::format_hex_lowercase((unsigned)hr);
 
-		if (hr != E_UNEXPECTED && hr != OLESCRIPT_E_SYNTAX)
+		if (hr != E_UNEXPECTED && hr != _HRESULT_TYPEDEF_(0x80020101L))
 		{
 			msg_formatter << "): " << win32_error_msg;
 		}
@@ -1774,14 +1774,16 @@ void wsh_panel_window::on_get_album_art_done(LPARAM lp)
 
 	using namespace helpers;
 	album_art_async::t_param * param = reinterpret_cast<album_art_async::t_param *>(lp);
-	VARIANTARG args[3];
+	VARIANTARG args[4];
 
-	args[0].vt = VT_DISPATCH;
-	args[0].pdispVal = param->bitmap;
-	args[1].vt = VT_I4;
-	args[1].lVal = param->art_id;
-	args[2].vt = VT_DISPATCH;
-	args[2].pdispVal = param->handle;
+	args[0].vt = VT_BSTR;
+	args[0].bstrVal = SysAllocString(param->image_path);
+	args[1].vt = VT_DISPATCH;
+	args[1].pdispVal = param->bitmap;
+	args[2].vt = VT_I4;
+	args[2].lVal = param->art_id;
+	args[3].vt = VT_DISPATCH;
+	args[3].pdispVal = param->handle;
 	script_invoke_v(L"on_get_album_art_done", args, _countof(args));
 }
 
@@ -1791,12 +1793,14 @@ void wsh_panel_window::on_load_image_done(LPARAM lp)
 
 	using namespace helpers;
 	load_image_async::t_param * param = reinterpret_cast<load_image_async::t_param *>(lp);
-	VARIANTARG args[2];
+	VARIANTARG args[3];
 
-	args[0].vt = VT_DISPATCH;
-	args[0].pdispVal = param->bitmap;
-	args[1].vt = VT_I4;
-	args[1].lVal = param->tid;
+	args[0].vt = VT_BSTR;
+	args[0].bstrVal = param->path;
+	args[1].vt = VT_DISPATCH;
+	args[1].pdispVal = param->bitmap;
+	args[2].vt = VT_I4;
+	args[2].lVal = param->tid;
 	script_invoke_v(L"on_load_image_done", args, _countof(args));
 }
 

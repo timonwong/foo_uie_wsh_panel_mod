@@ -5,8 +5,8 @@
 #define WINVER 0x0501
 #define _WIN32_IE 0x600
 
-// TODO: Define this to disable VLD
-//#define NO_VISUAL_LEAK_DETECTOR
+// Undefine to enable VLD
+#define NO_VISUAL_LEAK_DETECTOR
 
 #if defined(_DEBUG) && !defined(NO_VISUAL_LEAK_DETECTOR)
 #include <vld.h>
@@ -23,14 +23,14 @@
 #include <ComDefSp.h>
 #include <ObjSafe.h>
 #include <StrSafe.h>
-#include <azroles.h>
-#include <vssym32.h>
 #include <uxtheme.h>
+
 
 // ATL/WTL
 #define _WTL_USE_CSTRING
 #include <atlbase.h>
 #include <atlapp.h>
+
 #include <atlwin.h>
 #include <atlframe.h>
 #include <atldlgs.h>

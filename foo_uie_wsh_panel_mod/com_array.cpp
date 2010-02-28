@@ -83,7 +83,7 @@ error_get_bound:
 		{
 			DISPID dispid = 0;
 			DISPPARAMS params = {0};
-			wchar_t buf[65];
+			wchar_t buf[33];
 			LPOLESTR name = buf;
 			_variant_t element;
 			HRESULT hr = S_OK;

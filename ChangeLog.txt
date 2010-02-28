@@ -9,14 +9,15 @@ v1.3.2
 - ADD: IGdiGraphics.FillPolygon() and IGdiGraphics.DrawPolygon() methods.
 - ADD: Properties fb.PlaylistCount, fb.ActivePlaylist and fb.PlayingPlaylist.
 - ADD: Methods fb.GetPlaylistName(), fb.CreatePlaylist(), fb.RemovePlaylist(), fb.MovePlaylist() and fb.RenamePlaylist().
-- ADD: Sample "Themed Progress Bar.txt".
+- ADD: Sample "Themed Seek Bar.txt".
 - ADD: gdi.LoadImageAsync() method (#Interfaces.txt).
 - ADD: on_load_image_done() callback (#Callbacks.txt).
+- CHG: New modes for utils.FileTest()
 - CHG: window.NotifyOthers() is changed back to synchronous (since 1.2.1).
-- CHG: on_get_album_art_done() (#Callbacks.txt).
 - CHG: Add few optional parameters to ThemeManager.DrawThemeBackground().
 - FIX: Workaround for FillGradRect() which may draw a black line.
 - FIX: Script won't be updated in DUI after importing theme.
+- FIX: Rare crash caused by timers.
 
 v1.3.1
 - ADD: window.CreateThemeManager() method (and also the IThemeManager interface).

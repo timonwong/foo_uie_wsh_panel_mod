@@ -8,7 +8,7 @@ DESCRIPTION
     JScript:
       // ==PREPROCESSOR==
       // ...
-      // ==PREPROCESSOR==
+      // ==/PREPROCESSOR==
 
   And be aware that all preprocessors (directives) are case sensitive.
 
@@ -24,7 +24,7 @@ DIRECTIVES
     JScript:
       // ==PREPROCESSOR==
       // @import "path"
-      // ==PREPROCESSOR==
+      // ==/PREPROCESSOR==
 
     Remarks:
       You can place %fb2k_path%, %fb2k_component_path% and %fb2k_profile_path% into "path", they will be expanded while parsing.
