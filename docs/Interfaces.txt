@@ -408,6 +408,8 @@ Properties:
 	// [1.3.2] New:
 	// See Flags.txt for more details
 	(read, write) int DlgCode;
+	// [1.3.3] New:
+	(readonly) boolean IsTransparent;
 
 Methods:
 	void Repaint(force = false);
@@ -488,9 +490,11 @@ Methods:
 	IGdiBitmap GetAlbumArtEmbedded(rawpath, art_id = 0);
 	// [1.1.10] New:
 	// [1.3.0] CHG: Support fb2k 1.0 album art search patterns.
+	// [1.3.3] CHG: New no_load parameter, if true, the image will not load into memory. so parameter "image" will be 
+	//     set to null in on_get_album_art_done() callback.
 	// HINT: window_id can be retrieved by window.ID
 	// NOTE: This function returns immediately, album art will be sent to on_get_album_art_done() callback as soon as album art is found
-	unsigned int GetAlbumArtAsync(window_id, IFbMetadbHandle, art_id = 0, need_stub = true, only_embed = false);
+	unsigned int GetAlbumArtAsync(window_id, IFbMetadbHandle, art_id = 0, need_stub = true, only_embed = false, no_load = false);
 	// [1.1.4] New: A INI file should like this:
 	// [section]
 	// key=val

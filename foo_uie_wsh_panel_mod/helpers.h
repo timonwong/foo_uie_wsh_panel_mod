@@ -14,6 +14,38 @@ namespace helpers
 	extern bool get_mainmenu_item_checked(const GUID & guid);
 	extern void set_mainmenu_item_checked(const GUID & guid, bool checked);
 
+	__declspec(noinline) static bool execute_context_command_by_name_SEH(const char * p_name, metadb_handle * p_handle = NULL)
+	{
+		bool ret = false;
+
+		__try 
+		{
+			ret = execute_context_command_by_name(p_name, p_handle);
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			ret = false;
+		}
+
+		return ret;
+	}
+
+	__declspec(noinline) static bool execute_mainmenu_command_by_name_SEH(const char * p_name)
+	{
+		bool ret = false;
+
+		__try 
+		{
+			ret = execute_mainmenu_command_by_name(p_name);
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			ret = false;
+		}
+
+		return ret;
+	}
+
 	inline COLORREF convert_argb_to_colorref(DWORD argb)
 	{
 		return RGB(argb >> RED_SHIFT, argb >> GREEN_SHIFT, argb >> BLUE_SHIFT);
@@ -42,7 +74,7 @@ namespace helpers
 	// bitmap must be NULL
 	bool read_album_art_into_bitmap(const album_art_data_ptr & data, Gdiplus::Bitmap ** bitmap);
 	HRESULT get_album_art(BSTR rawpath, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub);
-	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub, pfc::string_base * image_path_ptr = NULL);
+	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub, VARIANT_BOOL no_load = VARIANT_FALSE, pfc::string_base * image_path_ptr = NULL);
 	HRESULT get_album_art_embedded(BSTR rawpath, IGdiBitmap ** pp, int art_id);
 
 	static bool get_is_vista_or_later()
@@ -145,12 +177,13 @@ namespace helpers
 
 	public:
 		album_art_async(HWND notify_hwnd, metadb_handle * handle, int art_id, 
-			VARIANT_BOOL need_stub, VARIANT_BOOL only_embed) 
+			VARIANT_BOOL need_stub, VARIANT_BOOL only_embed, VARIANT_BOOL no_load) 
 			: m_notify_hwnd(notify_hwnd)
 			, m_handle(handle)
 			, m_art_id(art_id)
 			, m_need_stub(need_stub)
 			, m_only_embed(only_embed)
+			, m_no_load(no_load)
 		{
 			if (m_handle.is_valid())
 				m_rawpath = pfc::stringcvt::string_wide_from_utf8(m_handle->get_path());
@@ -170,6 +203,7 @@ namespace helpers
 		int m_art_id;
 		VARIANT_BOOL m_need_stub;
 		VARIANT_BOOL m_only_embed;
+		VARIANT_BOOL m_no_load;
 		HWND m_notify_hwnd;
 	};
 

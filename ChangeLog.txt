@@ -1,3 +1,9 @@
+v1.3.3
+- ADD: Read only window.IsTransparent property.
+- CHG: Add new parameter "no_load" to utils.GetAlbumArtAsync().
+- FIX: Stub images won't be loaded since WSH Panel Mod 1.3.2.
+- FIX: fb.RemovePlaylist(idx) doesn't work when idx == 0.
+
 v1.3.2
 - ADD: on_key_up() callback.
 - ADD: on_char() callback.

@@ -358,6 +358,16 @@ STDMETHODIMP FbWindow::put_DlgCode(UINT code)
 	return S_OK;
 }
 
+STDMETHODIMP FbWindow::get_IsTransparent(VARIANT_BOOL* p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = TO_VARIANT_BOOL(m_host->get_pseudo_transparent());
+	return S_OK;
+}
+
 STDMETHODIMP FbWindow::Repaint(VARIANT_BOOL force)
 {
 	TRACK_FUNCTION();
@@ -994,7 +1004,7 @@ void wsh_panel_window::script_stop()
 
 	if (m_script_engine)
 	{
-		//m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
+		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
 		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
 		m_script_engine->Close();
 	}

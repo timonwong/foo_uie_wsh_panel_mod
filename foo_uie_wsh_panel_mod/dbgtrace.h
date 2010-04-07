@@ -49,24 +49,24 @@ public:
 			{
 				pfc::string_formatter formatter;
 
-				formatter << "Additional Info:\n" << "==>Last DispFunc: (";
+				formatter << "Additional Info:\n" << "==> IDispatch::Invoke: flag=\"";
 
 				switch (sm_last_flag)
 				{
 				case DISPATCH_METHOD:
-					formatter << "method";
+					formatter << "DISPATCH_METHOD";
 					break;
 
 				case DISPATCH_PROPERTYGET:
-					formatter << "property-get";
+					formatter << "DISPATCH_PROPERTYGET";
 					break;
 
 				case DISPATCH_PROPERTYPUT:
-					formatter << "property-put";
+					formatter << "DISPATCH_PROPERTYPUT";
 					break;
 
 				case DISPATCH_PROPERTYPUTREF:
-					formatter << "property-put-ref";
+					formatter << "DISPATCH_PROPERTYPUTREF";
 					break;
 				}
 
@@ -77,8 +77,8 @@ public:
 					sm_last_typeinfo->ReleaseTypeAttr(ptype_attr);
 				}
 
-				formatter << ") \"" << pfc::stringcvt::string_utf8_from_wide(name)
-					<< "\" of interface uuid(\"" << pfc::print_guid(guid) << "\")";
+				formatter << "\", name=\"" << pfc::stringcvt::string_utf8_from_wide(name)
+					<< "\", uuid=\"" << pfc::print_guid(guid) << "\"";
 
 				SysFreeString(name);
 

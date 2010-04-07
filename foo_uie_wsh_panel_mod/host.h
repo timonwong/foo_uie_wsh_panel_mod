@@ -102,6 +102,7 @@ public:
 	STDMETHODIMP put_MinHeight(UINT height);
 	STDMETHODIMP get_DlgCode(UINT* p);
 	STDMETHODIMP put_DlgCode(UINT code);
+	STDMETHODIMP get_IsTransparent(VARIANT_BOOL* p);
 	STDMETHODIMP Repaint(VARIANT_BOOL force);
 	STDMETHODIMP RepaintRect(UINT x, UINT y, UINT w, UINT h, VARIANT_BOOL force);
 	STDMETHODIMP CreatePopupMenu(IMenuObj ** pp);

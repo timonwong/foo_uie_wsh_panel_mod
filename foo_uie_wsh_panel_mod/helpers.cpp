@@ -18,10 +18,8 @@ namespace helpers
 
 				if (child)
 				{
-					const char * name = child->get_name();
-
 					path = p_path;
-					path += name;
+					path += child->get_name();
 
 					switch (child->get_type())
 					{
@@ -64,9 +62,10 @@ namespace helpers
 
 	bool execute_context_command_by_name(const char * p_name, metadb_handle * p_handle /*= NULL*/)
 	{
+		contextmenu_node * node = NULL;
+
 		service_ptr_t<contextmenu_manager> cm;
 		pfc::string8_fast dummy("");
-		contextmenu_node * node = NULL;
 
 		contextmenu_manager::g_create(cm);
 
@@ -83,10 +82,7 @@ namespace helpers
 			return false;
 
 		if (node)
-		{
 			node->execute();
-			return true;
-		}
 
 		return false;
 	}
@@ -112,27 +108,24 @@ namespace helpers
 		// Second, generate a list of all mainmenu commands
 		service_enum_t<mainmenu_commands> e;
 		service_ptr_t<mainmenu_commands> ptr;
+		t_size len = strlen(p_name);
 
 		while (e.next(ptr))
 		{
 			for (t_uint32 idx = 0; idx < ptr->get_command_count(); ++idx)
 			{
-				service_ptr_t<mainmenu_group> group_ptr;
-				service_ptr_t<mainmenu_group_popup> group_popup_ptr;
-				GUID group_guid;
-				pfc::string8_fast temp;
+				GUID group_guid = ptr->get_parent();
 				pfc::string8_fast command;
-				t_size len = strlen(p_name);
-
 				ptr->get_name(idx, command);
-				group_guid = ptr->get_parent();
 
 				while (group_guid_text_map.have_item(group_guid))
 				{
-					group_ptr = group_guid_text_map[group_guid];
+					mainmenu_group::ptr group_ptr = group_guid_text_map[group_guid];
+					mainmenu_group_popup::ptr group_popup_ptr;
 
 					if (group_ptr->service_query_t(group_popup_ptr))
 					{
+						pfc::string8_fast temp;
 						group_popup_ptr->get_display_string(temp);
 						temp.add_char('/');
 						temp += command;
@@ -143,24 +136,24 @@ namespace helpers
 				}
 
 				// command?
+				bool want_to_execute = false;
+
 				if (len == command.get_length())
 				{
 					if (_stricmp(p_name, command) == 0)
-					{
-						ptr->execute(idx, NULL);
-						return true;
-					}
+						want_to_execute = true;
 				}
 				else if (len < command.get_length())
 				{
-					if (command[command.get_length() - len - 1] == '/')
-					{
-						if (_stricmp(command.get_ptr() + command.get_length() - len, p_name) == 0)
-						{
-							ptr->execute(idx, NULL);
-							return true;
-						}
-					}
+					if ((command[command.get_length() - len - 1] == '/') &&
+						(_stricmp(command.get_ptr() + command.get_length() - len, p_name) == 0))
+						want_to_execute = true;
+				}
+
+				if (want_to_execute)
+				{
+					ptr->execute(idx, NULL);
+					return true;
 				}
 			}
 		}
@@ -290,15 +283,13 @@ namespace helpers
 		}
 		catch (std::exception &)
 		{
-			if (need_stub != 0)
+			if (need_stub)
 			{
 				try
 				{
 					data = aami->query_stub_image(abort);
 				}
-				catch (std::exception &)
-				{
-				}
+				catch (std::exception &) {}
 			}
 		}
 
@@ -314,32 +305,32 @@ namespace helpers
 		return S_OK;
 	}
 
-	IGdiBitmap * query_album_art(album_art_extractor_instance_v2::ptr extractor, GUID & what, pfc::string_base * image_path_ptr) 
+	IGdiBitmap * query_album_art(album_art_extractor_instance_v2::ptr extractor, GUID & what, VARIANT_BOOL no_load = VARIANT_FALSE, pfc::string_base * image_path_ptr = NULL) 
 	{
 		abort_callback_dummy abort;
 		album_art_data_ptr data = extractor->query(what, abort);
 		Gdiplus::Bitmap * bitmap = NULL;
 		IGdiBitmap * ret = NULL;
 
-		if (helpers::read_album_art_into_bitmap(data, &bitmap))
+		if (!no_load && helpers::read_album_art_into_bitmap(data, &bitmap))
 		{
-			if (image_path_ptr)
-			{
-				album_art_path_list::ptr pathlist = extractor->query_paths(what, abort);
-
-				if (pathlist->get_count() > 0)
-				{
-					image_path_ptr->set_string(pathlist->get_path(0));
-				}
-			}
-
 			ret = new com_object_impl_t<GdiBitmap>(bitmap);
+		}
+
+		if (image_path_ptr && (no_load || ret))
+		{
+			album_art_path_list::ptr pathlist = extractor->query_paths(what, abort);
+
+			if (pathlist->get_count() > 0)
+			{
+				image_path_ptr->set_string(pathlist->get_path(0));
+			}
 		}
 
 		return ret;
 	}
 
-	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub, pfc::string_base * image_path_ptr /*= NULL*/)
+	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub, VARIANT_BOOL no_load /*= VARIANT_FALSE*/, pfc::string_base * image_path_ptr /*= NULL*/)
 	{
 		if (handle.is_empty()) return E_INVALIDARG;
 		if (!pp) return E_POINTER;
@@ -357,7 +348,7 @@ namespace helpers
 			aaeiv2 = aamv2->open(pfc::list_single_ref_t<metadb_handle_ptr>(handle), 
 				pfc::list_single_ref_t<GUID>(helpers::convert_artid_to_guid(art_id)), abort);
 
-			ret = query_album_art(aaeiv2, what, image_path_ptr);
+			ret = query_album_art(aaeiv2, what, no_load, image_path_ptr);
 		}
 		catch (std::exception &)
 		{
@@ -369,7 +360,7 @@ namespace helpers
 				{
 					album_art_data_ptr data = aaeiv2_stub->query(what, abort);
 
-					ret = query_album_art(aaeiv2, what, image_path_ptr);
+					ret = query_album_art(aaeiv2_stub, what, no_load, image_path_ptr);
 				} catch (std::exception &) {}
 			}
 		}
@@ -685,11 +676,11 @@ namespace helpers
 			if (m_only_embed)
 			{
 				get_album_art_embedded(m_rawpath, &bitmap, m_art_id);
-				image_path = m_handle->get_path();
+				if (bitmap) image_path = m_handle->get_path();
 			}
 			else
 			{
-				get_album_art_v2(m_handle, &bitmap, m_art_id, m_need_stub, &image_path);
+				get_album_art_v2(m_handle, &bitmap, m_art_id, m_need_stub, m_no_load, &image_path);
 			}
 
 			handle = new com_object_impl_t<FbMetadbHandle>(m_handle);

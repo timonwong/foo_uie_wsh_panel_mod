@@ -513,9 +513,9 @@ STDMETHODIMP GdiGraphics::DrawImage(IGdiBitmap* image, float dstX, float dstY, f
 	if (alpha != (BYTE)~0)
 	{
 		Gdiplus::ImageAttributes ia;
-		Gdiplus::ColorMatrix cm = { 0.0 };
+		Gdiplus::ColorMatrix cm = { 0.0f };
 
-		cm.m[0][0] = cm.m[1][1] = cm.m[2][2] = cm.m[4][4] = 1.0;
+		cm.m[0][0] = cm.m[1][1] = cm.m[2][2] = cm.m[4][4] = 1.0f;
 		cm.m[3][3] = static_cast<float>(alpha) / 255;
 
 		ia.SetColorMatrix(&cm);
@@ -1797,15 +1797,7 @@ STDMETHODIMP FbUtils::RunMainMenuCommand(BSTR command, VARIANT_BOOL * p)
 
 	pfc::stringcvt::string_utf8_from_wide name(command);
 
-	try
-	{
-		*p = TO_VARIANT_BOOL(helpers::execute_mainmenu_command_by_name(name));
-	}
-	catch (...)
-	{
-		*p = VARIANT_FALSE;
-	}
-
+	*p = TO_VARIANT_BOOL(helpers::execute_mainmenu_command_by_name_SEH(name));
 	return S_OK;
 }
 
@@ -1818,16 +1810,7 @@ STDMETHODIMP FbUtils::RunContextCommand(BSTR command, VARIANT_BOOL * p)
 
 	pfc::stringcvt::string_utf8_from_wide name(command);
 
-	try
-	{
-
-		*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name(name));
-	}
-	catch (...)
-	{
-		*p = VARIANT_FALSE;
-	}
-
+	*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name));
 	return S_OK;
 }
 
@@ -1845,16 +1828,7 @@ STDMETHODIMP FbUtils::RunContextCommandWithMetadb(BSTR command, IFbMetadbHandle 
 
 	if (!ptr) return E_INVALIDARG;
 
-	try
-	{
-
-		*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name(name, ptr));
-	}
-	catch (...)
-	{
-		*p = VARIANT_FALSE;
-	}
-
+	*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name, ptr));
 	return S_OK;
 }
 
@@ -1982,7 +1956,6 @@ STDMETHODIMP FbUtils::RemovePlaylist(UINT idx, VARIANT_BOOL * p)
 {
 	TRACK_FUNCTION();
 
-	if (!idx) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
 	*p = TO_VARIANT_BOOL(static_api_ptr_t<playlist_manager>()->remove_playlist(idx));
@@ -2540,7 +2513,7 @@ STDMETHODIMP WSHUtils::GetAlbumArtEmbedded(BSTR rawpath, int art_id, IGdiBitmap 
 	return helpers::get_album_art_embedded(rawpath, pp, art_id);
 }
 
-STDMETHODIMP WSHUtils::GetAlbumArtAsync(UINT window_id, IFbMetadbHandle * handle, int art_id, VARIANT_BOOL need_stub, VARIANT_BOOL only_embed, UINT * p)
+STDMETHODIMP WSHUtils::GetAlbumArtAsync(UINT window_id, IFbMetadbHandle * handle, int art_id, VARIANT_BOOL need_stub, VARIANT_BOOL only_embed, VARIANT_BOOL no_load, UINT * p)
 {
 	TRACK_FUNCTION();
 
@@ -2557,7 +2530,7 @@ STDMETHODIMP WSHUtils::GetAlbumArtAsync(UINT window_id, IFbMetadbHandle * handle
 		try
 		{
 			helpers::album_art_async * thread = new helpers::album_art_async((HWND)window_id,
-				ptr, art_id, need_stub, only_embed);
+				ptr, art_id, need_stub, only_embed, no_load);
 
 			thread->start();
 			tid = thread->get_tid();
@@ -2761,16 +2734,9 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
 			CloseHandle(fh);
 		}
 
-		if (size.HighPart)
-		{
-			p->vt = VT_I8;
-			p->llVal = size.QuadPart;
-		}
-		else
-		{
-			p->vt = VT_UI4;
-			p->ulVal = size.LowPart;
-		}
+		// Only 32bit integers...
+		p->vt = VT_UI4;
+		p->ulVal = (size.HighPart) ? pfc::infinite32 : size.LowPart;
 	}
 	else if (wcscmp(mode, L"d") == 0)
 	{

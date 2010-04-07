@@ -134,6 +134,8 @@ __interface IGdiGraphics: IGdiObj
 	STDMETHOD(SetTextRenderingHint)([range(Gdiplus::TextRenderingHintSystemDefault, Gdiplus::TextRenderingHintClearTypeGridFit)] UINT mode);
 	STDMETHOD(SetSmoothingMode)([range(Gdiplus::SmoothingModeInvalid, Gdiplus::SmoothingModeAntiAlias)] int mode);
 	STDMETHOD(SetInterpolationMode)([range(Gdiplus::InterpolationModeInvalid, Gdiplus::InterpolationModeHighQualityBicubic)] int mode);
+	//STDMETHOD(SetCompositingMode)([range(Gdiplus::CompositingModeSourceOver, Gdiplus::CompositingModeSourceCopy)] UINT mode);
+	//STDMETHOD(SetCompositingQuality)([range(Gdiplus::CompositingQualityInvalid, Gdiplus::CompositingQualityAssumeLinear)] int mode);
 };
 _COM_SMARTPTR_TYPEDEF(IGdiGraphics, __uuidof(IGdiGraphics));
 
@@ -454,6 +456,7 @@ __interface IFbWindow: IDispatch
 	[propput] STDMETHOD(MinHeight)(UINT height);
 	[propget] STDMETHOD(DlgCode)([out,retval] UINT* p);
 	[propput] STDMETHOD(DlgCode)(UINT code);
+	[propget] STDMETHOD(IsTransparent)([out,retval] VARIANT_BOOL* p);
 	STDMETHOD(Repaint)([defaultvalue(0)] VARIANT_BOOL force);
 	STDMETHOD(RepaintRect)(UINT x, UINT y, UINT w, UINT h, [defaultvalue(0)] VARIANT_BOOL force);
 	STDMETHOD(CreatePopupMenu)([out,retval] IMenuObj ** pp);
@@ -495,7 +498,7 @@ __interface IWSHUtils: IDispatch
 	STDMETHOD(GetAlbumArt)(BSTR rawpath, [defaultvalue(0)] int art_id, [defaultvalue(-1)] VARIANT_BOOL need_stub, [out,retval] IGdiBitmap ** pp);
 	STDMETHOD(GetAlbumArtV2)(IFbMetadbHandle * handle, [defaultvalue(0)] int art_id, [defaultvalue(-1)] VARIANT_BOOL need_stub, [out,retval] IGdiBitmap **pp);
 	STDMETHOD(GetAlbumArtEmbedded)(BSTR rawpath, [defaultvalue(0)] int art_id, [out,retval] IGdiBitmap ** pp);
-	STDMETHOD(GetAlbumArtAsync)(UINT window_id, IFbMetadbHandle * handle, [defaultvalue(0)] int art_id, [defaultvalue(-1)] VARIANT_BOOL need_stub, [defaultvalue(0)] VARIANT_BOOL only_embed, [out,retval] UINT * p);
+	STDMETHOD(GetAlbumArtAsync)(UINT window_id, IFbMetadbHandle * handle, [defaultvalue(0)] int art_id, [defaultvalue(-1)] VARIANT_BOOL need_stub, [defaultvalue(0)] VARIANT_BOOL only_embed, [defaultvalue(0)] VARIANT_BOOL no_load, [out,retval] UINT * p);
 	STDMETHOD(ReadINI)(BSTR filename, BSTR section, BSTR key, [optional] VARIANT defaultval, [out,retval] BSTR * pp);
 	STDMETHOD(WriteINI)(BSTR filename, BSTR section, BSTR key, VARIANT val, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(IsKeyPressed)(UINT vkey, [out,retval] VARIANT_BOOL * p);
