@@ -11,9 +11,17 @@ CVS
 *.user
 vc90.idl
 vc90.tlb
+vc100.idl
+vc100.tlb
 *.aps
+*.opensdf
+*.sdf
+*.tlog
+*.old
 
 dist/
+ipch/
+
 
 # switch to regexp syntax
 syntax: regexp

@@ -41,7 +41,10 @@ Methods:
 interface IGdiGraphics {
 Methods:
 	void FillSolidRect(x, y, w, h, color);
-	void FillGradRect(x, y, w, h, angle, color1, color2);
+	// [1.3.4] Updated:
+	// focus: Specify where the center color will be at its highest intensity, from 0.0 to 1.0
+	//   the default is 1.0.
+	void FillGradRect(x, y, w, h, angle, color1, color2, focus);
 	// [1.1.5] New:
 	void FillRoundRect(x, y, w, h, arc_width, arc_height, color);
 	// [1.1.5] New:
@@ -373,6 +376,13 @@ Methods:
 	void SetMaxWidth(width);
 	// [1.1.10] New:
 	void Dispose();
+	// [1.3.4] New:
+	// in milliseconds
+	// type: See flags.txt
+	int GetDelayTime(type);
+	// [1.3.4] New:
+	// type: See flags.txt
+	void SetDelayTime(type, time);
 }
 
 // [1.3.1] New interface

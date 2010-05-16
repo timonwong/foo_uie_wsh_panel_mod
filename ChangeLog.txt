@@ -1,3 +1,8 @@
+v1.3.4
+- ADD: New parameter "focus" to IGdiGraphics.FillGradRect().
+- ADD: GetDelayTime() and SetDelayTime() methods to IFbTooltip interface.
+- FIX: UpdateFileInfoSimple() won't work when supply multivalue fields.
+
 v1.3.3
 - ADD: Read only window.IsTransparent property.
 - CHG: Add new parameter "no_load" to utils.GetAlbumArtAsync().

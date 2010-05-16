@@ -112,7 +112,7 @@ __interface IGdiGraphics: IGdiObj
 {
 	[propput] STDMETHOD(_ptr)(void * p);
 	STDMETHOD(FillSolidRect)(float x, float y, float w, float h, DWORD color);
-	STDMETHOD(FillGradRect)(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2);
+	STDMETHOD(FillGradRect)(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2, [defaultvalue(1.0f)] float focus);
 	STDMETHOD(FillRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, DWORD color);
 	STDMETHOD(FillEllipse)(float x, float y, float w, float h, DWORD color);
 	STDMETHOD(FillPolygon)(DWORD color, [range(0, 1)]INT fillmode, VARIANT points);
@@ -410,11 +410,13 @@ __interface ITimerObj: IDisposable
 ]
 __interface IFbTooltip: IDisposable
 {
+	[propget] STDMETHOD(Text)([out,retval] BSTR * pp);
+	[propput] STDMETHOD(Text)(BSTR text);
 	STDMETHOD(Activate)();
 	STDMETHOD(Deactivate)();
 	STDMETHOD(SetMaxWidth)(int width);
-	[propget] STDMETHOD(Text)([out,retval] BSTR * pp);
-	[propput] STDMETHOD(Text)(BSTR text);
+	STDMETHOD(GetDelayTime)(int type, [out,retval] INT * p);
+	STDMETHOD(SetDelayTime)(int type, int time);
 };
 
 [

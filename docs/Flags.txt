@@ -101,6 +101,13 @@ DLGC_WANTCHARS             = 0x0080;     /* Want WM_CHAR messages            */
 DLGC_STATIC                = 0x0100;     /* Static item: don't include       */
 DLGC_BUTTON                = 0x2000;     /* Button item: can be checked      */
 
+// Used in IFbTooltip.GetDelayTime() and IFbTooltip.SetDelayTime()
+// For more information, see: http://msdn.microsoft.com/en-us/library/bb760404(VS.85).aspx
+TTDT_AUTOMATIC             =   0;
+TTDT_RESHOW                =   1;
+TTDT_AUTOPOP               =   2;
+TTDT_INITIAL               =   3;
+
 // Used in gdi.Font(), can be combined
 // For more information, see: http://msdn.microsoft.com/en-us/library/ms534124(VS.85).aspx
 FontStyle = {

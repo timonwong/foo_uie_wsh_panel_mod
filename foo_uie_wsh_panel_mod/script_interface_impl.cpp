@@ -285,7 +285,7 @@ STDMETHODIMP GdiGraphics::FillSolidRect(float x, float y, float w, float h, DWOR
 	return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2)
+STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2, float focus)
 {
 	TRACK_FUNCTION();
 
@@ -293,9 +293,10 @@ STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float
 
 	Gdiplus::RectF rect(x, y, w, h);
 	// HACK: Workaround for one pixel black line problem.
-	rect.Inflate(0.1f, 0.1f);
+	//rect.Inflate(0.1f, 0.1f);
 	Gdiplus::LinearGradientBrush brush(rect, color1, color2, angle, TRUE);
 
+	brush.SetBlendTriangularShape(focus);
 	m_ptr->FillRectangle(&brush, rect);
 	return S_OK;
 }
@@ -1179,7 +1180,8 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 	if (nCount < 2)
 		return DISP_E_BADPARAMCOUNT;
 
-	for (LONG i = nLBound; i <= nUBound; i += 2)
+	// Enum every two elems
+	for (LONG i = nLBound; i < nUBound; i += 2)
 	{
 		_variant_t var_field, var_value;
 		LONG n1 = i;
@@ -1207,8 +1209,9 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfoSimple(SAFEARRAY * p)
 	if (nCount % 2 != 0)
 	{
 		_variant_t var_multival;
+		LONG n = nUBound;
 
-		if (FAILED(hr = SafeArrayGetElement(p, &nUBound, &var_multival)))
+		if (FAILED(hr = SafeArrayGetElement(p, &n, &var_multival)))
 			return hr;
 
 		if (FAILED(hr = VariantChangeType(&var_multival, &var_multival, 0, VT_BSTR)))
@@ -2906,6 +2909,27 @@ STDMETHODIMP FbTooltip::SetMaxWidth(int width)
 	TRACK_FUNCTION();
 
 	SendMessage(m_wndtooltip, TTM_SETMAXTIPWIDTH, 0, width);
+	return S_OK;
+}
+
+STDMETHODIMP FbTooltip::GetDelayTime(int type, INT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+	if (type < TTDT_AUTOMATIC || type > TTDT_INITIAL) return E_INVALIDARG;
+
+	*p = SendMessage(m_wndtooltip, TTM_GETDELAYTIME, type, 0);
+	return S_OK;
+}
+
+STDMETHODIMP FbTooltip::SetDelayTime(int type, int time)
+{
+	TRACK_FUNCTION();
+
+	if (type < TTDT_AUTOMATIC || type > TTDT_INITIAL) return E_INVALIDARG;
+
+	SendMessage(m_wndtooltip, TTM_SETDELAYTIME, type, time);
 	return S_OK;
 }
 

@@ -293,7 +293,7 @@ public:
 
 	STDMETHODIMP put__ptr(void * p);
 	STDMETHODIMP FillSolidRect(float x, float y, float w, float h, DWORD color);
-	STDMETHODIMP FillGradRect(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2);
+	STDMETHODIMP FillGradRect(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2, float focus);
 	STDMETHODIMP FillRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, DWORD color);
 	STDMETHODIMP FillEllipse(float x, float y, float w, float h, DWORD color);
 	STDMETHODIMP FillPolygon(DWORD color, INT fillmode, VARIANT points);
@@ -713,6 +713,8 @@ public:
 	STDMETHODIMP Activate();
 	STDMETHODIMP Deactivate();
 	STDMETHODIMP SetMaxWidth(int width);
+	STDMETHODIMP GetDelayTime(int type, INT * p);
+	STDMETHODIMP SetDelayTime(int type, int time);
 };
 
 // forward declartion

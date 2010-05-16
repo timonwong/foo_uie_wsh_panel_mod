@@ -5,6 +5,7 @@
 #include "config.h"
 
 
+// Smart Pointers
 _COM_SMARTPTR_TYPEDEF(IActiveScriptParse, IID_IActiveScriptParse);
 
 

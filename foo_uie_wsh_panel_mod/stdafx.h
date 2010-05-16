@@ -1,8 +1,8 @@
 #pragma once
 
 
-#define _WIN32_WINNT 0x0501 // Require Windows XP
-#define WINVER 0x0501
+#define _WIN32_WINNT 0x0700 // Require Windows 7
+#define WINVER 0x0700
 #define _WIN32_IE 0x600
 
 // Undefine to enable VLD
@@ -24,6 +24,12 @@
 #include <ObjSafe.h>
 #include <StrSafe.h>
 #include <uxtheme.h>
+
+// Direct2D DirectWrite relative
+//#include <d2d1.h>
+//#include <d2d1helper.h>
+//#include <dwrite.h>
+//#include <wincodec.h>
 
 
 // ATL/WTL
