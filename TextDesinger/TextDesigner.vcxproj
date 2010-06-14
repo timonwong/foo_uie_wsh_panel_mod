@@ -102,7 +102,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="License.html" />
-    <None Include="Readme.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -22,6 +22,7 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
+			ManagedExtensions="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -44,12 +45,12 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\include\scintilla"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;FOO_UIE_WSH_PANEL_EXPORTS"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				MinimalRebuild="false"
+				BasicRuntimeChecks="0"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -63,10 +64,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="GdiPlus.lib shared.lib shlwapi.lib WinMM.lib SciLexerD.lib Imm32.lib uxtheme.lib"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../shared;../lib"
 				DelayLoadDLLs="uxtheme.dll"
 				GenerateDebugInformation="true"
+				AssemblyDebug="1"
 				SubSystem="2"
 				TargetMachine="1"
 			/>

@@ -311,6 +311,8 @@ public:
 	STDMETHODIMP GdiAlphaBlend(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, BYTE alpha);
 	STDMETHODIMP MeasureString(BSTR str, IGdiFont * font, float x, float y, float w, float h, DWORD flags, IMeasureStringInfo ** pp);
 	STDMETHODIMP CalcTextWidth(BSTR str, IGdiFont * font, UINT * p);
+	STDMETHODIMP CalcTextHeight(BSTR str, IGdiFont * font, UINT * p);
+	STDMETHODIMP EstimateLineWrap(BSTR str, IGdiFont * font, int max_width, VARIANT * p);
 	STDMETHODIMP SetTextRenderingHint(UINT mode);
 	STDMETHODIMP SetSmoothingMode(INT mode);
 	STDMETHODIMP SetInterpolationMode(INT mode);

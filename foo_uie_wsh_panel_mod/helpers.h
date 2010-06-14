@@ -10,9 +10,80 @@ namespace helpers
 	extern bool find_context_command_recur(const char * p_command, pfc::string_base & p_path, contextmenu_node * p_parent, contextmenu_node *& p_out);
 	extern bool execute_context_command_by_name(const char * p_name, metadb_handle * p_handle = NULL);
 	extern bool execute_mainmenu_command_by_name(const char * p_name);
-	extern t_size calc_text_width(const Gdiplus::Font & fn, LPCTSTR text, int len);
 	extern bool get_mainmenu_item_checked(const GUID & guid);
 	extern void set_mainmenu_item_checked(const GUID & guid, bool checked);
+
+	inline int get_text_width(HDC hdc, LPCTSTR text, int len)
+	{
+		SIZE size;
+
+		GetTextExtentPoint32(hdc, text, len, &size);
+		return size.cx;
+	}
+
+	inline int get_text_height(HDC hdc, const wchar_t * text, int len)
+	{
+		SIZE size;
+
+		GetTextExtentPoint32(hdc, text, len, &size);
+		return size.cy;
+	}
+
+	inline int is_wrap_char(TCHAR current, TCHAR next)
+	{
+		if (next == 0) return true;
+
+		switch (current)
+		{
+		case '\r':
+		case '\n':
+		case ' ':
+		case '\t':
+		case '-':
+		case '?':
+		case '!':
+		case '|':
+		case ')':
+		case ']':
+		case '}':
+			//
+		case '(':
+		case '[':
+		case '{':
+		case '+':
+		case '$':
+		case '%':
+		case '\\':
+			return true;
+		}
+
+		return !(current < 0x80 && next < 0x80);
+	}
+
+	inline bool is_wrap_char_adv(TCHAR ch)
+	{
+		switch (ch)
+		{
+		case '(':
+		case '[':
+		case '{':
+		case '+':
+		case '$':
+		case '%':
+		case '\\':
+			return true;
+		}
+
+		return false;
+	}
+
+	struct wrapped_item
+	{
+		BSTR text;
+		int width;
+	};
+
+	extern void estimate_line_wrap(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out);
 
 	__declspec(noinline) static bool execute_context_command_by_name_SEH(const char * p_name, metadb_handle * p_handle = NULL)
 	{

@@ -1,3 +1,7 @@
+v1.3.5
+- FIX: UpdateFileInfoSimple() treat all tags as multivalue fileds.
+- ADD: IGdiGraphics.CalcTextHeight() and IGdiGraphics.EstimateLineWrap() methods.
+
 v1.3.4
 - ADD: New parameter "focus" to IGdiGraphics.FillGradRect().
 - ADD: GetDelayTime() and SetDelayTime() methods to IFbTooltip interface.

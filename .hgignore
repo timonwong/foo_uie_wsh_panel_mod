@@ -9,10 +9,8 @@ CVS
 *.ncb
 *.suo
 *.user
-vc90.idl
-vc90.tlb
-vc100.idl
-vc100.tlb
+vc*.idl
+vc*.tlb
 *.aps
 *.opensdf
 *.sdf

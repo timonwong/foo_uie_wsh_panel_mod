@@ -74,6 +74,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="License.html" />
-    <None Include="Readme.txt" />
   </ItemGroup>
 </Project>

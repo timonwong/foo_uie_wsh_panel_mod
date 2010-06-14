@@ -161,26 +161,56 @@ namespace helpers
 		return false;
 	}
 
-	t_size calc_text_width(const Gdiplus::Font & fn, LPCTSTR text, int len)
+	void estimate_line_wrap(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out)
 	{
-		HDC hDC;
-		HFONT hFont;
-		LOGFONT logfont;
-		HFONT oldfont;
-		Gdiplus::Bitmap bmp(1, 1, PixelFormat32bppARGB);
-		Gdiplus::Graphics g(&bmp);
-		SIZE sz;
+		int calc_width = get_text_width(hdc, text, len);
+		int calc_length = len;
 
-		fn.GetLogFontW(&g, &logfont);
-		fn.GetLogFontW(NULL, &logfont);
-		hFont = CreateFontIndirect(&logfont);
-		hDC = g.GetHDC();
-		oldfont = SelectFont(hDC, hFont);
-		GetTextExtentPoint32(hDC, text, len, &sz);
-		SelectFont(hDC, oldfont);
-		g.ReleaseHDC(hDC);
+		if ((calc_width <= width) || (len == 1))
+		{
+			wrapped_item item = { SysAllocString(text), calc_width };
+			out.add_item(item);
+		}
+		else
+		{
+			calc_length = (len * width) / calc_width;
 
-		return sz.cx;
+			if (get_text_width(hdc, text, calc_length) <= width)
+			{
+				while (get_text_width(hdc, text, min(len, calc_length + 1)) <= width)
+					++calc_length;
+			}
+			else
+			{
+				while (get_text_width(hdc, text, calc_length) > width && calc_length > 0)
+					--calc_length;
+			}
+
+			int length_rollback = calc_length;
+
+			while (calc_length > 0 && !is_wrap_char(text[calc_length - 1], text[calc_length]))
+			{
+				--calc_length;
+			}
+
+			if (calc_length > 1 && is_wrap_char_adv(text[calc_length - 1]))
+			{
+				--calc_length;
+			}
+
+			if (calc_length == 0)
+			{
+				calc_length = length_rollback;
+			}
+
+			wrapped_item item = { SysAllocStringLen(text, calc_length), get_text_width(hdc, text, calc_length) };
+			out.add_item(item);
+
+			if (calc_length < (int)len)
+			{
+				estimate_line_wrap(hdc, text + calc_length, len - calc_length, width, out);
+			}
+		}
 	}
 
 	int int_from_hex_digit(int ch)
@@ -638,9 +668,19 @@ namespace helpers
 
 				if (!iter->m_value.is_empty())
 				{
-					if (m_multivalue_fields.find_item(string_upper(iter->m_key)))
+					bool is_multival = false;
+
+					for (t_size idx = 0; idx < m_multivalue_fields.get_count(); ++idx)
 					{
-						// Yes, a multivalue field
+						if (_stricmp(m_multivalue_fields.get_item(idx), iter->m_key.get_ptr()) == 0)
+						{
+							is_multival = true;
+							break;
+						}
+					}
+
+					if (is_multival)
+					{
 						pfc::string_list_impl valuelist;
 
 						// *Split value with ";"*

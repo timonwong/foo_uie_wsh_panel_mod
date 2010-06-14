@@ -112,7 +112,7 @@ __interface IGdiGraphics: IGdiObj
 {
 	[propput] STDMETHOD(_ptr)(void * p);
 	STDMETHOD(FillSolidRect)(float x, float y, float w, float h, DWORD color);
-	STDMETHOD(FillGradRect)(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2, [defaultvalue(1.0f)] float focus);
+	STDMETHOD(FillGradRect)(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2, [defaultvalue(1.0)] float focus);
 	STDMETHOD(FillRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, DWORD color);
 	STDMETHOD(FillEllipse)(float x, float y, float w, float h, DWORD color);
 	STDMETHOD(FillPolygon)(DWORD color, [range(0, 1)]INT fillmode, VARIANT points);
@@ -131,6 +131,8 @@ __interface IGdiGraphics: IGdiObj
 	//STDMETHOD(GdiTransparentBlt)(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, DWORD color);
 	STDMETHOD(MeasureString)(BSTR str, IGdiFont * font, float x, float y, float w, float h, [defaultvalue(0)] DWORD flags, [out,retval] IMeasureStringInfo ** pp);
 	STDMETHOD(CalcTextWidth)(BSTR str, IGdiFont * font, [out,retval] UINT * p);
+	STDMETHOD(CalcTextHeight)(BSTR str, IGdiFont * font, [out,retval] UINT * p);
+	STDMETHOD(EstimateLineWrap)(BSTR str, IGdiFont * font, int max_width, [out,retval] VARIANT * p);
 	STDMETHOD(SetTextRenderingHint)([range(Gdiplus::TextRenderingHintSystemDefault, Gdiplus::TextRenderingHintClearTypeGridFit)] UINT mode);
 	STDMETHOD(SetSmoothingMode)([range(Gdiplus::SmoothingModeInvalid, Gdiplus::SmoothingModeAntiAlias)] int mode);
 	STDMETHOD(SetInterpolationMode)([range(Gdiplus::InterpolationModeInvalid, Gdiplus::InterpolationModeHighQualityBicubic)] int mode);

@@ -715,19 +715,81 @@ STDMETHODIMP GdiGraphics::CalcTextWidth(BSTR str, IGdiFont * font, UINT * p)
 	if (!str || !font) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
-	HFONT hFont = NULL;;
+	HFONT hFont = NULL;
 	font->get_HFont((UINT *)&hFont);
 	if (!hFont) return E_INVALIDARG;
 
 	HFONT oldfont;
 	HDC dc = m_ptr->GetHDC();
-	SIZE sz;
 
 	oldfont = SelectFont(dc, hFont);
-	GetTextExtentPoint32(dc, str, SysStringLen(str), &sz);
+	*p = helpers::get_text_width(dc, str, SysStringLen(str));
 	SelectFont(dc, oldfont);
 	m_ptr->ReleaseHDC(dc);
-	*p = sz.cx;
+	return S_OK;
+}
+
+STDMETHODIMP GdiGraphics::CalcTextHeight(BSTR str, IGdiFont * font, UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!m_ptr) return E_POINTER;
+	if (!str || !font) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	HFONT hFont = NULL;
+	font->get_HFont((UINT *)&hFont);
+	if (!hFont) return E_INVALIDARG;
+
+	HFONT oldfont;
+	HDC dc = m_ptr->GetHDC();
+
+	oldfont = SelectFont(dc, hFont);
+	*p = helpers::get_text_height(dc, str, SysStringLen(str));
+	SelectFont(dc, oldfont);
+	m_ptr->ReleaseHDC(dc);
+	return S_OK;
+}
+
+STDMETHODIMP GdiGraphics::EstimateLineWrap(BSTR str, IGdiFont * font, int max_width, VARIANT * p)
+{
+	if (!m_ptr) return E_POINTER;
+	if (!str || !font) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	HFONT hFont = NULL;
+	font->get_HFont((UINT *)&hFont);
+	if (!hFont) return E_INVALIDARG;
+
+	HFONT oldfont;
+	HDC dc = m_ptr->GetHDC();
+	pfc::list_t<helpers::wrapped_item> result;
+
+	oldfont = SelectFont(dc, hFont);
+	estimate_line_wrap(dc, str, SysStringLen(str), max_width, result);
+	SelectFont(dc, oldfont);
+	m_ptr->ReleaseHDC(dc);
+
+	helpers::com_array_writer<> helper;
+
+	if (!helper.create(result.get_count() * 2))
+		return E_OUTOFMEMORY;
+
+	for (long i = 0; i < helper.get_count() / 2; ++i)
+	{
+		_variant_t var1, var2;
+
+		var1.vt = VT_BSTR;
+		var1.bstrVal = result[i].text;
+		var2.vt = VT_I4;
+		var2.intVal = result[i].width;
+
+		helper.put(i * 2, var1);
+		helper.put(i * 2 + 1, var2);
+	}
+
+	p->vt = VT_ARRAY | VT_VARIANT;
+	p->parray = helper.get_ptr();
 	return S_OK;
 }
 
