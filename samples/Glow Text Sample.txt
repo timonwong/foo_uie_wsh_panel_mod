@@ -11,7 +11,7 @@ function RGBA(r, g, b, a) {
 var g_font = gdi.Font("Segoe UI", 22, 1);
 var g_drag = false;
 var g_textrender = gdi.CreateStyleTextRender();
-var g_bkclr = RGB(192, 192, 192);
+var g_bkclr = RGB(0, 0, 0);
 
 function on_paint(gr) {
     gr.SetTextRenderingHint(5);
@@ -24,7 +24,7 @@ function on_paint(gr) {
     // Draw background first
     gr.FillSolidRect(0, 0, ww, wh, g_bkclr);
 
-    g_textrender.GlowText(RGB(0, 0, 64), RGBA(255, 255, 0, 32), 8);
+    g_textrender.GlowText(RGB(0, 0, 64), RGBA(255, 255, 0, 30), 12);
 
     // Clear previous shadow setting
     g_textrender.EnableShadow(true);
@@ -32,5 +32,3 @@ function on_paint(gr) {
 
     g_textrender.RenderStringRect(gr, "Glow Text Sample", g_font, 0, 0, ww, wh, 0x11005000);
 }
-
-//EOF

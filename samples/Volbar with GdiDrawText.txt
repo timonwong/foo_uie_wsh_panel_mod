@@ -72,4 +72,3 @@ function on_mouse_wheel(delta) {
 function on_volume_change(val) {
     window.Repaint();
 }
-//EOF
