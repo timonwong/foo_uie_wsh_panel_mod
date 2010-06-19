@@ -220,8 +220,6 @@ namespace helpers
 				ptr->get_name(idx, command);
 				path.add_string(command);
 
-				console::info(path);
-
 				if (match_mainmenu_command(command, p_name, name_len))
 				{
 					ptr->execute(idx, NULL);
