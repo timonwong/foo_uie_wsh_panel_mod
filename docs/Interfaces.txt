@@ -268,7 +268,8 @@ Methods:
 interface IFbProfiler {
 Properties:
 	// [1.1.4] New:
-	double Time;
+	// in ms
+	int Time;
 	
 Methods:
 	void Reset();

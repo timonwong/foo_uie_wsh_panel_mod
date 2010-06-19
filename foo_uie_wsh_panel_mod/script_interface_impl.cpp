@@ -2356,17 +2356,17 @@ STDMETHODIMP FbProfiler::Print()
 {
 	TRACK_FUNCTION();
 
-	console::formatter() << "WSH Panel Mod: FbProfiler (" << m_name << "): " << (m_timer.query() * 1000) << " ms";
+	console::formatter() << "WSH Panel Mod: FbProfiler (" << m_name << "): " << (int)(m_timer.query() * 1000) << " ms";
 	return S_OK;
 }
 
-STDMETHODIMP FbProfiler::get_Time(double * p)
+STDMETHODIMP FbProfiler::get_Time(INT * p)
 {
 	TRACK_FUNCTION();
 
 	if (!p) return E_POINTER;
 
-	*p = m_timer.query() * 1000;
+	*p = (int)(m_timer.query() * 1000);
 	return S_OK;
 }
 

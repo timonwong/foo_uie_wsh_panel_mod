@@ -1,3 +1,9 @@
+v1.3.6
+- ADD: Sample "LoadImageAsync.txt"
+- FIX: Better handling for mainmenu commands in fb.RunMainMenuCommand().
+- CHG: Edge style can be used with pseudo transparent now.
+- CHG: Improved pseudo transparent handling while in a tab splitter.
+
 v1.3.5
 - FIX: UpdateFileInfoSimple() treat all tags as multivalue fileds.
 - ADD: IGdiGraphics.CalcTextHeight() and IGdiGraphics.EstimateLineWrap() methods.

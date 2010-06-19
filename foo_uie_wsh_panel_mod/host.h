@@ -13,15 +13,15 @@ class HostComm : public wsh_panel_vars
 {
 protected:
 	HWND              m_hwnd;
-	UINT              m_width;
-	UINT              m_height;
+	INT               m_width;
+	INT               m_height;
 	POINT             m_max_size;
 	POINT             m_min_size;
 	UINT              m_dlg_code;
 	HDC               m_hdc;
 	HBITMAP           m_gr_bmp;
 	HBITMAP           m_gr_bmp_bk;
-	bool              m_bk_updating;
+	bool              m_suppress_drawing;
 	bool              m_paint_pending;
 	UINT              m_accuracy;
 	metadb_handle_ptr m_watched_handle;
@@ -46,8 +46,8 @@ public:
 	GUID GetGUID() { return get_config_guid(); }
 	inline HDC GetHDC() { return m_hdc; }
 	inline HWND GetHWND() { return m_hwnd; }
-	inline UINT GetWidth() { return m_width; }
-	inline UINT GetHeight() { return m_height; }
+	inline INT GetWidth() { return m_width; }
+	inline INT GetHeight() { return m_height; }
 	inline UINT GetInstanceType() { return m_instance_type; }
 	inline POINT & GetMaxSize() { return m_max_size; }
 	inline POINT & GetMinSize() { return m_min_size; }
@@ -90,8 +90,8 @@ protected:
 
 public:
 	STDMETHODIMP get_ID(UINT* p);
-	STDMETHODIMP get_Width(UINT* p);
-	STDMETHODIMP get_Height(UINT* p);
+	STDMETHODIMP get_Width(INT* p);
+	STDMETHODIMP get_Height(INT* p);
 	STDMETHODIMP get_InstanceType(UINT* p);
 	STDMETHODIMP get_MaxWidth(UINT* p);
 	STDMETHODIMP put_MaxWidth(UINT width);

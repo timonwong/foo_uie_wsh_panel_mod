@@ -2,6 +2,7 @@
 
 #include "script_interface.h"
 #include "dbgtrace.h"
+#include "helpers.h"
 
 //-- IUnknown ---
 #define BEGIN_COM_QI_IMPL() \
@@ -515,7 +516,7 @@ class FbProfiler: public IDispatchImpl3<IFbProfiler>
 {
 protected:
 	pfc::string_simple m_name;
-	pfc::hires_timer m_timer;
+	helpers::mm_timer m_timer;
 
 	FbProfiler(const char * p_name) : m_name(p_name) { m_timer.start(); }
 	virtual ~FbProfiler() {}
@@ -523,7 +524,7 @@ protected:
 public:
 	STDMETHODIMP Reset();
 	STDMETHODIMP Print();
-	STDMETHODIMP get_Time(double * p);
+	STDMETHODIMP get_Time(INT * p);
 };
 
 class FbUtils : public IDispatchImpl3<IFbUtils>
@@ -719,7 +720,7 @@ public:
 	STDMETHODIMP SetDelayTime(int type, int time);
 };
 
-// forward declartion
+// forward declaration
 namespace TextDesign
 {
 	class IOutlineText;

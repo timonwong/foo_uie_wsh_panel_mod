@@ -51,7 +51,7 @@ namespace
 }
 
 
-HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_bmp(NULL), m_bk_updating(false), 
+HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_bmp(NULL), m_suppress_drawing(false), 
 	m_paint_pending(false), m_accuracy(0), m_script_state(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false), 
 	m_instance_type(KInstanceTypeCUI), m_dlg_code(0)
 {
@@ -65,7 +65,7 @@ HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_
 
 	if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) == TIMERR_NOERROR)
 	{
-		m_accuracy = min(max(tc.wPeriodMin, 0), tc.wPeriodMax);
+		m_accuracy = min(max(tc.wPeriodMin, 5), tc.wPeriodMax);
 	}
 
 	timeBeginPeriod(m_accuracy);
@@ -126,15 +126,29 @@ void HostComm::RefreshBackground(LPRECT lprcUpdate /*= NULL*/)
 
 	HDC dc_parent = GetDC(wnd_parent);
 	HDC hdc_bk = CreateCompatibleDC(dc_parent);
-	POINT pt = { 0, 0};
-	RECT rect_child = { 0, 0, m_width, m_height };
+	POINT pt = {0, 0};
+	RECT rect_child = {0, 0, m_width, m_height};
 	RECT rect_parent;
 	HRGN rgn_child = NULL;
+
+	// HACK: for Tab control
+	// Find siblings
+	HWND hwnd = NULL;
+	while (hwnd = FindWindowEx(wnd_parent, hwnd, NULL, NULL))
+	{
+		TCHAR buff[64];
+		if (hwnd == m_hwnd) continue;
+		GetClassName(hwnd, buff, _countof(buff));
+		if (_tcsstr(buff, _T("SysTabControl32"))) 
+		{
+			wnd_parent = hwnd;
+			break;
+		}
+	}
 
 	if (lprcUpdate)
 	{
 		HRGN rgn = CreateRectRgnIndirect(lprcUpdate);
-
 		rgn_child = CreateRectRgnIndirect(&rect_child);
 		CombineRgn(rgn_child, rgn_child, rgn, RGN_DIFF);
 		DeleteRgn(rgn);
@@ -144,12 +158,17 @@ void HostComm::RefreshBackground(LPRECT lprcUpdate /*= NULL*/)
 		rgn_child = CreateRectRgn(0, 0, 0, 0);
 	}
 
-	MapWindowPoints(m_hwnd, wnd_parent, &pt, 1);
+	ClientToScreen(m_hwnd, &pt);
+	ScreenToClient(wnd_parent, &pt);
+
 	CopyRect(&rect_parent, &rect_child);
-	MapWindowRect(m_hwnd, wnd_parent, &rect_parent);
+	ClientToScreen(m_hwnd, (LPPOINT)&rect_parent);
+	ClientToScreen(m_hwnd, (LPPOINT)&rect_parent + 1);
+	ScreenToClient(wnd_parent, (LPPOINT)&rect_parent);
+	ScreenToClient(wnd_parent, (LPPOINT)&rect_parent + 1);
 
 	// Force Repaint
-	m_bk_updating = true;
+	m_suppress_drawing = true;
 	SetWindowRgn(m_hwnd, rgn_child, FALSE);
 	RedrawWindow(wnd_parent, &rect_parent, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ERASENOW | RDW_UPDATENOW);
 
@@ -165,8 +184,9 @@ void HostComm::RefreshBackground(LPRECT lprcUpdate /*= NULL*/)
 	ReleaseDC(wnd_parent, dc_parent);
 	DeleteRgn(rgn_child);
 	SetWindowRgn(m_hwnd, NULL, FALSE);
-	m_bk_updating = false;
+	m_suppress_drawing = false;
 	SendMessage(m_hwnd, UWM_REFRESHBKDONE, 0, 0);
+	if (get_edge_style()) SendMessage(m_hwnd, WM_NCPAINT, 1, 0);
 	Repaint(true);
 }
 
@@ -236,7 +256,7 @@ STDMETHODIMP FbWindow::get_ID(UINT* p)
 	return S_OK;
 }
 
-STDMETHODIMP FbWindow::get_Width(UINT* p)
+STDMETHODIMP FbWindow::get_Width(INT* p)
 {
 	TRACK_FUNCTION();
 
@@ -246,21 +266,21 @@ STDMETHODIMP FbWindow::get_Width(UINT* p)
 	return S_OK;
 }
 
-STDMETHODIMP FbWindow::get_InstanceType(UINT* p)
-{
-	TRACK_FUNCTION();
-
-	*p = m_host->GetInstanceType();
-	return S_OK;
-}
-
-STDMETHODIMP FbWindow::get_Height(UINT* p)
+STDMETHODIMP FbWindow::get_Height(INT* p)
 {
 	TRACK_FUNCTION();
 
 	if (!p) return E_POINTER;
 
 	*p = m_host->GetHeight();
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::get_InstanceType(UINT* p)
+{
+	TRACK_FUNCTION();
+
+	*p = m_host->GetInstanceType();
 	return S_OK;
 }
 
@@ -928,7 +948,7 @@ bool wsh_panel_window::script_init()
 {
 	TRACK_FUNCTION();
 
-	pfc::hires_timer timer;
+	helpers::mm_timer timer;
 	timer.start();
 
 	// Set window edge
@@ -936,8 +956,8 @@ bool wsh_panel_window::script_init()
 		DWORD extstyle = GetWindowLongPtr(m_hwnd, GWL_EXSTYLE);
 
 		// Exclude all edge style
-		extstyle &= (~WS_EX_CLIENTEDGE) & (~WS_EX_STATICEDGE);
-		extstyle |= !get_pseudo_transparent() ? edge_style_from_config(get_edge_style()) : 0;
+		extstyle &= ~WS_EX_CLIENTEDGE & ~WS_EX_STATICEDGE;
+		extstyle |= edge_style_from_config(get_edge_style());
 		SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, extstyle);
 		SetWindowPos(m_hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 	}
@@ -952,7 +972,6 @@ bool wsh_panel_window::script_init()
 	if (get_disabled())
 	{
 		PostMessage(m_hwnd, UWM_SCRIPT_DISABLE, 0, 0);
-
 		return false;
 	}
 
@@ -989,8 +1008,8 @@ bool wsh_panel_window::script_init()
 	console::formatter() << "WSH Panel Mod (GUID: " 
 		<< pfc::print_guid(get_config_guid()) 
 		<< "): initliased in "
-		<< timer.query() / 1000
-		<< " s";
+		<< (int)(timer.query() * 1000)
+		<< " ms";
 
 	// HACK: Script update will not call on_size, so invoke it explicitly
 	SendMessage(m_hwnd, UWM_SIZE, 0, 0);
@@ -1115,9 +1134,9 @@ ui_helpers::container_window::class_data & wsh_panel_window::get_class_data() co
 		false, 
 		false, 
 		0, 
-		WS_CHILD, 
-		!get_pseudo_transparent() ? edge_style_from_config(get_edge_style()) : 0,
-		CS_DBLCLKS,
+		WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 
+		edge_style_from_config(get_edge_style()),
+		CS_DBLCLKS /*| CS_VREDRAW | CS_HREDRAW*/,
 		true, true, true, IDC_ARROW
 	};
 
@@ -1152,10 +1171,12 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	{
 	case WM_CREATE:
 		{
+			RECT rect;
 			m_hwnd = hwnd;
 			m_hdc = GetDC(m_hwnd);
-			m_width  = ((CREATESTRUCT*)lp)->cx;
-			m_height = ((CREATESTRUCT*)lp)->cy;
+			GetClientRect(m_hwnd, &rect);
+			m_width  = rect.right - rect.left;
+			m_height = rect.bottom - rect.top;
 
 			create_context();
 
@@ -1206,7 +1227,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case WM_PAINT:
 		{
-			if (get_pseudo_transparent() && m_bk_updating)
+			if (m_suppress_drawing)
 				break;
 
 			if (get_pseudo_transparent() && !m_paint_pending)
@@ -1238,13 +1259,17 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case WM_SIZE:
-		on_size(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+		{
+			RECT rect;
+			GetClientRect(m_hwnd, &rect);
 
-		if (get_pseudo_transparent())
-			PostMessage(m_hwnd, UWM_REFRESHBK, 0, 0);
-		else
-			Repaint();
+			on_size(rect.right - rect.left, rect.bottom - rect.top);
 
+			if (get_pseudo_transparent())
+				PostMessage(m_hwnd, UWM_REFRESHBK, 0, 0);
+			else
+				Repaint();
+		}
 		return 0;
 
 	case WM_GETMINMAXINFO:
@@ -2173,10 +2198,9 @@ HWND wsh_panel_window_cui::create_or_transfer_window(HWND parent, const uie::win
 	{
 		ShowWindow(m_hwnd, SW_HIDE);
 		SetParent(m_hwnd, parent);
+		SetWindowPos(m_hwnd, NULL, p_position.x, p_position.y, p_position.cx, p_position.cy, SWP_NOZORDER);
 		m_host->relinquish_ownership(m_hwnd);
 		m_host = host;
-
-		SetWindowPos(m_hwnd, NULL, p_position.x, p_position.y, p_position.cx, p_position.cy, SWP_NOZORDER);
 	}
 	else
 	{

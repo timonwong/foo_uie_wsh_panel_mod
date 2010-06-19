@@ -67,8 +67,6 @@ LRESULT CDialogConf::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 	uButton_SetCheck(m_hWnd, IDC_CHECK_GRABFOCUS, m_parent->get_grab_focus());
 	uButton_SetCheck(m_hWnd, IDC_CHECK_PSEUDO_TRANSPARENT, m_parent->get_pseudo_transparent());
 
-	::EnableWindow(combo_edge_style, !m_parent->get_pseudo_transparent());
-
 	// GUID Text
 	pfc::string8 guid_text = "GUID: ";
 	guid_text += pfc::print_guid(m_parent->get_config_guid());
@@ -299,12 +297,6 @@ bool CDialogConf::MatchShortcuts(unsigned vk)
 	}
 
 	return false;
-}
-
-LRESULT CDialogConf::OnCheckPseudoTransparentBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl)
-{
-	::EnableWindow(GetDlgItem(IDC_EDGE_STYLE), !uButton_GetCheck(m_hWnd, IDC_CHECK_PSEUDO_TRANSPARENT));
-	return 0;
 }
 
 LRESULT CDialogConf::OnScnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

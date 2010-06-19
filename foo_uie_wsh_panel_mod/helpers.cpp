@@ -99,6 +99,67 @@ namespace helpers
 		}
 	}
 
+	static bool match_mainmenu_command(const pfc::string_base & command, const char * p_name, t_size p_name_len) 
+	{
+		if (p_name_len == command.get_length())
+		{
+			if (_stricmp(p_name, command) == 0)
+				return true;
+		}
+		else if (p_name_len < command.get_length())
+		{
+			if ((command[command.get_length() - p_name_len - 1] == '/') &&
+				(_stricmp(command.get_ptr() + command.get_length() - p_name_len, p_name) == 0))
+				return true;
+		}
+
+		return false;
+	}
+
+	static bool execute_mainmenu_command_recur_v2(mainmenu_node::ptr node, pfc::string8_fast path, const char * p_name, t_size p_name_len)
+	{
+		pfc::string8_fast text;
+		t_uint32 flags;
+		t_uint32 type = node->get_type();
+
+		if (type != mainmenu_node::type_separator)
+		{
+			node->get_display(text, flags);
+			if (!text.is_empty())
+				path.add_string(text);
+		}
+
+		switch (type) 
+		{
+		case mainmenu_node::type_command:
+			{
+				if (match_mainmenu_command(path, p_name, p_name_len)) 
+				{
+					node->execute(NULL); 
+					return true;
+				}
+			}
+			break;
+
+		case mainmenu_node::type_group:
+			{
+				if (!text.is_empty())
+					path.add_char('/');
+
+				for(t_size i = 0; i < node->get_children_count(); ++i) 
+				{
+					mainmenu_node::ptr child = node->get_child(i);
+
+					if (execute_mainmenu_command_recur_v2(child, path, p_name, p_name_len)) 
+						return true;
+				}
+			}
+			break;
+		}
+
+		return false;
+	}
+
 	bool execute_mainmenu_command_by_name(const char * p_name)
 	{
 		// First generate a map of all mainmenu_group
@@ -108,15 +169,14 @@ namespace helpers
 		// Second, generate a list of all mainmenu commands
 		service_enum_t<mainmenu_commands> e;
 		service_ptr_t<mainmenu_commands> ptr;
-		t_size len = strlen(p_name);
+		t_size name_len = strlen(p_name);
 
 		while (e.next(ptr))
 		{
 			for (t_uint32 idx = 0; idx < ptr->get_command_count(); ++idx)
 			{
 				GUID group_guid = ptr->get_parent();
-				pfc::string8_fast command;
-				ptr->get_name(idx, command);
+				pfc::string8_fast path;
 
 				while (group_guid_text_map.have_item(group_guid))
 				{
@@ -127,30 +187,42 @@ namespace helpers
 					{
 						pfc::string8_fast temp;
 						group_popup_ptr->get_display_string(temp);
-						temp.add_char('/');
-						temp += command;
-						command = temp;
+
+						if (!temp.is_empty())
+						{
+							temp.add_char('/');
+							temp.add_string(path);
+							path = temp;
+						}
 					}
 
 					group_guid = group_ptr->get_parent();
 				}
 
-				// command?
-				bool want_to_execute = false;
+				// for new fb2k1.0 commands
+				mainmenu_commands_v2::ptr v2_ptr;
 
-				if (len == command.get_length())
+				if (ptr->service_query_t(v2_ptr))
 				{
-					if (_stricmp(p_name, command) == 0)
-						want_to_execute = true;
-				}
-				else if (len < command.get_length())
-				{
-					if ((command[command.get_length() - len - 1] == '/') &&
-						(_stricmp(command.get_ptr() + command.get_length() - len, p_name) == 0))
-						want_to_execute = true;
+					if (v2_ptr->is_command_dynamic(idx))
+					{
+						mainmenu_node::ptr node = v2_ptr->dynamic_instantiate(idx);
+
+						if (execute_mainmenu_command_recur_v2(node, path, p_name, name_len))
+							return true;
+						else
+							continue;
+					}
 				}
 
-				if (want_to_execute)
+				// old commands
+				pfc::string8_fast command;
+				ptr->get_name(idx, command);
+				path.add_string(command);
+
+				console::info(path);
+
+				if (match_mainmenu_command(command, p_name, name_len))
 				{
 					ptr->execute(idx, NULL);
 					return true;

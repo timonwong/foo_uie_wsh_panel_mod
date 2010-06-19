@@ -24,7 +24,7 @@ struct StyleAndWords
 	bool IsSingleChar() { return words.length() == 1; }
 };
 
-// Forward declartion
+// forward declaration
 struct t_sci_prop_set;
 
 struct t_style_to_key_table

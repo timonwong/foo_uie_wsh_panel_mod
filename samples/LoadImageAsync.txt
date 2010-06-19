@@ -1,4 +1,10 @@
 // vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
+
+// Get a list of images from a folder contains pictures
+// ***NOTE***
+// You should configure the path before use.
+var g_image_list = utils.Glob("D:\\Pictures\\Wallpaper\\*.jpg").toArray();
+
 var ww = 0,
     wh = 0;
 var g_img = null;
@@ -6,9 +12,6 @@ var g_valid_tid = 0;
 
 // every 5 seconds.
 var g_timer = window.CreateTimerInterval(5000);
-
-// Get a list of images from a folder contains pictures
-var g_image_list = utils.Glob("D:\\Pictures\\Wallpaper\\*.jpg").toArray();
 
 load_random_image_async();
 

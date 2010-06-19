@@ -10,8 +10,6 @@ namespace helpers
 	extern bool find_context_command_recur(const char * p_command, pfc::string_base & p_path, contextmenu_node * p_parent, contextmenu_node *& p_out);
 	extern bool execute_context_command_by_name(const char * p_name, metadb_handle * p_handle = NULL);
 	extern bool execute_mainmenu_command_by_name(const char * p_name);
-	extern bool get_mainmenu_item_checked(const GUID & guid);
-	extern void set_mainmenu_item_checked(const GUID & guid, bool checked);
 
 	inline int get_text_width(HDC hdc, LPCTSTR text, int len)
 	{
@@ -312,5 +310,40 @@ namespace helpers
 	private:
 		HWND m_notify_hwnd;
 		_bstr_t m_path;
+	};
+	
+	// Taken from pfc::lores_timer
+	class mm_timer 
+	{
+	public:
+		void start() 
+		{
+			_start(timeGetTime());
+		}
+
+		double query() const 
+		{
+			return _query(timeGetTime());
+		}
+
+		double query_reset() 
+		{
+			t_uint32 time = timeGetTime();
+			double ret = _query(time);
+			_start(time);
+			return ret;
+		}
+	private:
+		void _start(t_uint32 p_time) {m_last_seen = m_start = p_time;}
+		double _query(t_uint32 p_time) const 
+		{
+			t_uint64 time = p_time;
+			if (time < (m_last_seen & 0xFFFFFFFF)) time += 0x100000000;
+			m_last_seen = (m_last_seen & 0xFFFFFFFF00000000) + time;
+			return (double)(m_last_seen - m_start) / 1000.0;
+		}
+
+		t_uint64 m_start;
+		mutable t_uint64 m_last_seen;
 	};
 }

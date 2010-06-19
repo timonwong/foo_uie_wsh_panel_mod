@@ -51,7 +51,6 @@ public:
 		COMMAND_ID_HANDLER_EX(IDC_RESET_CURRENT, OnResetCurrent)
 		COMMAND_ID_HANDLER_EX(IDC_IMPORT, OnImport)
 		COMMAND_ID_HANDLER_EX(IDC_EXPORT, OnExport)
-		COMMAND_HANDLER_EX(IDC_CHECK_PSEUDO_TRANSPARENT, BN_CLICKED, OnCheckPseudoTransparentBnClicked)
 		CHAIN_MSG_MAP(CDialogResize<CDialogConf>)
 		REFLECT_NOTIFICATIONS()
 	END_MSG_MAP()
@@ -80,6 +79,5 @@ public:
 	LRESULT OnExport(WORD wNotifyCode, WORD wID, HWND hWndCtl);
 	LRESULT OnNotify(int idCtrl, LPNMHDR pnmh);
 	LRESULT OnNCDestroy();
-	LRESULT OnCheckPseudoTransparentBnClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl);
 	LRESULT OnScnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };

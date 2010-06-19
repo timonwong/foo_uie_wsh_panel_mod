@@ -311,7 +311,7 @@ __interface IFbProfiler: IDispatch
 {
 	STDMETHOD(Reset)();
 	STDMETHOD(Print)();
-	[propget] STDMETHOD(Time)([out,retval] double * p);
+	[propget] STDMETHOD(Time)([out,retval] INT * p);
 };
 
 [
@@ -447,8 +447,8 @@ __interface IThemeManager: IDisposable
 __interface IFbWindow: IDispatch
 {
 	[propget] STDMETHOD(ID)([out,retval] UINT* p);
-	[propget] STDMETHOD(Width)([out,retval] UINT* p);
-	[propget] STDMETHOD(Height)([out,retval] UINT* p);
+	[propget] STDMETHOD(Width)([out,retval] INT* p);
+	[propget] STDMETHOD(Height)([out,retval] INT* p);
 	[propget] STDMETHOD(InstanceType)([out,retval] UINT* p);
 	[propget] STDMETHOD(MaxWidth)([out,retval] UINT* p);
 	[propput] STDMETHOD(MaxWidth)(UINT width);
