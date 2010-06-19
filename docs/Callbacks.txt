@@ -4,6 +4,7 @@
 function on_mouse_lbtn_down(x, y, mask) {}
 
 // [1.0.4] Updated: mask, see Flags.txt for more details
+// [1.3.6] NOTE: This callback will be suppressed while both VK_LSHIFT and VK_LWIN are pressed.
 function on_mouse_lbtn_up(x, y, mask) {}
 
 // [1.1.8] Added: mask, see Flags.txt for more details

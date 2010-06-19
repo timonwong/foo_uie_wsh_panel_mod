@@ -280,6 +280,7 @@ STDMETHODIMP FbWindow::get_InstanceType(UINT* p)
 {
 	TRACK_FUNCTION();
 
+	if (!p) return E_POINTER;
 	*p = m_host->GetInstanceType();
 	return S_OK;
 }
@@ -1136,7 +1137,7 @@ ui_helpers::container_window::class_data & wsh_panel_window::get_class_data() co
 		0, 
 		WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 
 		edge_style_from_config(get_edge_style()),
-		CS_DBLCLKS /*| CS_VREDRAW | CS_HREDRAW*/,
+		CS_DBLCLKS,
 		true, true, true, IDC_ARROW
 	};
 
@@ -1347,6 +1348,9 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			case WM_RBUTTONUP:
 				{
 					_variant_t result;
+
+					if (IsKeyPressed(VK_LSHIFT) && IsKeyPressed(VK_LWIN))
+						break;
 
 					if (SUCCEEDED(script_invoke_v(L"on_mouse_rbtn_up", args, _countof(args), &result)))
 					{
@@ -2198,9 +2202,10 @@ HWND wsh_panel_window_cui::create_or_transfer_window(HWND parent, const uie::win
 	{
 		ShowWindow(m_hwnd, SW_HIDE);
 		SetParent(m_hwnd, parent);
-		SetWindowPos(m_hwnd, NULL, p_position.x, p_position.y, p_position.cx, p_position.cy, SWP_NOZORDER);
 		m_host->relinquish_ownership(m_hwnd);
 		m_host = host;
+
+		SetWindowPos(m_hwnd, NULL, p_position.x, p_position.y, p_position.cx, p_position.cy, SWP_NOZORDER);
 	}
 	else
 	{

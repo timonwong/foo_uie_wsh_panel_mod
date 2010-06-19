@@ -220,7 +220,7 @@ namespace helpers
 				ptr->get_name(idx, command);
 				path.add_string(command);
 
-				if (match_mainmenu_command(command, p_name, name_len))
+				if (match_mainmenu_command(path, p_name, name_len))
 				{
 					ptr->execute(idx, NULL);
 					return true;

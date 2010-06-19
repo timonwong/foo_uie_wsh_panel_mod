@@ -1,5 +1,5 @@
 v1.3.6
-- ADD: Sample "LoadImageAsync.txt"
+- ADD: Sample "LoadImageAsync.txt".
 - FIX: Better handling for mainmenu commands in fb.RunMainMenuCommand().
 - CHG: Edge style can be used with pseudo transparent now.
 - CHG: Improved pseudo transparent handling while in a tab splitter.
