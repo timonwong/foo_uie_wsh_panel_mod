@@ -6,8 +6,28 @@
 
 namespace helpers
 {
+	static bool match_menu_command(const pfc::string_base & path, const char * command, t_size command_len = ~0)
+	{
+		if (command_len == ~0)
+			command_len = strlen(command);
+
+		if (command_len == path.get_length())
+		{
+			if (_stricmp(command, path) == 0)
+				return true;
+		}
+		else if (command_len < path.get_length())
+		{
+			if ((path[path.get_length() - command_len - 1] == '/') &&
+				(_stricmp(path.get_ptr() + path.get_length() - command_len, command) == 0))
+				return true;
+		}
+
+		return false;
+	}
+
 	// p_out must be NULL
-	bool find_context_command_recur(const char * p_command, pfc::string_base & p_path, contextmenu_node * p_parent, contextmenu_node *& p_out)
+	static bool find_context_command_recur(const char * p_command, pfc::string_base & p_path, contextmenu_node * p_parent, contextmenu_node *& p_out)
 	{
 		if (p_parent != NULL && p_parent->get_type() == contextmenu_item_node::TYPE_POPUP)
 		{
@@ -32,24 +52,10 @@ namespace helpers
 						break;
 
 					case contextmenu_item_node::TYPE_COMMAND:
-						if (_stricmp(path, p_command) == 0)
+						if (match_menu_command(path, p_command))
 						{
 							p_out = child;
 							return true;
-						}
-						else
-						{
-							t_size len_path = path.get_length();
-							t_size len_cmd = strlen(p_command);
-
-							if (len_path > len_cmd && path[len_path - len_cmd - 1] == '/')
-							{
-								if (_stricmp(path + (len_path - len_cmd), p_command) == 0)
-								{
-									p_out = child;
-									return true;
-								}
-							}
 						}
 						break;
 					}
@@ -87,7 +93,7 @@ namespace helpers
 		return false;
 	}
 
-	static void gen_mainmenu_group_map(pfc::map_t<GUID, mainmenu_group::ptr> & p_group_guid_text_map)
+	static void build_mainmenu_group_map(pfc::map_t<GUID, mainmenu_group::ptr> & p_group_guid_text_map)
 	{
 		service_enum_t<mainmenu_group> e;
 		service_ptr_t<mainmenu_group> ptr;
@@ -97,23 +103,6 @@ namespace helpers
 			GUID guid = ptr->get_guid();
 			p_group_guid_text_map.find_or_add(guid) = ptr;
 		}
-	}
-
-	static bool match_mainmenu_command(const pfc::string_base & command, const char * p_name, t_size p_name_len) 
-	{
-		if (p_name_len == command.get_length())
-		{
-			if (_stricmp(p_name, command) == 0)
-				return true;
-		}
-		else if (p_name_len < command.get_length())
-		{
-			if ((command[command.get_length() - p_name_len - 1] == '/') &&
-				(_stricmp(command.get_ptr() + command.get_length() - p_name_len, p_name) == 0))
-				return true;
-		}
-
-		return false;
 	}
 
 	static bool execute_mainmenu_command_recur_v2(mainmenu_node::ptr node, pfc::string8_fast path, const char * p_name, t_size p_name_len)
@@ -133,7 +122,7 @@ namespace helpers
 		{
 		case mainmenu_node::type_command:
 			{
-				if (match_mainmenu_command(path, p_name, p_name_len)) 
+				if (match_menu_command(path, p_name, p_name_len)) 
 				{
 					node->execute(NULL); 
 					return true;
@@ -164,7 +153,7 @@ namespace helpers
 	{
 		// First generate a map of all mainmenu_group
 		pfc::map_t<GUID, mainmenu_group::ptr> group_guid_text_map;
-		gen_mainmenu_group_map(group_guid_text_map);
+		build_mainmenu_group_map(group_guid_text_map);
 
 		// Second, generate a list of all mainmenu commands
 		service_enum_t<mainmenu_commands> e;
@@ -220,7 +209,7 @@ namespace helpers
 				ptr->get_name(idx, command);
 				path.add_string(command);
 
-				if (match_mainmenu_command(path, p_name, name_len))
+				if (match_menu_command(path, p_name, name_len))
 				{
 					ptr->execute(idx, NULL);
 					return true;
@@ -721,7 +710,7 @@ namespace helpers
 			// to upper first
 			string_upper multivalue_field_upper(p_multivalue_field);
 
-			pfc::splitStringSimple_toList(m_multivalue_fields, ";", multivalue_field_upper);
+			pfc::splitStringByChar(m_multivalue_fields, multivalue_field_upper, ';');
 		}
 	}
 
@@ -736,36 +725,36 @@ namespace helpers
 
 				p_info.meta_remove_field(iter->m_key);
 
-				if (!iter->m_value.is_empty())
+				if (iter->m_value.is_empty())
+					continue;
+
+				bool is_multival = false;
+
+				for (t_size idx = 0; idx < m_multivalue_fields.get_count(); ++idx)
 				{
-					bool is_multival = false;
-
-					for (t_size idx = 0; idx < m_multivalue_fields.get_count(); ++idx)
+					if (_stricmp(m_multivalue_fields.get_item(idx), iter->m_key.get_ptr()) == 0)
 					{
-						if (_stricmp(m_multivalue_fields.get_item(idx), iter->m_key.get_ptr()) == 0)
-						{
-							is_multival = true;
-							break;
-						}
+						is_multival = true;
+						break;
 					}
+				}
 
-					if (is_multival)
+				if (is_multival)
+				{
+					pfc::string_list_impl valuelist;
+
+					// Split values with ';'
+					pfc::splitStringByChar(valuelist, iter->m_value, ';');
+
+					for (t_size i = 0; i < valuelist.get_count(); ++i)
 					{
-						pfc::string_list_impl valuelist;
-
-						// *Split value with ";"*
-						pfc::splitStringSimple_toList(valuelist, ";", iter->m_value);
-
-						for (t_size i = 0; i < valuelist.get_count(); ++i)
-						{
-							p_info.meta_add(iter->m_key, valuelist[i]);
-						}
+						p_info.meta_add(iter->m_key, valuelist[i]);
 					}
-					else
-					{
-						// Not a multivalue field
-						p_info.meta_set(iter->m_key, iter->m_value);
-					}
+				}
+				else
+				{
+					// Not a multivalue field
+					p_info.meta_set(iter->m_key, iter->m_value);
 				}
 			}
 

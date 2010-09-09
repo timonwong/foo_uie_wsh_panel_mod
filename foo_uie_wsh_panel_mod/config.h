@@ -67,15 +67,15 @@ private:
 class wsh_panel_vars
 {
 private:
+	GUID m_config_guid;
+	WINDOWPLACEMENT m_wndpl;
+	prop_kv_config m_config_prop;
+	pfc::string8 m_script_engine;
+	pfc::string8 m_script_code;
+	t_edge_style m_edge_style;
 	bool m_disabled;
 	bool m_grab_focus;
 	bool m_pseudo_transparent;
-	WINDOWPLACEMENT m_wndpl;
-	pfc::string8  m_script_name;
-	pfc::string8  m_script_code;
-	prop_kv_config m_config_prop;
-	t_edge_style m_edge_style;
-	GUID m_config_guid;
 
 public:
 	wsh_panel_vars()
@@ -88,12 +88,12 @@ public:
 	void load_config(stream_reader * reader, t_size size, abort_callback & abort);
 	void save_config(stream_writer * writer, abort_callback & abort) const;
 
-	inline pfc::string_base& get_script_name()
+	inline pfc::string_base& get_script_engine()
 	{
-		return m_script_name;
+		return m_script_engine;
 	}
 
-	inline pfc::string_base & get_script_code()
+	inline pfc::string_base& get_script_code()
 	{
 		return m_script_code;
 	}
@@ -113,7 +113,7 @@ public:
 		return m_grab_focus;
 	}
 
-	inline WINDOWPLACEMENT & get_wndpl()
+	inline WINDOWPLACEMENT & get_windowplacement()
 	{
 		return m_wndpl;
 	}

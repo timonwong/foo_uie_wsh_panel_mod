@@ -1,3 +1,5 @@
+// vi:set ft=javascript ff=dos ts=4 sts=4 sw=4:
+
 // Flags, used with GdiDrawText()
 // For more information, see: http://msdn.microsoft.com/en-us/library/dd162498(VS.85).aspx
 DT_TOP = 0x00000000;
@@ -25,7 +27,7 @@ DT_NOFULLWIDTHCHARBREAK = 0x00080000;
 DT_HIDEPREFIX = 0x00100000;
 DT_PREFIXONLY = 0x00200000;
 
-// Used in AppendMenu()
+// Used in AppendMenuItem()
 // For more information, see: http://msdn.microsoft.com/en-us/library/ms647616(VS.85).aspx
 MF_SEPARATOR = 0x00000800;
 MF_ENABLED = 0x00000000;

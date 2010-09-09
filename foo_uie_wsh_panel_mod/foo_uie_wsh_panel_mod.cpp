@@ -11,11 +11,10 @@ ITypeLibPtr g_typelib;
 
 namespace
 {
-	// TODO: Change Version Number Every Time
 	DECLARE_COMPONENT_VERSION(
-		"WSH Panel Mod",
+		WSPM_NAME,
 		WSPM_VERSION_NUMBER,
-		"Windows Scripting Host Panel\n"
+		"Windows Scripting Host Panel Modded\n"
 		"Modded by T.P. Wang\n\n"
 		"Build: "  __TIME__ ", " __DATE__ "\n"
 		"Columns UI API Version: " UI_EXTENSION_VERSION "\n\n\n\n"
@@ -28,6 +27,8 @@ namespace
 		"CPropertyList - A Property List control\n"
 		"Copyright (c) 2001-2003 Bjarke Viksoe\n\n\n"
 	);
+
+	VALIDATE_COMPONENT_FILENAME("foo_uie_wsh_panel_mod.dll");
 
 	// Is there anything not correctly loaded?
 	enum t_load_status_error

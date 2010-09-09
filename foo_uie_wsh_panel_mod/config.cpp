@@ -5,19 +5,16 @@
 
 void wsh_panel_vars::get_default_script_code(pfc::string_base & out)
 {
+	out.reset();
 	puResource pures = uLoadResource(core_api::get_my_instance(), uMAKEINTRESOURCE(IDR_SCRIPT), "SCRIPT");
 
 	if (pures)
-	{
 		out.set_string(reinterpret_cast<const char *>(pures->GetPointer()), pures->GetSize());
-		return;
-	}
-	out.reset();
 }
 
 void wsh_panel_vars::reset_config()
 {
-	m_script_name = "JScript";
+	m_script_engine = "JScript";
 	get_default_script_code(m_script_code);
 	m_pseudo_transparent = false;
 	m_wndpl.length = 0;
@@ -63,7 +60,7 @@ void wsh_panel_vars::load_config(stream_reader * reader, t_size size, abort_call
 				reader->read_object(&m_wndpl, sizeof(m_wndpl), abort);
 
 			case VERSION_0x73:
-				reader->read_string(m_script_name, abort);
+				reader->read_string(m_script_engine, abort);
 				reader->read_string(m_script_code, abort);
 				reader->read_object_t(m_pseudo_transparent, abort);
 				have_read_config = true;
@@ -80,7 +77,7 @@ void wsh_panel_vars::load_config(stream_reader * reader, t_size size, abort_call
 		{
 			// Configuration corruputed or config version dismatch.
 			console::complain("WSH Panel Mod", 
-				"Error: Configuration need newer version of WSH Panel Mod or is corrupted");
+				"Error: Configuration needs newer version of WSH Panel Mod or is corrupted");
 		}
 	}
 }
@@ -100,7 +97,7 @@ void wsh_panel_vars::save_config(stream_writer * writer, abort_callback & abort)
 		writer->write_object_t(m_disabled, abort);
 		writer->write_object_t(m_grab_focus, abort);
 		writer->write_object(&m_wndpl, sizeof(m_wndpl), abort);
-		writer->write_string(m_script_name, abort);
+		writer->write_string(m_script_engine, abort);
 		writer->write_string(m_script_code, abort);
 		writer->write_object_t(m_pseudo_transparent, abort);
 	}

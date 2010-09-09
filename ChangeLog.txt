@@ -1,3 +1,11 @@
+v1.3.7
+- ADD: Readonly window.IsVisible property.
+- ADD: Directives @name, @version and @author to preprocessors.
+- ADD: dir.profile variable in editor properties.
+- CHG: dir.component and fb.ComponentPath now return the actual directory where the foo_uie_wsh_panel_mod.dll is located.
+- FIX: Glitch in UpdateFileInfoSimple() which may update fileds with same name more than once.
+- FIX: Typos.
+
 v1.3.6
 - ADD: Sample "LoadImageAsync.txt".
 - FIX: Better handling for mainmenu commands in fb.RunMainMenuCommand().

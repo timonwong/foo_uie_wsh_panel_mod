@@ -7,7 +7,6 @@
 #include "ui_conf.h"
 #include "ui_property.h"
 #include "user_message.h"
-#include "script_preprocessor.h"
 #include "popup_msg.h"
 #include "dbgtrace.h"
 
@@ -51,9 +50,10 @@ namespace
 }
 
 
-HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_bmp(NULL), m_suppress_drawing(false), 
-	m_paint_pending(false), m_accuracy(0), m_script_state(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false), 
-	m_instance_type(KInstanceTypeCUI), m_dlg_code(0)
+HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_bmp(NULL), 
+	m_suppress_drawing(false), m_paint_pending(false), m_accuracy(0), 
+	m_script_state(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false), 
+	m_instance_type(KInstanceTypeCUI), m_dlg_code(0), m_script_info(get_config_guid())
 {
 	m_max_size.x = INT_MAX;
 	m_max_size.y = INT_MAX;
@@ -386,6 +386,16 @@ STDMETHODIMP FbWindow::get_IsTransparent(VARIANT_BOOL* p)
 	if (!p) return E_POINTER;
 
 	*p = TO_VARIANT_BOOL(m_host->get_pseudo_transparent());
+	return S_OK;
+}
+
+STDMETHODIMP FbWindow::get_IsVisible(VARIANT_BOOL* p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = TO_VARIANT_BOOL(IsWindowVisible(m_host->GetHWND()));
 	return S_OK;
 }
 
@@ -834,10 +844,10 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 		if (excep.pfnDeferredFillIn)
 			(*excep.pfnDeferredFillIn)(&excep);
 
-		pfc::stringcvt::string_os_from_utf8 guid_str(pfc::print_guid(m_host->GetGUID()));
-
-		StringCbPrintf(buf, sizeof(buf), _T("WSH Panel Mod (GUID: %s): %s:\n%s\nLn: %d, Col: %d\n%s\n"),
-			guid_str.get_ptr(), excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, static_cast<const wchar_t *>(sourceline));
+		StringCbPrintf(buf, sizeof(buf), _T("WSH Panel Mod (%s): %s:\n%s\nLn: %d, Col: %d\n%s\n"),
+			pfc::stringcvt::string_wide_from_utf8(m_host->GetScriptInfo().build_info_string()).get_ptr(), 
+			excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, 
+			static_cast<const wchar_t *>(sourceline));
 
 		m_host->OnScriptError(buf);
 
@@ -893,7 +903,7 @@ void wsh_panel_window::update_script(const char * name /*= NULL*/, const char * 
 {
 	if (name && code)
 	{
-		get_script_name() = name;
+		get_script_engine() = name;
 		get_script_code() = code;
 	}
 
@@ -909,10 +919,12 @@ HRESULT wsh_panel_window::script_pre_init()
 
 	HRESULT hr = S_OK;
 	IActiveScriptParsePtr parser;
-	pfc::stringcvt::string_wide_from_utf8_fast wname(get_script_name());
+	pfc::stringcvt::string_wide_from_utf8_fast wname(get_script_engine());
 	pfc::stringcvt::string_wide_from_utf8_fast wcode(get_script_code());
 	// Load preprocessor module
-	script_preprocessor preprocessor(wcode.get_ptr(), get_config_guid());
+	script_preprocessor preprocessor(wcode.get_ptr());
+	
+	preprocessor.process_script_info(GetScriptInfo());
 
 	if (SUCCEEDED(hr)) hr = m_script_engine.CreateInstance(wname.get_ptr(), NULL, CLSCTX_ALL);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptSite(&m_script_site);
@@ -939,7 +951,7 @@ HRESULT wsh_panel_window::script_pre_init()
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
 	// processing "@import"
-	if (SUCCEEDED(hr)) hr = preprocessor.process_import(parser);
+	if (SUCCEEDED(hr)) hr = preprocessor.process_import(GetScriptInfo(), parser);
 	if (SUCCEEDED(hr)) hr = parser->ParseScriptText(wcode.get_ptr(), NULL, NULL, NULL, NULL, 0, SCRIPTTEXT_ISVISIBLE, NULL, NULL);
 
 	return hr;
@@ -984,11 +996,11 @@ bool wsh_panel_window::script_init()
 		pfc::string_simple win32_error_msg = format_win32_error(hr);
 		pfc::string_formatter msg_formatter;
 
-		msg_formatter << "Scripting Engine Initialization Failed (GUID: "
-			<< pfc::print_guid(get_config_guid()) << ", CODE: 0x" 
+		msg_formatter << "Scripting Engine Initialization Failed ("
+			<< GetScriptInfo().build_info_string() << ", CODE: 0x" 
 			<< pfc::format_hex_lowercase((unsigned)hr);
 
-		if (hr != E_UNEXPECTED && hr != _HRESULT_TYPEDEF_(0x80020101L))
+		if (hr != E_UNEXPECTED && hr != _HRESULT_TYPEDEF_(0x80020101L) && hr != _HRESULT_TYPEDEF_(0x86664004L))
 		{
 			msg_formatter << "): " << win32_error_msg;
 		}
@@ -1006,9 +1018,9 @@ bool wsh_panel_window::script_init()
 	//create_context();
 
 	// Show init message
-	console::formatter() << "WSH Panel Mod (GUID: " 
-		<< pfc::print_guid(get_config_guid()) 
-		<< "): initliased in "
+	console::formatter() << "WSH Panel Mod (" 
+		<< GetScriptInfo().build_info_string()
+		<< "): initialized in "
 		<< (int)(timer.query() * 1000)
 		<< " ms";
 
@@ -1076,7 +1088,8 @@ HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, VARIANTARG * argv /*= N
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("WSH Panel Mod (GUID: %s): Unhandled C++ Exception: \"%s\", will crash now...", guid.get_ptr(), e.what());
+			console::printf("WSH Panel Mod (%s): Unhandled C++ Exception: \"%s\", will crash now...", 
+				GetScriptInfo().build_info_string().get_ptr(), e.what());
 			PRINT_DISPATCH_TRACK_MESSAGE();
 			// breakpoint
 			__debugbreak();
@@ -1085,7 +1098,8 @@ HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, VARIANTARG * argv /*= N
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("WSH Panel Mod (GUID: %s): Unhandled Unknown Exception, will crash now...", guid.get_ptr());
+			console::printf("WSH Panel Mod (%s): Unhandled Unknown Exception, will crash now...", 
+				GetScriptInfo().build_info_string().get_ptr());
 			PRINT_DISPATCH_TRACK_MESSAGE();
 			// breakpoint
 			__debugbreak();
@@ -1513,8 +1527,8 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		get_disabled() = true;
 		script_stop();
 
-		popup_msg::g_show(pfc::string_formatter() << "Script terminated due to the panel (GUID: " 
-			<< pfc::print_guid(get_config_guid())
+		popup_msg::g_show(pfc::string_formatter() << "Script terminated due to the panel (" 
+			<< GetScriptInfo().build_info_string()
 			<< ") seems to be unresponsive, "
 			<< "please check your script (usually infinite loop).", 
 			"WSH Panel Mod", popup_message::icon_error);
@@ -1539,8 +1553,8 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case UWM_SCRIPT_DISABLE:
 		// Show error message
 		popup_msg::g_show(pfc::string_formatter() 
-			<< "Panel (GUID: "
-			<< pfc::print_guid(get_config_guid()) 
+			<< "Panel ("
+			<< GetScriptInfo().build_info_string()
 			<< "): Refuse to load script due to critical error last run,"
 			<< " please check your script and apply it again.",
 			"WSH Panel Mod", 

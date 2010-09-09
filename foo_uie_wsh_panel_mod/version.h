@@ -1,6 +1,8 @@
 #pragma once
 
-#define WSPM_VERSION_NUMBER_MAIN "1.3.6"
+// TODO: Change Version Number Every Time
+#define WSPM_VERSION_NUMBER_MAIN "1.3.7"
+#define WSPM_NAME "WSH Panel Mod" 
 #define WSPM_TEST_VERSION 0
 
 #ifdef _DEBUG

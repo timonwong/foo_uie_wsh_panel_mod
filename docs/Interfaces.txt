@@ -1,4 +1,6 @@
-﻿interface IGdiFont {
+﻿// vi:set ft=javascript ff=dos ts=4 sts=4 sw=4:
+
+interface IGdiFont {
 Properties:
 	(readonly) int Height;
 Methods:
@@ -15,10 +17,11 @@ Methods:
 	IGdiBitmap Clone(x, y, w, h);
 	void RotateFlip(mode);
 	IGdiBitmap ApplyAlpha(alpha);
-	// [1.1.10] New: mask is the bitmap as in Photoshop
-	// Changes will be saved in current bitmap
+	// [1.1.10] New:
+	// Changes will be saved in the current bitmap
 	boolean ApplyMask(IGdiBitmap);
-	IGdiRawBitmap CreateRawBitmap(); // Create a DDB bitmap from IGdiBitmap, which is used in GdiDrawBitmap()
+	// Create a DDB bitmap from IGdiBitmap, which is used in GdiDrawBitmap()
+	IGdiRawBitmap CreateRawBitmap();
 	// NOTE: Don't forget to use ReleaseGraphics() after operations on IGdiGraphics interface is done.
 	IGdiGraphics GetGraphics();
 	void ReleaseGraphics(IGdiGraphics);
@@ -71,12 +74,17 @@ Methods:
 	//   [2] right  (DT_CALCRECT)
 	//   [3] bottom (DT_CALCRECT)
 	//   [4] characters drawn
-	VBArray GdiDrawText(str, IGdiFont, color, x, y, w, h, format = 0); // Always faster than DrawString and returns chars drawed
+	// Always faster than DrawString and returns chars drawed
+	VBArray GdiDrawText(str, IGdiFont, color, x, y, w, h, format = 0); 
 	void DrawImage(IGdiBitmap, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH, angle = 0, alpha = 255);
-	void GdiDrawBitmap(IGdiRawBitmap, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH); // Always faster than DrawImage, do not support alpha channel
+	// Always faster than DrawImage, do not support alpha channel
+	void GdiDrawBitmap(IGdiRawBitmap, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH);
+	// Used with GDI+ functions, such as DrawString().
 	IMeasureStringInfo MeasureString(str, IGdiFont, x, y, w, h, flags = 0);
+	// Used with GDI functions, such as GdiDrawText().
 	unsigned int CalcTextWidth(str, IGdiFont);
 	// [1.3.5] New:
+	// Note that it will only calulate one line text height.
 	unsigned int CalcTextHeight(str, IGdiFont);
 	// [1.3.5] New:
 	// Returns a VBArray
@@ -91,8 +99,11 @@ Methods:
 	//   [2n + 2] text line n
 	//   [2n + 3] width of text line n (in pixel)
 	VBArray EstimateLineWrap(str, IGdiFont, max_width);
+	// See Flags.txt meanings of modes.
 	void SetTextRenderingHint(mode);
+	// See Flags.txt meanings of modes.
 	void SetSmoothingMode(mode);
+	// See Flags.txt meanings of modes.
 	void SetInterpolationMode(mode);
 	// [1.1.10] New:
 	void GdiAlphaBlend(IGdiRawBitmap, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH, alpha = 255);
@@ -210,7 +221,9 @@ Methods:
 interface IFbTitleFormat {
 Methods:
 	// [1.1.2] Updated:
-	// force: when true, Eval() will always return a value from a random handle
+	// By default, return a valid value if there is current playing track.
+	// force: while true, Eval() will always return a valid value even there is no current playing track, useful for
+	//  non-track specified title formatting strings.
 	String Eval(force = false);
 	// [1.1.0] New:
 	String EvalWithMetadb(IFbMetadbHandle);
@@ -224,8 +237,10 @@ Properties:
 	(readonly) unsigned int ID;
 
 Methods:
+	// flags: see Flags.txt.
 	void AppendMenuItem(flags, item_id, text);
-	void AppendMenuSeparator();
+	// Same as AppendMenuItem()
+	void AppendMenuSeparator(MF_SEPARATOR,..,..);
 	// [1.3.2] Changed:
 	// Add bypos parameter.
 	void EnableMenuItem(id_or_pos, enable, bypos = false);
@@ -436,6 +451,8 @@ Properties:
 	(read, write) int DlgCode;
 	// [1.3.3] New:
 	(readonly) boolean IsTransparent;
+	// [1.3.7] New:
+	(readonly) boolean IsVisible;
 
 Methods:
 	void Repaint(force = false);

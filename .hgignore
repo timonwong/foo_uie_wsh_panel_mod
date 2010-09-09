@@ -5,6 +5,21 @@ syntax: glob
 .git
 CVS
 
+*.o
+*.a
+*.obj
+*.pyc
+*.dll
+*.exp
+*.pdb
+*.res
+*.bak
+*.sbr
+*.idb
+*.ilk
+*.opt
+*.plg
+
 *.swp
 *.ncb
 *.suo
@@ -16,6 +31,7 @@ vc*.tlb
 *.sdf
 *.tlog
 *.old
+*.lib
 
 dist/
 ipch/

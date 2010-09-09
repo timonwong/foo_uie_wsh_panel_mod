@@ -125,7 +125,7 @@ __interface IGdiGraphics: IGdiObj
 
 	STDMETHOD(DrawString)(BSTR str, IGdiFont* font, DWORD color, float x, float y, float w, float h, [defaultvalue(0)] DWORD flags);
 	STDMETHOD(GdiDrawText)(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, [defaultvalue(0)] DWORD format, [out,retval] VARIANT * p);
-	STDMETHOD(DrawImage)(IGdiBitmap* image, float dstX, float dstY, float dstW, float dstH, float srcX, float srcY, float srcW, float srcH, [defaultvalue(0)]float angle, [defaultvalue(255)]BYTE alpha);
+	STDMETHOD(DrawImage)(IGdiBitmap* image, float dstX, float dstY, float dstW, float dstH, float srcX, float srcY, float srcW, float srcH, [defaultvalue(0.0)]float angle, [defaultvalue(255)]BYTE alpha);
 	STDMETHOD(GdiDrawBitmap)(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH);
 	STDMETHOD(GdiAlphaBlend)(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, [defaultvalue(255)]BYTE alpha);
 	//STDMETHOD(GdiTransparentBlt)(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, DWORD color);
@@ -461,6 +461,7 @@ __interface IFbWindow: IDispatch
 	[propget] STDMETHOD(DlgCode)([out,retval] UINT* p);
 	[propput] STDMETHOD(DlgCode)(UINT code);
 	[propget] STDMETHOD(IsTransparent)([out,retval] VARIANT_BOOL* p);
+	[propget] STDMETHOD(IsVisible)([out,retval] VARIANT_BOOL* p);
 	STDMETHOD(Repaint)([defaultvalue(0)] VARIANT_BOOL force);
 	STDMETHOD(RepaintRect)(UINT x, UINT y, UINT w, UINT h, [defaultvalue(0)] VARIANT_BOOL force);
 	STDMETHOD(CreatePopupMenu)([out,retval] IMenuObj ** pp);

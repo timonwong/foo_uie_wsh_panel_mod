@@ -22,16 +22,16 @@ LRESULT CDialogConf::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 	DlgResize_Init();
 
 	// Apply window placement
-	if (m_parent->get_wndpl().length == 0)
+	if (m_parent->get_windowplacement().length == 0)
 	{
-		m_parent->get_wndpl().length = sizeof(WINDOWPLACEMENT);
+		m_parent->get_windowplacement().length = sizeof(WINDOWPLACEMENT);
 
-		if (!GetWindowPlacement(&m_parent->get_wndpl()))
-			memset(&m_parent->get_wndpl(), 0, sizeof(WINDOWPLACEMENT));
+		if (!GetWindowPlacement(&m_parent->get_windowplacement()))
+			memset(&m_parent->get_windowplacement(), 0, sizeof(WINDOWPLACEMENT));
 	}
 	else
 	{
-		SetWindowPlacement(&m_parent->get_wndpl());
+		SetWindowPlacement(&m_parent->get_windowplacement());
 	}
 
 	// Script Engine
@@ -40,7 +40,7 @@ LRESULT CDialogConf::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 	ComboBox_AddString(combo_script_engine, _T("JScript"));
 	ComboBox_AddString(combo_script_engine, _T("VBScript"));
 
-	if (!uComboBox_SelectString(combo_script_engine, m_parent->get_script_name()))
+	if (!uComboBox_SelectString(combo_script_engine, m_parent->get_script_engine()))
 		ComboBox_SetCurSel(combo_script_engine, 0);
 
 	// Edge Style
@@ -148,7 +148,7 @@ LRESULT CDialogConf::OnResetCurrent(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 {
 	HWND combo = GetDlgItem(IDC_SCRIPT_ENGINE);
 
-	uComboBox_SelectString(combo, m_parent->get_script_name());			
+	uComboBox_SelectString(combo, m_parent->get_script_engine());			
 	m_editorctrl.SetContent(m_parent->get_script_code());
 	return 0;
 }
@@ -207,7 +207,7 @@ void CDialogConf::Apply()
 	m_parent->update_script(name, code.get_ptr());
 
 	// Wndow position
-	GetWindowPlacement(&m_parent->get_wndpl());
+	GetWindowPlacement(&m_parent->get_windowplacement());
 
 	// Save point
 	m_editorctrl.SetSavePoint();

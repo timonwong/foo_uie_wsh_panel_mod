@@ -14,18 +14,35 @@ DESCRIPTION
 
 DIRECTIVES
   Directives should be started with "@", and placed into a single comment.
-
-  @import "path"
+  e.g:
     VBScript:
       ' // ==PREPROCESSOR==
-      ' // @import "path"
+      ' // @directive "path"
       ' // ==/PREPROCESSOR==
 
     JScript:
       // ==PREPROCESSOR==
-      // @import "path"
+      // @directive "path"
       // ==/PREPROCESSOR==
 
-    Remarks:
-      You can place %fb2k_path%, %fb2k_component_path% and %fb2k_profile_path% into "path", they will be expanded while parsing.
-      Escape one double quote (") with two double quotes ("") if path includes double quote(") character. eg: @import "D:\""Something"""
+  @import "path"
+  Load external script from "path".
+  Remarks:
+    You can place %fb2k_path%, %fb2k_component_path% and %fb2k_profile_path% into "path", they will be expanded while parsing.
+    Escape one double quote (") with two double quotes ("") if path includes double quote(") character. eg: @import "D:\""Something"""
+
+  @name "name"
+  Set name of the script.
+  Remarks:
+    Escape one double quote (") with two double quotes ("") if name includes double quote(") character. eg: @name "One aka ""1"""
+
+  @version "version"
+  Set version of the script.
+  Remarks:
+    Escape one double quote (") with two double quotes ("") if name includes double quote(") character. 
+
+  @author "author"
+  Set author of the script.
+  Remarks:
+    Escape one double quote (") with two double quotes ("") if name includes double quote(") character. 
+

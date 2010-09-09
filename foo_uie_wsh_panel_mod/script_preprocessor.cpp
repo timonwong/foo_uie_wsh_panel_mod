@@ -1,9 +1,10 @@
 #include "stdafx.h"
+#include "config.h"
 #include "script_preprocessor.h"
 #include "helpers.h"
 
 
-HRESULT script_preprocessor::process_import(IActiveScriptParse * parser)
+HRESULT script_preprocessor::process_import(const t_script_info & info, IActiveScriptParse * parser)
 {
 	HRESULT hr = S_OK;
 
@@ -22,7 +23,7 @@ HRESULT script_preprocessor::process_import(IActiveScriptParse * parser)
 			bool is_file_read = helpers::read_file_wide(v.value.get_ptr(), code);
 			pfc::string_formatter msg;
 
-			msg << "WSH Panel Mod (GUID: " << m_guidstr << "): "
+			msg << "WSH Panel Mod (" << info.build_info_string() << "): "
 				<< "Parsing file \"" << pfc::stringcvt::string_utf8_from_wide(v.value.get_ptr())
 				<< "\"";
 
@@ -45,6 +46,39 @@ HRESULT script_preprocessor::process_import(IActiveScriptParse * parser)
 	}
 
 	return hr;
+}
+
+bool script_preprocessor::process_script_info(t_script_info & info)
+{
+	bool ret = false;
+
+	info.clear();
+	if (!m_is_ok) return ret;
+
+	for (t_size i = 0; i < m_directive_value_list.get_count(); ++i)
+	{
+		t_directive_value & v = m_directive_value_list[i];
+		expand_var(v.value);
+		pfc::string_simple value = pfc::stringcvt::string_utf8_from_wide(v.value.get_ptr());
+
+		if (wcscmp(v.directive.get_ptr(), L"name") == 0)
+		{
+			ret = true;
+			info.name = value;
+		}
+		else if (wcscmp(v.directive.get_ptr(), L"version") == 0)
+		{
+			ret = true;
+			info.version = value;
+		}
+		else if (wcscmp(v.directive.get_ptr(), L"author") == 0)
+		{
+			ret = true;
+			info.author = value;
+		}
+	}
+
+	return ret;
 }
 
 bool script_preprocessor::preprocess(const wchar_t * script)

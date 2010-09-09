@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\include\scintilla"
+				AdditionalIncludeDirectories="..\scintilla\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;FOO_UIE_WSH_PANEL_EXPORTS"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
@@ -63,9 +63,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GdiPlus.lib shared.lib shlwapi.lib WinMM.lib SciLexerD.lib Imm32.lib uxtheme.lib"
+				AdditionalDependencies="GdiPlus.lib shared.lib shlwapi.lib WinMM.lib Imm32.lib uxtheme.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../../shared;../lib"
+				AdditionalLibraryDirectories="../../shared"
 				DelayLoadDLLs="uxtheme.dll"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
@@ -126,7 +126,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\include\scintilla"
+				AdditionalIncludeDirectories="..\scintilla\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;FOO_UIE_WSH_PANEL_EXPORTS;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -149,9 +149,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="GdiPlus.lib shared.lib shlwapi.lib WinMM.lib SciLexer.lib Imm32.lib uxtheme.lib"
+				AdditionalDependencies="GdiPlus.lib shared.lib shlwapi.lib WinMM.lib Imm32.lib uxtheme.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../shared;../lib"
+				AdditionalLibraryDirectories="../../shared"
 				DelayLoadDLLs=""
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -358,6 +358,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SString.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
@@ -504,7 +508,7 @@
 	<Globals>
 		<Global
 			Name="RESOURCE_FILE"
-			Value="resource.rc"
+			Value="res\resource.rc"
 		/>
 	</Globals>
 </VisualStudioProject>

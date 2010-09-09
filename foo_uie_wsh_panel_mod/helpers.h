@@ -7,7 +7,6 @@
 
 namespace helpers
 {
-	extern bool find_context_command_recur(const char * p_command, pfc::string_base & p_path, contextmenu_node * p_parent, contextmenu_node *& p_out);
 	extern bool execute_context_command_by_name(const char * p_name, metadb_handle * p_handle = NULL);
 	extern bool execute_mainmenu_command_by_name(const char * p_name);
 
@@ -146,22 +145,12 @@ namespace helpers
 	HRESULT get_album_art_v2(const metadb_handle_ptr & handle, IGdiBitmap ** pp, int art_id, VARIANT_BOOL need_stub, VARIANT_BOOL no_load = VARIANT_FALSE, pfc::string_base * image_path_ptr = NULL);
 	HRESULT get_album_art_embedded(BSTR rawpath, IGdiBitmap ** pp, int art_id);
 
-	static bool get_is_vista_or_later()
+	inline bool is_vista()
 	{
 		// Get OS version
-		static DWORD dwMajorVersion = 0;
-
-		if (!dwMajorVersion)
-		{
-			OSVERSIONINFO osvi = { 0 };
-
-			osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-
-			if (GetVersionEx(&osvi))
-				dwMajorVersion = osvi.dwMajorVersion;
-		}
-
-		return (dwMajorVersion >= 6);
+		OSVERSIONINFO ovi = { sizeof(OSVERSIONINFO) };
+		BOOL bRet = ::GetVersionEx(&ovi);
+		return ((bRet != FALSE) && (ovi.dwMajorVersion >= 6));
 	}
 
 	static pfc::string8_fast get_fb2k_path()
@@ -179,10 +168,9 @@ namespace helpers
 	{
 		pfc::string8_fast path;
 
-		uGetModuleFileName(NULL, path);
+		uGetModuleFileName(core_api::get_my_instance(), path);
 		path = pfc::string_directory(path);
-		path.add_string("\\components\\");
-
+		path.add_char('\\');
 		return path;
 	}
 
@@ -206,7 +194,8 @@ namespace helpers
 	class file_info_pairs_filter : public file_info_filter
 	{
 	public:
-		typedef pfc::map_t<pfc::string_simple, pfc::string_simple> t_field_value_map;
+		typedef pfc::map_t<pfc::string_simple, pfc::string_simple, 
+			file_info::field_name_comparator> t_field_value_map;
 
 	private:
 		metadb_handle_ptr m_handle;

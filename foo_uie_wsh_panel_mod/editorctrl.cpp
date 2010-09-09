@@ -61,7 +61,7 @@ const t_style_to_key_table vbs_style_table[] =
 
 static bool IsSymIncludes(const StyleAndWords & symbols, const SString value) 
 {
-	if (symbols.words.length() == 0) 
+	if (symbols.IsEmpty()) 
 	{
 		return false;
 	} 
@@ -947,6 +947,7 @@ void CScriptEditorCtrl::Init()
 	// Set embeded properties
 	SetProperty("dir.base", helpers::get_fb2k_path());
 	SetProperty("dir.component", helpers::get_fb2k_component_path());
+	SetProperty("dir.profile", helpers::get_profile_path());
 
 	// Load properties
 	LoadProperties(g_sci_prop_sets.val());

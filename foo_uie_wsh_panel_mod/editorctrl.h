@@ -20,8 +20,8 @@ struct StyleAndWords
 {
 	int styleNumber;
 	SString words;
-	bool IsEmpty() { return words.length() == 0; }
-	bool IsSingleChar() { return words.length() == 1; }
+	bool IsEmpty() const { return words.length() == 0; }
+	bool IsSingleChar() const { return words.length() == 1; }
 };
 
 // forward declaration

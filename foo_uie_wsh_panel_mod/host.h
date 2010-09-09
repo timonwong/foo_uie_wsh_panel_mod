@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include "script_preprocessor.h"
 #include "script_interface_impl.h"
 #include "config.h"
 
@@ -11,6 +11,13 @@ _COM_SMARTPTR_TYPEDEF(IActiveScriptParse, IID_IActiveScriptParse);
 
 class HostComm : public wsh_panel_vars
 {
+public:
+	enum 
+	{
+		KInstanceTypeCUI = 0,
+		KInstanceTypeDUI,
+	};
+
 protected:
 	HWND              m_hwnd;
 	INT               m_width;
@@ -21,28 +28,22 @@ protected:
 	HDC               m_hdc;
 	HBITMAP           m_gr_bmp;
 	HBITMAP           m_gr_bmp_bk;
-	bool              m_suppress_drawing;
-	bool              m_paint_pending;
 	UINT              m_accuracy;
 	metadb_handle_ptr m_watched_handle;
-
+	t_script_info m_script_info;
 	ui_selection_holder::ptr m_selection_holder;
-
 	IActiveScriptPtr  m_script_engine;
 	IDispatchPtr      m_script_root;
 	SCRIPTSTATE       m_script_state;
-	bool              m_query_continue;
 	int               m_instance_type;
+	bool              m_query_continue;
+	bool              m_suppress_drawing;
+	bool              m_paint_pending;
 
 	HostComm();
 	virtual ~HostComm();
 
 public:
-	enum {
-		KInstanceTypeCUI = 0,
-		KInstanceTypeDUI,
-	};
-
 	GUID GetGUID() { return get_config_guid(); }
 	inline HDC GetHDC() { return m_hdc; }
 	inline HWND GetHWND() { return m_hwnd; }
@@ -56,8 +57,8 @@ public:
 	inline SCRIPTSTATE & GetScriptState() { return m_script_state; }
 	inline bool & GetQueryContinue() { return m_query_continue; }
 	IGdiBitmap * GetBackgroundImage();
-
 	inline void PreserveSelection() { m_selection_holder = static_api_ptr_t<ui_selection_manager_v2>()->acquire(); }
+	inline t_script_info & GetScriptInfo() { return m_script_info; }
 
 	void Redraw();
 	void Repaint(bool force = false);
@@ -104,6 +105,7 @@ public:
 	STDMETHODIMP get_DlgCode(UINT* p);
 	STDMETHODIMP put_DlgCode(UINT code);
 	STDMETHODIMP get_IsTransparent(VARIANT_BOOL* p);
+	STDMETHODIMP get_IsVisible(VARIANT_BOOL* p);
 	STDMETHODIMP Repaint(VARIANT_BOOL force);
 	STDMETHODIMP RepaintRect(UINT x, UINT y, UINT w, UINT h, VARIANT_BOOL force);
 	STDMETHODIMP CreatePopupMenu(IMenuObj ** pp);

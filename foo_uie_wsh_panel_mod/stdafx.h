@@ -48,7 +48,6 @@
 #include <atlmisc.h>
 
 // Other controls
-#define PLAT_WIN 1
 #define STATIC_BUILD 1
 #define SCI_LEXER 1
 #include <Scintilla.h>
