@@ -12,7 +12,7 @@ if %ERRORLEVEL% NEQ 0 (
   if %ERRORLEVEL% EQU 0 (
     echo #define HG_MODS 1 > %CD%\hgrev.h
   ) else (
-    echo #define HG_MODS 1 > %CD%\hgrev.h
+    echo #define HG_MODS 0 > %CD%\hgrev.h
   )
   echo. >> %CD%\hgrev.h
 )
