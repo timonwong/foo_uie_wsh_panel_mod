@@ -247,6 +247,12 @@ bool CDialogConf::MatchShortcuts(unsigned vk)
 		(IsKeyPressed(VK_MENU) ? SCMOD_ALT : 0);
 
 	// Hotkey
+	if (vk == VK_ESCAPE)
+	{
+		SendMessage(WM_COMMAND, MAKEWPARAM(IDCANCEL, BN_CLICKED), (LPARAM)m_hWnd);
+		return true;
+	}
+
 	if (modifiers == SCMOD_CTRL)
 	{
 		switch (vk)

@@ -10,6 +10,35 @@
 #include "../TextDesinger/PngOutlineText.h"
 
 
+// Helper functions
+// 
+// -1: not a valid metadb interface
+//  0: metadb interface
+//  1: metadb handles interface
+int TryGetMetadbHandleFromVariant(const VARIANT & obj, IDispatch ** ppuk)
+{
+	if (obj.vt != VT_DISPATCH || !obj.pdispVal)
+		return -1;
+
+	// try:
+	IDispatch * temp = NULL;
+	
+	if (SUCCEEDED(obj.pdispVal->QueryInterface(__uuidof(IFbMetadbHandle), (void **)&temp)))
+	{
+		*ppuk = temp;
+		return 0;
+	}
+	else if (SUCCEEDED(obj.pdispVal->QueryInterface(__uuidof(IFbMetadbHandleList), (void **)&temp)))
+	{
+		*ppuk = temp;
+		return 1;
+	}
+
+	// failed
+	return -1;
+}
+
+
 STDMETHODIMP GdiFont::get_HFont(UINT* p)
 {
 	TRACK_FUNCTION();
@@ -1311,6 +1340,40 @@ STDMETHODIMP FbMetadbHandle::Compare(IFbMetadbHandle * handle, VARIANT_BOOL * p)
 	return S_OK;
 }
 
+STDMETHODIMP FbMetadbHandleList::get__ptr(void ** pp)
+{
+	TRACK_FUNCTION();
+
+	if (!m_handles_ptr) return E_POINTER;
+	if (!pp) return E_POINTER;
+
+	*pp = m_handles_ptr;
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::get_Item(UINT idx, IFbMetadbHandle ** pp)
+{
+	TRACK_FUNCTION();
+
+	if (!m_handles_ptr) return E_POINTER;
+	if (!pp) return E_POINTER;
+	if (idx >= m_handles_ptr->get_count()) return E_INVALIDARG;
+
+	*pp = new com_object_impl_t<FbMetadbHandle>(m_handles_ptr->get_item(idx));
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::get_Count(UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!m_handles_ptr) return E_POINTER;
+	if (!p) return E_POINTER;
+
+	*p = m_handles_ptr->get_count();
+	return S_OK;
+}
+
 STDMETHODIMP FbTitleFormat::Eval(VARIANT_BOOL force, BSTR* pp)
 {
 	TRACK_FUNCTION();
@@ -1496,6 +1559,20 @@ STDMETHODIMP FbUtils::GetSelection(IFbMetadbHandle** pp)
 		(*pp) = NULL;
 	}
 
+	return S_OK;
+}
+
+
+STDMETHODIMP FbUtils::GetSelections(UINT flags, IFbMetadbHandleList ** pp)
+{
+	TRACK_FUNCTION();
+
+	if (!pp) return E_POINTER;
+
+	metadb_handle_list * items = new metadb_handle_list;
+
+	static_api_ptr_t<ui_selection_manager_v2>()->get_selection(*items, flags);
+	(*pp) = new com_object_impl_t<FbMetadbHandleList>(items);
 	return S_OK;
 }
 
@@ -1874,26 +1951,43 @@ STDMETHODIMP FbUtils::RunContextCommand(BSTR command, VARIANT_BOOL * p)
 	if (!p) return E_POINTER;
 
 	pfc::stringcvt::string_utf8_from_wide name(command);
-
-	*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name));
+	*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name, metadb_handle_list()));
 	return S_OK;
 }
 
-STDMETHODIMP FbUtils::RunContextCommandWithMetadb(BSTR command, IFbMetadbHandle * handle, VARIANT_BOOL * p)
+STDMETHODIMP FbUtils::RunContextCommandWithMetadb(BSTR command, VARIANT handle, VARIANT_BOOL * p)
 {
 	TRACK_FUNCTION();
 
-	if (!command || !handle) return E_INVALIDARG;
+	IDispatch * handle_s = NULL;
+	int try_result = TryGetMetadbHandleFromVariant(handle, &handle_s);
+
+	if (!command || !try_result) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
 	pfc::stringcvt::string_utf8_from_wide name(command);
-	metadb_handle * ptr = NULL;
+	metadb_handle_list handle_list;
+	void * ptr = NULL;
 
-	handle->get__ptr((void**)&ptr);
+	switch (try_result)
+	{
+	case 0:
+		reinterpret_cast<IFbMetadbHandle *>(handle_s)->get__ptr(&ptr);
+		handle_list = pfc::list_single_ref_t<metadb_handle_ptr>(reinterpret_cast<metadb_handle *>(ptr));
+		break;
+
+	case 1:
+		reinterpret_cast<IFbMetadbHandleList *>(handle_s)->get__ptr(&ptr);
+		handle_list = *reinterpret_cast<metadb_handle_list *>(ptr);
+		break;
+
+	default:
+		return E_INVALIDARG;
+	}
 
 	if (!ptr) return E_INVALIDARG;
 
-	*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name, ptr));
+	*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name, handle_list));
 	return S_OK;
 }
 
@@ -2065,6 +2159,75 @@ STDMETHODIMP FbUtils::RenamePlaylist(UINT idx, BSTR name, VARIANT_BOOL * p)
 	pfc::stringcvt::string_utf8_from_wide uname(name);
 
 	*p = TO_VARIANT_BOOL(static_api_ptr_t<playlist_manager>()->playlist_rename(idx, uname, uname.length()));
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::IsAutoPlaylist(UINT idx, VARIANT_BOOL * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	try
+	{
+		*p = TO_VARIANT_BOOL(static_api_ptr_t<autoplaylist_manager>()->is_client_present(idx));
+	}
+	catch (...)
+	{
+		*p = VARIANT_FALSE;
+	}
+
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::CreateAutoPlaylist(UINT idx, BSTR name, BSTR query, BSTR sort, UINT flags, UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!name || !query) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	UINT pos = 0;
+	HRESULT hr = CreatePlaylist(idx, name, &pos);
+
+	if (FAILED(hr)) return hr;
+
+	pfc::stringcvt::string_utf8_from_wide wquery(query);
+	pfc::stringcvt::string_utf8_from_wide wsort(sort);
+
+	try
+	{
+		*p = pos;
+		static_api_ptr_t<autoplaylist_manager>()->add_client_simple(wquery, wsort, pos, flags);
+	}
+	catch (...)
+	{
+		*p = pfc_infinite;
+	}
+
+	return S_OK;
+}
+
+STDMETHODIMP FbUtils::ShowAutoPlaylistUI(UINT idx, VARIANT_BOOL * p)
+{
+	TRACK_FUNCTION();
+
+	*p = VARIANT_TRUE;
+	static_api_ptr_t<autoplaylist_manager> manager;
+	
+	try
+	{
+		if (manager->is_client_present(idx))
+		{
+			autoplaylist_client_ptr client = manager->query_client(idx);
+			client->show_ui(idx);
+		}
+	}
+	catch (...)
+	{			
+		*p = VARIANT_FALSE;
+	}
+
 	return S_OK;
 }
 
@@ -2276,7 +2439,6 @@ STDMETHODIMP MainMenuManager::Init(BSTR root_name)
 
 	// In mainmenu_groups: 
 	//   static const GUID file,view,edit,playback,library,help;
-
 	const t_valid_root_name valid_root_names[] = 
 	{
 		{L"file",     &mainmenu_groups::file},
@@ -2356,7 +2518,7 @@ STDMETHODIMP FbProfiler::Print()
 {
 	TRACK_FUNCTION();
 
-	console::formatter() << "WSH Panel Mod: FbProfiler (" << m_name << "): " << (int)(m_timer.query() * 1000) << " ms";
+	console::formatter() << WSPM_NAME ": FbProfiler (" << m_name << "): " << (int)(m_timer.query() * 1000) << " ms";
 	return S_OK;
 }
 
@@ -2895,7 +3057,7 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
 
 FbTooltip::FbTooltip(HWND p_wndparent/*, bool p_want_multiline*/) 
 : m_wndparent(p_wndparent)
-, m_tip_buffer(SysAllocString(L"WSH Panel Mod"))
+, m_tip_buffer(SysAllocString(PFC_WIDESTRING(WSPM_NAME)))
 {
 	m_wndtooltip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
 		WS_POPUP | TTS_ALWAYSTIP | TTS_NOPREFIX,

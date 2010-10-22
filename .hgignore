@@ -32,10 +32,13 @@ vc*.tlb
 *.tlog
 *.old
 *.lib
+*.bsc
+
+hgrev.h
 
 dist/
 ipch/
-
+docs/*.html
 
 # switch to regexp syntax
 syntax: regexp

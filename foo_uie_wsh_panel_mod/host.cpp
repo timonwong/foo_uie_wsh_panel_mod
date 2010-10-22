@@ -844,7 +844,7 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 		if (excep.pfnDeferredFillIn)
 			(*excep.pfnDeferredFillIn)(&excep);
 
-		StringCbPrintf(buf, sizeof(buf), _T("WSH Panel Mod (%s): %s:\n%s\nLn: %d, Col: %d\n%s\n"),
+		StringCbPrintf(buf, sizeof(buf), _T(WSPM_NAME) _T(" (%s): %s:\n%s\nLn: %d, Col: %d\n%s\n"),
 			pfc::stringcvt::string_wide_from_utf8(m_host->GetScriptInfo().build_info_string()).get_ptr(), 
 			excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, 
 			static_cast<const wchar_t *>(sourceline));
@@ -962,6 +962,7 @@ bool wsh_panel_window::script_init()
 	TRACK_FUNCTION();
 
 	helpers::mm_timer timer;
+	bool result = true;
 	timer.start();
 
 	// Set window edge
@@ -1006,28 +1007,27 @@ bool wsh_panel_window::script_init()
 		}
 		else
 		{
-			msg_formatter << ")\nCheck the console for more detailed information (Always caused by unexcepted script error).";
+			msg_formatter << ")\nCheck the console for more information (Always caused by unexcepted script error).";
 		}
 
 		// Show error message
-		popup_msg::g_show(msg_formatter, "WSH Panel Mod", popup_message::icon_error);
-		return false;
+		popup_msg::g_show(msg_formatter, WSPM_NAME, popup_message::icon_error);
+		result = false;
 	}
-
-	//delete_context();
-	//create_context();
-
-	// Show init message
-	console::formatter() << "WSH Panel Mod (" 
-		<< GetScriptInfo().build_info_string()
-		<< "): initialized in "
-		<< (int)(timer.query() * 1000)
-		<< " ms";
+	else
+	{
+		// Show init message
+		console::formatter() << WSPM_NAME " (" 
+			<< GetScriptInfo().build_info_string()
+			<< "): initialized in "
+			<< (int)(timer.query() * 1000)
+			<< " ms";
+	}
 
 	// HACK: Script update will not call on_size, so invoke it explicitly
 	SendMessage(m_hwnd, UWM_SIZE, 0, 0);
 
-	return true;
+	return result;
 }
 
 void wsh_panel_window::script_stop()
@@ -1088,7 +1088,7 @@ HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, VARIANTARG * argv /*= N
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("WSH Panel Mod (%s): Unhandled C++ Exception: \"%s\", will crash now...", 
+			console::printf(WSPM_NAME " (%s): Unhandled C++ Exception: \"%s\", will crash now...", 
 				GetScriptInfo().build_info_string().get_ptr(), e.what());
 			PRINT_DISPATCH_TRACK_MESSAGE();
 			// breakpoint
@@ -1098,7 +1098,7 @@ HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, VARIANTARG * argv /*= N
 		{
 			pfc::print_guid guid(get_config_guid());
 
-			console::printf("WSH Panel Mod (%s): Unhandled Unknown Exception, will crash now...", 
+			console::printf(WSPM_NAME " (%s): Unhandled Unknown Exception, will crash now...", 
 				GetScriptInfo().build_info_string().get_ptr());
 			PRINT_DISPATCH_TRACK_MESSAGE();
 			// breakpoint
@@ -1224,6 +1224,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case WM_DISPLAYCHANGE:
+	case WM_THEMECHANGED:
 		update_script();
 		return 0;
 
@@ -1531,7 +1532,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			<< GetScriptInfo().build_info_string()
 			<< ") seems to be unresponsive, "
 			<< "please check your script (usually infinite loop).", 
-			"WSH Panel Mod", popup_message::icon_error);
+			WSPM_NAME, popup_message::icon_error);
 
 		Repaint();
 		return 0;
@@ -1557,7 +1558,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			<< GetScriptInfo().build_info_string()
 			<< "): Refuse to load script due to critical error last run,"
 			<< " please check your script and apply it again.",
-			"WSH Panel Mod", 
+			WSPM_NAME, 
 			popup_message::icon_error);
 		return 0;
 
@@ -1747,13 +1748,31 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
 	}
 	else
 	{
-		const TCHAR szErrMsg[] = _T("SCRIPT ERROR");
+		const TCHAR errmsg[] = _T("Aw, crashed :(");
 		RECT rc = {0, 0, m_width, m_height};
+		SIZE sz = {0};
 
-		FillRect(memdc, &rc, (HBRUSH)(COLOR_WINDOW + 1));
-		SetBkMode(memdc, TRANSPARENT);
-		SetTextColor(memdc, GetSysColor(COLOR_WINDOWTEXT));
-		DrawText(memdc, szErrMsg, -1, &rc, DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE);
+		// Font chosing
+		HFONT newfont = CreateFont(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, 
+			DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+			DEFAULT_PITCH | FF_DONTCARE, _T("Tahoma"));
+		HFONT oldfont = (HFONT)SelectObject(memdc, newfont);
+
+		// Font drawing
+		{
+			LOGBRUSH lbBack = {BS_SOLID, RGB(35, 48, 64), 0};
+			HBRUSH hBack = CreateBrushIndirect(&lbBack);
+
+			FillRect(memdc, &rc, hBack);
+			SetBkMode(memdc, TRANSPARENT);
+
+			SetTextColor(memdc, RGB(255, 255, 255));
+			DrawText(memdc, errmsg, -1, &rc, DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE);
+
+			DeleteObject(hBack);
+		}
+
+		SelectObject(memdc, oldfont);
 	}
 
 	BitBlt(dc, 0, 0, m_width, m_height, memdc, 0, 0, SRCCOPY);
@@ -2119,7 +2138,7 @@ const GUID& wsh_panel_window_cui::get_extension_guid() const
 
 void wsh_panel_window_cui::get_name(pfc::string_base& out) const
 {
-	out = "WSH Panel Mod";
+	out = WSPM_NAME;
 }
 
 void wsh_panel_window_cui::get_category(pfc::string_base& out) const
@@ -2166,7 +2185,7 @@ LRESULT wsh_panel_window_cui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 		{
 			// Using in Default UI and dockable panels without Columns UI installed?
 			static bool g_reported = false;
-			const char warning[] = "Warning: At least one of WSH Panel Mod instance running in CUI containers"
+			const char warning[] = "Warning: At least one " WSPM_NAME " instance running in CUI containers"
 								   " (dockable panels or Func UI?), however, some essential services provided"
 								   " by the Columns UI cannot be found (haven't been installed or have a very"
 								   " old version is installed?).\n"
@@ -2176,13 +2195,13 @@ LRESULT wsh_panel_window_cui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 			if (!g_cfg_cui_warning_reported)
 			{
 				popup_msg::g_show(pfc::string_formatter(warning) << "\n\n[This popup message will be shown only once]", 
-								  "WSH Panel Mod");
+								  WSPM_NAME);
 
 				g_cfg_cui_warning_reported = true;
 			}
 			else if (!g_reported)
 			{
-				console::formatter() << "\nWSH Panel Mod: " << warning << "\n\n";
+				console::formatter() << "\n" WSPM_NAME ": " << warning << "\n\n";
 				g_reported = true;
 			}
 		}
@@ -2334,7 +2353,7 @@ ui_element_config::ptr wsh_panel_window_dui::get_configuration()
 
 void wsh_panel_window_dui::g_get_name(pfc::string_base & out)
 {
-	out = "WSH Panel Mod";
+	out = WSPM_NAME;
 }
 
 pfc::string8 wsh_panel_window_dui::g_get_description()

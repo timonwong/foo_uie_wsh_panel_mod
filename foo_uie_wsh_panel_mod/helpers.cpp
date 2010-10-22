@@ -66,7 +66,7 @@ namespace helpers
 		return false;
 	}
 
-	bool execute_context_command_by_name(const char * p_name, metadb_handle * p_handle /*= NULL*/)
+	extern bool execute_context_command_by_name(const char * p_name, metadb_handle_list_cref p_handles)
 	{
 		contextmenu_node * node = NULL;
 
@@ -75,9 +75,9 @@ namespace helpers
 
 		contextmenu_manager::g_create(cm);
 
-		if (p_handle)
+		if (p_handles.get_count() > 0)
 		{
-			cm->init_context(pfc::list_single_ref_t<metadb_handle_ptr>(p_handle), 0);
+			cm->init_context(p_handles, 0);
 		}
 		else
 		{

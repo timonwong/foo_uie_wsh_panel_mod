@@ -30,7 +30,7 @@ void CDialogReplace::FindResult(int pos)
 
 		temp += m_text;
 		temp += "\"";
-		uMessageBox(m_hWnd, temp.get_ptr(), "WSH Panel Mod", MB_ICONINFORMATION);
+		uMessageBox(m_hWnd, temp.get_ptr(), WSPM_NAME, MB_ICONINFORMATION);
 	}
 }
 
@@ -89,7 +89,8 @@ LRESULT CDialogReplace::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 {
 	modeless_dialog_manager::g_add(m_hWnd);
 	DlgResize_Init();
-
+	m_replace.SubclassWindow(GetDlgItem(IDC_EDIT_FINDWHAT), m_hWnd);
+	m_find.SubclassWindow(GetDlgItem(IDC_EDIT_REPLACE), m_hWnd);
 	return TRUE; // set focus to default control
 }
 

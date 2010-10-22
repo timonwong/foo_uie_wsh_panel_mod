@@ -1316,7 +1316,7 @@ void CScriptEditorCtrl::ReadAPI()
 		}
 		else
 		{
-			console::formatter() << "WSH Panel Mod: Warning: Could not load file " << api_filename;
+			console::formatter() << WSPM_NAME ": Warning: Could not load file " << api_filename;
 		}
 
 		api_filename += strlen(api_filename) + 1;

@@ -60,7 +60,7 @@ public:
 
 	const char * get_name()
 	{
-		return "WSH Panel Mod";
+		return WSPM_NAME;
 	}
 
 	GUID get_guid()

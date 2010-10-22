@@ -34,6 +34,7 @@
 
 // ATL/WTL
 #define _WTL_USE_CSTRING
+#define _WTL_NO_WTYPES
 #include <atlbase.h>
 #include <atlapp.h>
 
@@ -53,12 +54,14 @@
 #include <Scintilla.h>
 #include <SciLexer.h>
 
-// fb2k
+// foobar2000 SDK
 #include "../../SDK/foobar2000.h"
-// CUI
+// Columns UI SDK
 #include "../../columns_ui-sdk/ui_extension.h"
 
 // Some marcos defined by windowsx.h should be removed
 #ifdef _INC_WINDOWSX
 #undef SubclassWindow
 #endif
+
+#define WSPM_NAME "WSH Panel Mod"

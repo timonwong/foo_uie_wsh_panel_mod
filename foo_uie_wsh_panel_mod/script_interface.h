@@ -1,6 +1,6 @@
 #pragma once
 
-[module(name="foo_uie_wsh_panel_mod", version="1.7")];
+[module(name="foo_uie_wsh_panel_mod", version="1.8")];
 
 extern ITypeLibPtr g_typelib;
 
@@ -16,7 +16,6 @@ __interface IDisposable: IDispatch
 {
 	STDMETHOD(Dispose)();
 };
-
 
 //----------------------------------------------------------------------------
 [
@@ -236,6 +235,20 @@ __interface IFbMetadbHandle: IDisposable
 };
 
 [
+	object,
+	dual,
+	pointer_default(unique),
+	library_block,
+	uuid("64528708-ae09-49dd-8e8d-1417fe9a9f09")
+]
+__interface IFbMetadbHandleList: IDisposable
+{
+	[propget] STDMETHOD(_ptr)([out,retval] void ** pp);
+	[propget] STDMETHOD(Item)(UINT idx, [out,retval] IFbMetadbHandle ** pp);
+	[propget] STDMETHOD(Count)([out,retval] UINT * p);
+};
+
+[
     object,
     dual,
     pointer_default(unique),
@@ -330,6 +343,7 @@ __interface IFbUtils: IDispatch
 	STDMETHOD(GetNowPlaying)([out,retval] IFbMetadbHandle** pp);
 	STDMETHOD(GetFocusItem)([defaultvalue(-1)] VARIANT_BOOL force, [out,retval] IFbMetadbHandle** pp);
 	STDMETHOD(GetSelection)([out,retval] IFbMetadbHandle** pp);
+	STDMETHOD(GetSelections)([defaultvalue(0)] UINT flags, [out,retval] IFbMetadbHandleList ** pp);
 	STDMETHOD(GetSelectionType)([out,retval] UINT* p);
 	//
 	[propget] STDMETHOD(ComponentPath)([out,retval] BSTR* pp);
@@ -371,7 +385,7 @@ __interface IFbUtils: IDispatch
 	STDMETHOD(SavePlaylist)();
 	STDMETHOD(RunMainMenuCommand)(BSTR command, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(RunContextCommand)(BSTR command, [out,retval] VARIANT_BOOL * p);
-	STDMETHOD(RunContextCommandWithMetadb)(BSTR command, IFbMetadbHandle * handle, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(RunContextCommandWithMetadb)(BSTR command, VARIANT handle, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(CreateContextMenuManager)([out,retval] IContextMenuManager ** pp);
 	STDMETHOD(CreateMainMenuManager)([out,retval] IMainMenuManager ** pp);
 	STDMETHOD(IsMetadbInMediaLibrary)(IFbMetadbHandle * handle, [out,retval] VARIANT_BOOL * p);
@@ -386,9 +400,11 @@ __interface IFbUtils: IDispatch
 	STDMETHOD(RemovePlaylist)(UINT idx, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(MovePlaylist)(UINT from, UINT to, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(RenamePlaylist)(UINT idx, BSTR name, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(IsAutoPlaylist)(UINT idx, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(CreateAutoPlaylist)(UINT idx, BSTR name, BSTR query, [defaultvalue("")] BSTR sort, [defaultvalue(0)]UINT flags, [out,retval] UINT * p);
+	STDMETHOD(ShowAutoPlaylistUI)(UINT idx, [out,retval] VARIANT_BOOL * p);
 };
 _COM_SMARTPTR_TYPEDEF(IFbUtils, __uuidof(IFbUtils));
-
 
 //---
 [

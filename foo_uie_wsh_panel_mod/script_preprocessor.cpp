@@ -23,7 +23,7 @@ HRESULT script_preprocessor::process_import(const t_script_info & info, IActiveS
 			bool is_file_read = helpers::read_file_wide(v.value.get_ptr(), code);
 			pfc::string_formatter msg;
 
-			msg << "WSH Panel Mod (" << info.build_info_string() << "): "
+			msg << WSPM_NAME " (" << info.build_info_string() << "): "
 				<< "Parsing file \"" << pfc::stringcvt::string_utf8_from_wide(v.value.get_ptr())
 				<< "\"";
 

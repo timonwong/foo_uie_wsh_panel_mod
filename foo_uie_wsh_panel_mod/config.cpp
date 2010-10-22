@@ -76,8 +76,8 @@ void wsh_panel_vars::load_config(stream_reader * reader, t_size size, abort_call
 		if (!have_read_config)
 		{
 			// Configuration corruputed or config version dismatch.
-			console::complain("WSH Panel Mod", 
-				"Error: Configuration needs newer version of WSH Panel Mod or is corrupted");
+			console::complain(WSPM_NAME, 
+				"Error: Configuration needs a newer component or is corrupted");
 		}
 	}
 }

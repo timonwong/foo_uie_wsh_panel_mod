@@ -13,7 +13,7 @@ namespace
 {
 	DECLARE_COMPONENT_VERSION(
 		WSPM_NAME,
-		WSPM_VERSION_NUMBER,
+		WSPM_VERSION,
 		"Windows Scripting Host Panel Modded\n"
 		"Modded by T.P. Wang\n\n"
 		"Build: "  __TIME__ ", " __DATE__ "\n"
@@ -48,7 +48,7 @@ namespace
 		{
 			// HACK: popup_message services will not be initialized soon after start.
 			popup_msg::g_set_service_initialized();
-			check_error_();
+			check_error();
 			popup_msg::g_process_pendings();
 		}
 
@@ -59,14 +59,14 @@ namespace
 		}
 
 	private:
-		void check_error_() 
+		void check_error() 
 		{
 			// Check and show error message
 			pfc::string8 err_msg;
 
 			if (IS_EXPIRED(__DATE__))
 			{
-				err_msg = "This version of WSH Panel Mod is expired, please get a new version now.\n\n";
+				err_msg = "This version is expired, please get a new one now.\nVisit: http://foo-wsh-panel-mod.googlecode.com\n\n";
 			}
 			else if (g_load_status != E_OK)
 			{
@@ -83,7 +83,7 @@ namespace
 			}
 
 			if (!err_msg.is_empty())
-				popup_msg::g_show(err_msg, "WSH Panel Mod", popup_message::icon_error);
+				popup_msg::g_show(err_msg, WSPM_NAME, popup_message::icon_error);
 		}
 	};
 
