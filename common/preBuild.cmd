@@ -10,9 +10,9 @@ if %ERRORLEVEL% NEQ 0 (
 ) else (
   hg id -i | findstr "+" > nul
   if %ERRORLEVEL% EQU 0 (
-    echo #define HG_MODS 1 > %CD%\hgrev.h
-  ) else (
     echo #define HG_MODS 0 > %CD%\hgrev.h
+  ) else (
+    echo #define HG_MODS 1 > %CD%\hgrev.h
   )
   echo. >> %CD%\hgrev.h
 )

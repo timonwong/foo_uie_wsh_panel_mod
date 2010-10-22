@@ -342,6 +342,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\hgrev.h"
+				>
+			</File>
+			<File
 				RelativePath=".\host.h"
 				>
 			</File>
