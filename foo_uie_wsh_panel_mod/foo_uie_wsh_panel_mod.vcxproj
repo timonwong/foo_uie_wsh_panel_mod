@@ -64,8 +64,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>"$(SolutionDir)common\preBuild.cmd" "$(ProjectDir)"</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -94,8 +93,7 @@ copy $(SolutionDir)extras\*.api "D:\Program Files (x86)\foobar2000\components\"
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>"$(SolutionDir)common\preBuild.cmd" "$(ProjectDir)"</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
@@ -129,6 +127,11 @@ copy $(SolutionDir)extras\*.api "D:\Program Files (x86)\foobar2000\components\"
       <Command>
       </Command>
     </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
+    <PreBuildEvent>
+      <Command>"$(SolutionDir)common\preBuild.cmd" "$(ProjectDir)"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="config.cpp" />

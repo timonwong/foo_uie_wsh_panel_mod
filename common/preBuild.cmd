@@ -4,15 +4,18 @@
 
 SETLOCAL ENABLEEXTENSIONS
 
+SET mydir=%~dp0
+SET projdir=%~dp1
+
 hg id -i > nul
-if %ERRORLEVEL% NEQ 0 (
-  copy /Y "%mydir%\hgrev_unknown.h" "%CD%\hgrev.h" > nul
-) else (
-  hg id -i | findstr "+" > nul
-  if %ERRORLEVEL% EQU 0 (
-    echo #define HG_MODS 0 > %CD%\hgrev.h
-  ) else (
-    echo #define HG_MODS 1 > %CD%\hgrev.h
+IF %ERRORLEVEL% NEQ 0 (
+  copy /Y "%mydir%\hgrev_unknown.h" "%projdir%\hgrev.h" > nul
+) ELSE (
+  hg id -i | find "+" > nul
+  IF !ERRORLEVEL! EQU 0 (
+    echo #define HG_MODS 1 > %projdir%\hgrev.h
+  ) ELSE (
+    echo #define HG_MODS 0 > %projdir%\hgrev.h
   )
   echo. >> %CD%\hgrev.h
 )
