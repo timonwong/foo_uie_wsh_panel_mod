@@ -152,7 +152,6 @@ STDMETHODIMP GdiBitmap::ApplyMask(IGdiBitmap * mask, VARIANT_BOOL * p)
 	if (!mask) return E_INVALIDARG;
 
 	Gdiplus::Bitmap * bitmap = NULL;
-
 	mask->get__ptr((void**)&bitmap);
 
 	if (!bitmap || bitmap->GetHeight() != m_ptr->GetHeight() || bitmap->GetWidth() != m_ptr->GetWidth())
@@ -1235,9 +1234,7 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfo(IFbFileInfo * fileinfo)
 
 	static_api_ptr_t<metadb_io_v2> io;
 	file_info_impl * info_ptr = NULL;
-
 	fileinfo->get__ptr((void**)&info_ptr);
-
 	if (!info_ptr) return E_INVALIDARG;
 
 	io->update_info_async_simple(pfc::list_single_ref_t<metadb_handle_ptr>(m_handle),
@@ -1331,7 +1328,6 @@ STDMETHODIMP FbMetadbHandle::Compare(IFbMetadbHandle * handle, VARIANT_BOOL * p)
 	if (handle)
 	{
 		metadb_handle * ptr = NULL;
-
 		handle->get__ptr((void **)&ptr);
 
 		*p = TO_VARIANT_BOOL(ptr == m_handle.get_ptr());
@@ -1344,10 +1340,9 @@ STDMETHODIMP FbMetadbHandleList::get__ptr(void ** pp)
 {
 	TRACK_FUNCTION();
 
-	if (!m_handles_ptr) return E_POINTER;
 	if (!pp) return E_POINTER;
 
-	*pp = m_handles_ptr;
+	*pp = &m_handles;
 	return S_OK;
 }
 
@@ -1355,11 +1350,10 @@ STDMETHODIMP FbMetadbHandleList::get_Item(UINT idx, IFbMetadbHandle ** pp)
 {
 	TRACK_FUNCTION();
 
-	if (!m_handles_ptr) return E_POINTER;
 	if (!pp) return E_POINTER;
-	if (idx >= m_handles_ptr->get_count()) return E_INVALIDARG;
+	if (idx >= m_handles.get_count()) return E_INVALIDARG;
 
-	*pp = new com_object_impl_t<FbMetadbHandle>(m_handles_ptr->get_item(idx));
+	*pp = new com_object_impl_t<FbMetadbHandle>(m_handles.get_item_ref(idx));
 	return S_OK;
 }
 
@@ -1367,10 +1361,217 @@ STDMETHODIMP FbMetadbHandleList::get_Count(UINT * p)
 {
 	TRACK_FUNCTION();
 
-	if (!m_handles_ptr) return E_POINTER;
 	if (!p) return E_POINTER;
 
-	*p = m_handles_ptr->get_count();
+	*p = m_handles.get_count();
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::Clone(IFbMetadbHandleList ** pp)
+{
+	TRACK_FUNCTION();
+
+	if (!pp) return E_POINTER;
+	*pp = new com_object_impl_t<FbMetadbHandleList>(m_handles);
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::Sort()
+{
+	TRACK_FUNCTION();
+
+	metadb_handle_list_helper::remove_duplicates(m_handles);
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::Find(IFbMetadbHandle * handle, UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!handle) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	metadb_handle * ptr = NULL;
+	handle->get__ptr((void **)&ptr);
+	if (!ptr) return E_INVALIDARG;
+
+	*p = m_handles.find_item(ptr);
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::BSearch(IFbMetadbHandle * handle, UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!handle) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	metadb_handle * ptr = NULL;
+	handle->get__ptr((void **)&ptr);
+	if (!ptr) return E_INVALIDARG;
+
+	*p = m_handles.bsearch_by_pointer(ptr);
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::Add(IFbMetadbHandle * handle, UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!handle) return E_INVALIDARG;
+	if (!p) return E_POINTER;
+
+	metadb_handle * ptr = NULL;
+	handle->get__ptr((void **)&ptr);
+	if (!ptr) return E_INVALIDARG;
+
+	*p = m_handles.add_item(ptr);
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::RemoveById(UINT idx)
+{
+	TRACK_FUNCTION();
+
+	if (idx >= m_handles.get_count()) return E_INVALIDARG;
+	m_handles.remove_by_idx(idx);
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::Remove(IFbMetadbHandle * handle)
+{
+	TRACK_FUNCTION();
+
+	if (!handle) return E_INVALIDARG;
+
+	metadb_handle * ptr = NULL;
+	handle->get__ptr((void **)&ptr);
+	if (!ptr) return E_INVALIDARG;
+
+	m_handles.remove_item(ptr);
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::RemoveAll()
+{
+	TRACK_FUNCTION();
+
+	m_handles.remove_all();
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::MakeIntersection(IFbMetadbHandleList * handles)
+{
+	TRACK_FUNCTION();
+
+	if (!handles) return E_INVALIDARG;
+
+	metadb_handle_list * handles_ptr = NULL;
+	handles->get__ptr((void **)&handles_ptr);
+	if (!handles_ptr) return E_INVALIDARG;
+
+	metadb_handle_list_ref handles_ref = *handles_ptr;
+	metadb_handle_list result;
+	t_size walk1 = 0;
+	t_size walk2 = 0;
+	t_size last1 = m_handles.get_count();
+	t_size last2 = handles_ptr->get_count();
+
+	while (walk1 != last1 && walk2 != last2)
+	{
+		if (m_handles[walk1] < handles_ref[walk2])
+			++walk1;
+		else if (handles_ref[walk2] < m_handles[walk1])
+			++walk2;
+		else 
+		{
+			result.add_item(m_handles[walk1]);
+			++walk1;
+			++walk2;
+		}
+	}
+
+	m_handles = result;
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::MakeUnion(IFbMetadbHandleList * handles)
+{
+	TRACK_FUNCTION();
+
+	if (!handles) return E_INVALIDARG;
+
+	metadb_handle_list * handles_ptr = NULL;
+	handles->get__ptr((void **)&handles_ptr);
+	if (!handles_ptr) return E_INVALIDARG;
+
+	metadb_handle_list_ref handles_ref = *handles_ptr;
+	metadb_handle_list result;
+	t_size walk1 = 0;
+	t_size walk2 = 0;
+	t_size last1 = m_handles.get_count();
+	t_size last2 = handles_ptr->get_count();
+
+	while (walk1 != last1 && walk2 != last2) 
+	{
+		if (m_handles[walk1] < handles_ref[walk2]) 
+		{
+			result.add_item(m_handles[walk1]);
+			++walk1;
+		}
+		else if (handles_ref[walk2] < m_handles[walk1]) 
+		{
+			result.add_item(handles_ref[walk2]);
+			++walk2;
+		}
+		else 
+		{
+			result.add_item(m_handles[walk1]);
+			++walk1;
+			++walk2;
+		}
+	}
+
+	m_handles = result;
+	return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::MakeDifference(IFbMetadbHandleList * handles)
+{
+	TRACK_FUNCTION();
+
+	if (!handles) return E_INVALIDARG;
+
+	metadb_handle_list * handles_ptr = NULL;
+	handles->get__ptr((void **)&handles_ptr);
+	if (!handles_ptr) return E_INVALIDARG;
+
+	metadb_handle_list_ref handles_ref = *handles_ptr;
+	metadb_handle_list result;
+	t_size walk1 = 0;
+	t_size walk2 = 0;
+	t_size last1 = m_handles.get_count();
+	t_size last2 = handles_ptr->get_count();
+
+	while (walk1 != last1 && walk2 != last2)
+	{
+		if (m_handles[walk1] < handles_ref[walk2]) 
+		{
+			result.add_item(m_handles[walk1]);
+			++walk1;
+		}
+		else if (handles_ref[walk2] < m_handles[walk1])
+		{
+			++walk2;
+		}
+		else 
+		{
+			++walk1;
+			++walk2;
+		}
+	}
+
+	m_handles = result;
 	return S_OK;
 }
 
@@ -1392,7 +1593,7 @@ STDMETHODIMP FbTitleFormat::Eval(VARIANT_BOOL force, BSTR* pp)
 			static_api_ptr_t<metadb> m;
 
 			// HACK: A fake file handle should be okay
-			m->handle_create(handle, make_playable_location("file://C:\\_____temp_blah____.ogg", 0));
+			m->handle_create(handle, make_playable_location("file://C:\\__blahblahblah .ogg", 0));
 		}
 
 		handle->format_title(NULL, text, m_obj, NULL);
@@ -1411,9 +1612,7 @@ STDMETHODIMP FbTitleFormat::EvalWithMetadb(IFbMetadbHandle * handle, BSTR * pp)
 	if (!pp) return E_POINTER;
 
 	metadb_handle * ptr = NULL;
-
 	handle->get__ptr((void**)&ptr);
-
 	if (!ptr) return E_INVALIDARG;
 
 	pfc::string8_fast text;
@@ -1569,9 +1768,8 @@ STDMETHODIMP FbUtils::GetSelections(UINT flags, IFbMetadbHandleList ** pp)
 
 	if (!pp) return E_POINTER;
 
-	metadb_handle_list * items = new metadb_handle_list;
-
-	static_api_ptr_t<ui_selection_manager_v2>()->get_selection(*items, flags);
+	metadb_handle_list items;
+	static_api_ptr_t<ui_selection_manager_v2>()->get_selection(items, flags);
 	(*pp) = new com_object_impl_t<FbMetadbHandleList>(items);
 	return S_OK;
 }
@@ -1959,10 +2157,10 @@ STDMETHODIMP FbUtils::RunContextCommandWithMetadb(BSTR command, VARIANT handle, 
 {
 	TRACK_FUNCTION();
 
-	IDispatch * handle_s = NULL;
+	IDispatchPtr handle_s = NULL;
 	int try_result = TryGetMetadbHandleFromVariant(handle, &handle_s);
 
-	if (!command || !try_result) return E_INVALIDARG;
+	if (!command || try_result < 0 || !handle_s) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
 	pfc::stringcvt::string_utf8_from_wide name(command);
@@ -1972,20 +2170,20 @@ STDMETHODIMP FbUtils::RunContextCommandWithMetadb(BSTR command, VARIANT handle, 
 	switch (try_result)
 	{
 	case 0:
-		reinterpret_cast<IFbMetadbHandle *>(handle_s)->get__ptr(&ptr);
+		reinterpret_cast<IFbMetadbHandle *>(handle_s.GetInterfacePtr())->get__ptr(&ptr);
+		if (!ptr) return E_INVALIDARG;
 		handle_list = pfc::list_single_ref_t<metadb_handle_ptr>(reinterpret_cast<metadb_handle *>(ptr));
 		break;
 
 	case 1:
-		reinterpret_cast<IFbMetadbHandleList *>(handle_s)->get__ptr(&ptr);
+		reinterpret_cast<IFbMetadbHandleList *>(handle_s.GetInterfacePtr())->get__ptr(&ptr);
+		if (!ptr) return E_INVALIDARG;
 		handle_list = *reinterpret_cast<metadb_handle_list *>(ptr);
 		break;
 
 	default:
 		return E_INVALIDARG;
 	}
-
-	if (!ptr) return E_INVALIDARG;
 
 	*p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name, handle_list));
 	return S_OK;
@@ -2019,7 +2217,6 @@ STDMETHODIMP FbUtils::IsMetadbInMediaLibrary(IFbMetadbHandle * handle, VARIANT_B
 	if (!p) return E_POINTER;
 
 	metadb_handle * ptr = NULL;
-
 	handle->get__ptr((void**)&ptr);
 	*p = TO_VARIANT_BOOL(static_api_ptr_t<library_manager>()->is_item_in_library(ptr));
 	return S_OK;
@@ -2376,17 +2573,38 @@ STDMETHODIMP MenuObj::TrackPopupMenu(int x, int y, UINT * item_id)
 //	return S_OK;
 //}
 
-STDMETHODIMP ContextMenuManager::InitContext(IFbMetadbHandle * handle)
+STDMETHODIMP ContextMenuManager::InitContext(VARIANT handle)
 {
 	TRACK_FUNCTION();
 
-	if (!handle) return E_INVALIDARG;
+	IDispatchPtr handle_s = NULL;
+	int try_result = TryGetMetadbHandleFromVariant(handle, &handle_s);
 
-	metadb_handle * ptr = NULL;
+	if (try_result < 0 || !handle_s) return E_INVALIDARG;
 
-	handle->get__ptr((void**)&ptr);
+	metadb_handle_list handle_list;
+	void * ptr = NULL;
+
+	switch (try_result)
+	{
+	case 0:
+		reinterpret_cast<IFbMetadbHandle *>(handle_s.GetInterfacePtr())->get__ptr(&ptr);
+		if (!ptr) return E_INVALIDARG;
+		handle_list = pfc::list_single_ref_t<metadb_handle_ptr>(reinterpret_cast<metadb_handle *>(ptr));
+		break;
+
+	case 1:
+		reinterpret_cast<IFbMetadbHandleList *>(handle_s.GetInterfacePtr())->get__ptr(&ptr);
+		if (!ptr) return E_INVALIDARG;
+		handle_list = *reinterpret_cast<metadb_handle_list *>(ptr);
+		break;
+
+	default:
+		return E_INVALIDARG;
+	}
+
 	contextmenu_manager::g_create(m_cm);
-	m_cm->init_context(pfc::list_single_ref_t<metadb_handle_ptr>(ptr), 0);
+	m_cm->init_context(handle_list, 0);
 	return S_OK;
 }
 
@@ -2727,7 +2945,6 @@ STDMETHODIMP WSHUtils::GetAlbumArtV2(IFbMetadbHandle * handle, int art_id, VARIA
 	if (!handle) return E_INVALIDARG;
 
 	metadb_handle * ptr = NULL;
-
 	handle->get__ptr((void**)&ptr);
 
 	return helpers::get_album_art_v2(ptr, pp, art_id, need_stub);
@@ -2747,9 +2964,8 @@ STDMETHODIMP WSHUtils::GetAlbumArtAsync(UINT window_id, IFbMetadbHandle * handle
 	if (!handle) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
-	metadb_handle * ptr = NULL;
 	unsigned tid = 0;
-
+	metadb_handle * ptr = NULL;
 	handle->get__ptr((void**)&ptr);
 
 	if (ptr)
@@ -3277,10 +3493,8 @@ STDMETHODIMP StyleTextRender::RenderStringPoint(IGdiGraphics * g, BSTR str, IGdi
 
 	Gdiplus::Font * fn = NULL;
 	Gdiplus::Graphics * graphics = NULL;
-
 	font->get__ptr((void**)&fn);
 	g->get__ptr((void**)&graphics);
-
 	if (!fn || !graphics) return E_INVALIDARG;
 
 	Gdiplus::FontFamily family;
@@ -3313,10 +3527,8 @@ STDMETHODIMP StyleTextRender::RenderStringRect(IGdiGraphics * g, BSTR str, IGdiF
 
 	Gdiplus::Font * fn = NULL;
 	Gdiplus::Graphics * graphics = NULL;
-
 	font->get__ptr((void**)&fn);
 	g->get__ptr((void**)&graphics);
-
 	if (!fn || !graphics) return E_INVALIDARG;
 
 	Gdiplus::FontFamily family;
@@ -3387,9 +3599,7 @@ STDMETHODIMP ThemeManager::DrawThemeBackground(IGdiGraphics * gr, int x, int y, 
 	if (!gr) return E_INVALIDARG;
 
 	Gdiplus::Graphics * graphics = NULL;
-
 	gr->get__ptr((void **)&graphics);
-
 	if (!graphics) return E_INVALIDARG;
 
 	RECT rc = { x, y, x + w, y + h};

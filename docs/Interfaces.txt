@@ -88,10 +88,10 @@ Methods:
 	// Used with GDI+ functions, such as DrawString().
 	IMeasureStringInfo MeasureString(str, IGdiFont, x, y, w, h, flags = 0);
 	// Used with GDI functions, such as GdiDrawText().
-	unsigned int CalcTextWidth(str, IGdiFont);
+	uint CalcTextWidth(str, IGdiFont);
 	// [1.3.5] New:
 	// Note that it will only calulate one line text height.
-	unsigned int CalcTextHeight(str, IGdiFont);
+	uint CalcTextHeight(str, IGdiFont);
 	// [1.3.5] New:
 	// Returns a VBArray
 	//  index | meaning
@@ -131,13 +131,14 @@ interface IGdiUtils {
 Methods:
 	IGdiFont Font(name, ptSize, style = 0);
 	IGdiBitmap Image(path);
-	IGdiBitmap CreateImage(w, h); // Create an image. By default, this image is transparent
+	// Create an image. By default, this image is transparent
+	IGdiBitmap CreateImage(w, h);
 	// [1.2.1] New:
 	// [1.3.0] Add: pngmode
 	IStyleTextRender CreateStyleTextRender(pngmode = false);
 	// [1.3.2] New:
 	// Returns a unique ID of this task.
-	unsigned int LoadImageAsync(window_id, path);
+	uint LoadImageAsync(window_id, path);
 }
 
 // [1.2.1] New interface
@@ -224,6 +225,34 @@ Methods:
 	void Dispose();
 }
 
+// [1.4.0] New:
+// [1.4.0 Beta 2] Updated:
+interface IFbMetadbHandleList
+{
+Properties:
+	(readonly) uint Count;
+	(readonly) IFbMetadbHandle Item(idx);
+	
+Methods:
+	IFbMetadbHandleList Clone();
+	uint Add(handle);
+	void RemoveById(UINT idx);
+	void Remove(handle);
+	void RemoveAll();
+	// Sort and remove duplicates
+	void Sort();
+	// If sorted, use BSearch instead
+	uint Find(handle);
+	// Only works when sorted, always faster than Find()
+	uint BSearch(handle);
+	// Must be sorted
+	void MakeIntersection(handles);
+	// Must be sorted
+	void MakeUnion(handles);
+	// Must be sorted
+	void MakeDifference(handles);
+}
+
 interface IFbTitleFormat {
 Methods:
 	// [1.1.2] Updated:
@@ -240,13 +269,13 @@ Methods:
 interface IMenuObj {
 Properties:
 	// [1.1.8] Fixed:
-	(readonly) unsigned int ID;
+	(readonly) uint ID;
 
 Methods:
 	// flags: see Flags.txt.
 	void AppendMenuItem(flags, item_id, text);
-	// Same as AppendMenuItem()
-	void AppendMenuSeparator(MF_SEPARATOR,..,..);
+	// Same as AppendMenuItem(MF_SEPARATOR,...,...)
+	void AppendMenuSeparator();
 	// [1.3.2] Changed:
 	// Add bypos parameter.
 	void EnableMenuItem(id_or_pos, enable, bypos = false);
@@ -266,7 +295,8 @@ Methods:
 interface IContextMenuManager {
 Methods:
 	// [1.1.8] New:
-	void InitContext(IFbMetadbHandle);
+	// [1.4.0] Changed: accept handle list.
+	void InitContext(handle_or_handles);
 	void InitNowPlaying();
 	void BuildMenu(IMenuObj, base_id, max_id);
 	// [1.2.1] Changed, return boolean
@@ -306,7 +336,7 @@ Properties:
 	(readonly) double PlaybackLength;
 	(readonly) boolean IsPaused;
 	(read, write) double PlaybackTime;
-	(read, write) unsigned int PlaybackOrder;
+	(read, write) uint PlaybackOrder;
 	// [1.0.2] New:
 	(read, write) boolean StopAfterCurrent;
 	// [1.1.1] New:
@@ -315,11 +345,11 @@ Properties:
 	(read, write) boolean PlaybackFollowCursor;
 	(read, write) float Volume;
 	// [1.3.2] New:
-	(readonly) unsigned PlaylistCount;
+	(readonly) uint PlaylistCount;
 	// [1.3.2] New:
-	(read, write) unsigned int ActivePlaylist;
+	(read, write) uint ActivePlaylist;
 	// [1.3.2] New:
-	(read, write) unsigned int PlayingPlaylist;
+	(read, write) uint PlayingPlaylist;
 
 Methods:
 	// [1.1.4] Updated:
@@ -341,7 +371,7 @@ Methods:
 	// NOTE: the return value may be null.
 	IFbMetadbHandle GetSelection();
 	// [1.4.0] New:
-	// Works actually like GetSelection(), but returns a list of metadbs.
+	// Works actually like GetSelection(), but returns a list of metadb handles.
 	// flags: 1 - no now playing
 	IFbMetadbHandleList GetSelections(flags = 0);
 	// [1.3.2] New:
@@ -354,7 +384,7 @@ Methods:
 	//   4: now_playing
 	//   5: keyboard_shortcut_list
 	//   6: media_library_viewer
-	unsigned int GetSelectionType();
+	uint GetSelectionType();
 	void Exit();
 	void Play();
 	void Stop();
@@ -376,8 +406,8 @@ Methods:
 	boolean RunMainMenuCommand(command);
 	boolean RunContextCommand(command);
 	// [1.1.2] New:
-	// [1.4.0] Changed: Accept IFbMetadbHandleList interface for metadb list.
-	boolean RunContextCommandWithMetadb(command, handle_or_list);
+	// [1.4.0] Changed: Accept IFbMetadbHandleList interface for metadb handle list.
+	boolean RunContextCommandWithMetadb(command, handle_or_handles);
 	IContextMenuManager CreateContextMenuManager();
 	// [1.1.7] New:
 	boolean IsMetadbInMediaLibrary(metadb);
@@ -386,7 +416,7 @@ Methods:
 	// [1.3.2] New:
 	// if name is "", then Create a playlist autonamed with "New Playlist <number>".
 	// return the index of the created playlist.
-	unsigned int CreatePlaylist(idx, name);
+	uint CreatePlaylist(idx, name);
 	// [1.3.2] New:
 	boolean RemovePlaylist(idx);
 	// [1.3.2] New:
@@ -405,7 +435,7 @@ Methods:
 
 interface ITimerObj {
 Properties:
-	(readonly) unsigned int ID;
+	(readonly) uint ID;
 
 Methods:
 	// [1.1.10] New:
@@ -485,9 +515,13 @@ Methods:
 	//  info can be any type now, but be aware of passing arrays and objects (because they may be unrecognized between
 	//     JScript and VBScript). However, VBArrays, strings, booleans, integers and floats, are safe to use.
 	void NotifyOthers(name, info);
-	// [1.1.3] New: These two methods are in cooperation with callback on_metadb_changed().
+	// [1.1.3] New: These two methods below are in cooperation with callback on_metadb_changed().
+        // [1.4.0] Changed:
+        // NOTE: Make sure you have read Preprocessors.txt if you are using "feature" directive.
 	void WatchMetadb(IFbMetadbHandle);
 	// [1.1.3] New:
+        // [1.4.0] Changed:
+        // NOTE: Make sure you have read Preprocessors.txt if you are using "feature" directive.
 	void UnWatchMetadb();
 	// [1.1.5] New: Create a tooltip object
 	IFbTooltip CreateTooltip();
@@ -509,7 +543,7 @@ Methods:
 	// [1.3.0] New:
 	// Only valid in CUI
 	// for type and client_guid, see Flags.txt
-	unsigned int GetColorCUI(type, client_guid = "");
+	uint GetColorCUI(type, client_guid = "");
 	// [1.3.0] New:
 	// Only valid in CUI
 	// for type and client_guid, see Flags.txt
@@ -519,7 +553,7 @@ Methods:
 	// [1.3.0] New:
 	// Only valid in DUI
 	// for type, see Flags.txt
-	unsigned int GetColorDUI(type);
+	uint GetColorDUI(type);
 	// [1.3.0] New:
 	// Only valid in DUI
 	// for type, see Flags.txt
@@ -558,7 +592,7 @@ Methods:
 	//     set to null in on_get_album_art_done() callback.
 	// HINT: window_id can be retrieved by window.ID
 	// NOTE: This function returns immediately, album art will be sent to on_get_album_art_done() callback as soon as album art is found
-	unsigned int GetAlbumArtAsync(window_id, IFbMetadbHandle, art_id = 0, need_stub = true, only_embed = false, no_load = false);
+	uint GetAlbumArtAsync(window_id, IFbMetadbHandle, art_id = 0, need_stub = true, only_embed = false, no_load = false);
 	// [1.1.4] New: A INI file should like this:
 	// [section]
 	// key=val
@@ -579,7 +613,7 @@ Methods:
 	// [1.2.1] New:
 	// index: http://msdn.microsoft.com/en-us/library/ms724371%28VS.85%29.aspx
 	// Returns 0 if failed.
-	unsigned int GetSysColor(index);
+	uint GetSysColor(index);
 	// [1.2.1] New
 	// index: http://msdn.microsoft.com/en-us/library/ms724385%28VS.85%29.aspx
 	// Returns 0 if failed.

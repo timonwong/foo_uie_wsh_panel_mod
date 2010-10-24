@@ -132,7 +132,25 @@ struct StringComparePartialNC
 		return pfc::stricmp_ascii_ex(s1, len1, s2, len2);
 	}
 
-	t_size len, start;
+	t_size len;
+};
+
+struct StringCompareSpecial
+{
+	int operator()(const char * s1, const char * s2) const
+	{
+		int result = _stricmp(s1, s2);
+
+		if (result == 0)
+		{
+			if (isalpha(*s1) && (*s1 != *s2))
+			{
+				return islower(*s1) ? -1 : 1;
+			}
+		}
+
+		return result;
+	}
 };
 
 static t_size LengthWord(const char * word, char otherSeparator)
@@ -567,7 +585,7 @@ bool CScriptEditorCtrl::StartAutoComplete()
 
 	int startword = current;
 
-	while ((startword > 0) && IsIdentifierChar(line[startword - 1]) || line[startword - 1] == '.')
+	while ((startword > 0) && (IsIdentifierChar(line[startword - 1]) || line[startword - 1] == '.'))
 	{
 		startword--;
 	}
@@ -1292,6 +1310,15 @@ void CScriptEditorCtrl::ReadAPI()
 	{
 		if (helpers::read_file(api_filename, content))
 		{
+			pfc::list_t<pfc::string8_fast> temp;
+			pfc::splitStringByLines(temp, content);
+
+			for (t_size i = 0; i < temp.get_count(); ++i)
+			{
+				if (IsIdentifierChar(*(temp[i].get_ptr())))
+					m_apis.add_item(temp[i]);
+			}
+			/*
 			// Split string by lines
 			const char * str = content.get_ptr();
 
@@ -1301,7 +1328,8 @@ void CScriptEditorCtrl::ReadAPI()
 
 				if (next == NULL) 
 				{
-					m_apis.add_item(str); 
+					if (*str != '#')
+						m_apis.add_item(str); 
 					break;
 				}
 
@@ -1310,9 +1338,11 @@ void CScriptEditorCtrl::ReadAPI()
 				while (walk > str && walk[-1] == '\r') 
 					--walk;
 
-				m_apis.add_item(pfc::string_simple(str, walk - str));
+				if (*str != '#')
+					m_apis.add_item(pfc::string_simple(str, walk - str));
 				str = next + 1;
 			}
+			*/
 		}
 		else
 		{
@@ -1323,5 +1353,125 @@ void CScriptEditorCtrl::ReadAPI()
 	}
 
 	// Sort now
-	m_apis.sort_remove_duplicates_t(pfc::stringCompareCaseInsensitive);
+	m_apis.sort_remove_duplicates_t(StringCompareSpecial());
+}
+
+LRESULT CScriptEditorCtrl::OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	bHandled = FALSE;
+	::PostMessage(::GetAncestor(m_hWnd, GA_PARENT), UWM_SCN_KEYDOWN, wParam, lParam);
+	return TRUE;
+}
+
+LRESULT CScriptEditorCtrl::OnUpdateUI(LPNMHDR pnmn)
+{
+	// Match Brace
+	int braceAtCaret = -1;
+	int braceOpposite = -1;
+
+	FindBraceMatchPos(braceAtCaret, braceOpposite);
+
+	if (braceAtCaret != -1 && braceOpposite == -1)
+	{
+		BraceBadLight(braceAtCaret);
+		SetHighlightGuide(0);
+	}
+	else
+	{
+		char chBrace = GetCharAt(braceAtCaret);
+
+		BraceHighlight(braceAtCaret, braceOpposite);
+
+		int columnAtCaret = GetColumn(braceAtCaret);
+		int columnOpposite = GetColumn(braceOpposite);
+
+		SetHighlightGuide(min(columnAtCaret, columnOpposite));
+	}
+
+	return 0;
+}
+
+LRESULT CScriptEditorCtrl::OnCharAdded(LPNMHDR pnmh)
+{
+	SCNotification * notification = (SCNotification *)pnmh;
+	char ch = notification->ch;
+	Sci_CharacterRange crange = GetSelection();
+	int selStart = crange.cpMin;
+	int selEnd = crange.cpMax;
+
+	if ((selEnd == selStart) && (selStart > 0))
+	{
+		if (CallTipActive()) 
+		{
+			switch (ch)
+			{
+			case ')':
+				m_nBraceCount--;
+				if (m_nBraceCount < 1)
+					CallTipCancel();
+				else
+					StartCallTip();
+				break;
+
+			case '(':
+				m_nBraceCount++;
+				StartCallTip();
+				break;
+
+			default:
+				ContinueCallTip();
+				break;
+			}
+		}
+		else if (AutoCActive())
+		{
+			if (ch == '(') 
+			{
+				m_nBraceCount++;
+				StartCallTip();
+			} 
+			else if (ch == ')')
+			{
+				m_nBraceCount--;
+			} 
+			else if (!isalnum(ch) && (ch != '_'))
+			{
+				AutoCCancel();
+
+				if (IsIdentifierChar(ch) || ch == '.')
+					StartAutoComplete();
+			} 
+		} 
+		else 
+		{
+			if (ch == '(')
+			{
+				m_nBraceCount = 1;
+				StartCallTip();
+			} 
+			else 
+			{
+				AutomaticIndentation(ch);
+				
+				if (IsIdentifierChar(ch) || ch == '.')
+					StartAutoComplete();
+			}
+		}
+	}
+
+	return 0;
+}
+
+LRESULT CScriptEditorCtrl::OnZoom(LPNMHDR pnmn)
+{
+	AutoMarginWidth();
+
+	return 0;
+}
+
+LRESULT CScriptEditorCtrl::OnChange(UINT uNotifyCode, int nID, HWND wndCtl)
+{
+	AutoMarginWidth();
+
+	return 0;
 }

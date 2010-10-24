@@ -155,9 +155,9 @@ public:
 	ScriptSite(HostComm * host)
 		: m_host(host)
 		, m_window(new com_object_impl_t<FbWindow, false>(host))
-		, m_gdi(new com_object_impl_t<GdiUtils, false>())
-		, m_fb2k(new com_object_impl_t<FbUtils, false>())
-		, m_utils(new com_object_impl_t<WSHUtils, false>())
+		, m_gdi(com_object_singleton_t<GdiUtils>::instance())
+		, m_fb2k(com_object_singleton_t<FbUtils>::instance())
+		, m_utils(com_object_singleton_t<WSHUtils>::instance())
 		, m_dwRef(0)
 		, m_dwStartTime(0)
 	{}

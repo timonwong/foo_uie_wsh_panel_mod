@@ -469,8 +469,8 @@ STDMETHODIMP FbWindow::NotifyOthers(BSTR name, VARIANT info)
 
 	if (FAILED(hr)) return hr;
 
-	t_simple_callback_data_2<_bstr_t, _variant_t> * notify_data 
-		= new t_simple_callback_data_2<_bstr_t, _variant_t>(name, NULL);
+	simple_callback_data_2<_bstr_t, _variant_t> * notify_data 
+		= new simple_callback_data_2<_bstr_t, _variant_t>(name, NULL);
 
 	notify_data->m_item2.Attach(var.Detach());
 
@@ -484,14 +484,15 @@ STDMETHODIMP FbWindow::WatchMetadb(IFbMetadbHandle * handle)
 {
 	TRACK_FUNCTION();
 
+	if (m_host->GetScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
+	{
+		return E_NOTIMPL;
+	}
+
 	if (!handle) return E_INVALIDARG;
-
 	metadb_handle * ptr = NULL;
-
 	handle->get__ptr((void**)&ptr);
-
 	if (!ptr) return E_INVALIDARG;
-
 	m_host->GetWatchedMetadbHandle() = ptr;
 	return S_OK;
 }
@@ -499,6 +500,11 @@ STDMETHODIMP FbWindow::WatchMetadb(IFbMetadbHandle * handle)
 STDMETHODIMP FbWindow::UnWatchMetadb()
 {
 	TRACK_FUNCTION();
+
+	if (m_host->GetScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
+	{
+		return E_NOTIMPL;
+	}
 
 	m_host->GetWatchedMetadbHandle() = NULL;
 	return S_OK;
@@ -1828,7 +1834,7 @@ void wsh_panel_window::on_item_played(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	callback_data_ptr<t_simple_callback_data<metadb_handle_ptr> > data(wp);
+	simple_callback_data_scope_releaser<simple_callback_data<metadb_handle_ptr> > data(wp);
 
 	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
 	VARIANTARG args[1];
@@ -1915,7 +1921,7 @@ void wsh_panel_window::on_notify_data(WPARAM wp)
 
 	VARIANTARG args[2];
 
-	callback_data_ptr<t_simple_callback_data_2<_bstr_t, _variant_t> > data(wp);
+	simple_callback_data_scope_releaser<simple_callback_data_2<_bstr_t, _variant_t> > data(wp);
 
 	args[0].vt = VT_VARIANT | VT_BYREF;
 	args[0].pvarVal = &data->m_item2.GetVARIANT();
@@ -1955,7 +1961,7 @@ void wsh_panel_window::on_playback_new_track(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	callback_data_ptr<t_simple_callback_data<metadb_handle_ptr> > data(wp);
+	simple_callback_data_scope_releaser<simple_callback_data<metadb_handle_ptr> > data(wp);
 
 	VARIANTARG args[1];
 	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
@@ -1982,7 +1988,7 @@ void wsh_panel_window::on_playback_seek(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	callback_data_ptr<t_simple_callback_data<double> > data(wp);
+	simple_callback_data_scope_releaser<simple_callback_data<double> > data(wp);
 
 	VARIANTARG args[1];
 
@@ -2027,7 +2033,7 @@ void wsh_panel_window::on_playback_time(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	callback_data_ptr<t_simple_callback_data<double> > data(wp);
+	simple_callback_data_scope_releaser<simple_callback_data<double> > data(wp);
 
 	VARIANTARG args[1];
 
@@ -2040,7 +2046,7 @@ void wsh_panel_window::on_volume_change(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	callback_data_ptr<t_simple_callback_data<float> > data(wp);
+	simple_callback_data_scope_releaser<simple_callback_data<float> > data(wp);
 
 	VARIANTARG args[1];
 
@@ -2085,45 +2091,64 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	callback_data_ptr<nonautoregister_callbacks::t_on_changed_sorted_data > data(wp);
+	if (GetScriptInfo().feature_mask & t_script_info::kFeatureNoWatchMetadb)
+		return;
 
-	if (m_watched_handle.is_empty() || !data->m_items_sorted.have_item(m_watched_handle))
+	simple_callback_data_scope_releaser<nonautoregister_callbacks::t_on_changed_sorted_data> data(wp);
+
+	if (m_watched_handle.is_empty())
 		return;
 
 	VARIANTARG args[2];
-	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(m_watched_handle);
+	IDispatch * handle = NULL;
+
+	if (GetScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
+	{
+		handle = new com_object_impl_t<FbMetadbHandleList>(data->m_items_sorted);
+	}
+	else
+	{
+		if (!data->m_items_sorted.have_item(m_watched_handle))
+			return;
+
+		handle = new com_object_impl_t<FbMetadbHandle>(m_watched_handle);
+	}
 
 	args[0].vt = VT_BOOL;
 	args[0].boolVal = TO_VARIANT_BOOL(data->m_fromhook);
 	args[1].vt = VT_DISPATCH;
 	args[1].pdispVal = handle;
 	script_invoke_v(L"on_metadb_changed", args, _countof(args));
-
 	handle->Release();
 }
 
 void wsh_panel_window::on_selection_changed(WPARAM wp)
 {
 	TRACK_FUNCTION();
-
-	FbMetadbHandle * handle = NULL; 
 	
 	if (wp != 0)
 	{
-		callback_data_ptr<t_simple_callback_data<metadb_handle_ptr> > data(wp);
+		if (GetScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
+		{
+			script_invoke_v(L"on_selection_changed");
+		}
+		else
+		{
+			IDispatch * handle = NULL;
+			simple_callback_data_scope_releaser<simple_callback_data<metadb_handle_ptr> > data(wp);
+			handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
 
-		handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
-	}
+			VARIANTARG args[1];
 
-	VARIANTARG args[1];
+			args[0].vt = VT_DISPATCH;
+			args[0].pdispVal = handle;
+			script_invoke_v(L"on_selection_changed", args, _countof(args));
 
-	args[0].vt = VT_DISPATCH;
-	args[0].pdispVal = handle;
-	script_invoke_v(L"on_selection_changed", args, _countof(args));
-
-	if (handle)
-	{
-		handle->Release();
+			if (handle)
+			{
+				handle->Release();
+			}
+		}
 	}
 }
 

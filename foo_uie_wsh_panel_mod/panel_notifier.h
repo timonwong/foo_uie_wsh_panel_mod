@@ -58,43 +58,43 @@ public:
 };
 
 template <class T>
-struct t_simple_callback_data : public pfc::refcounted_object_root
+struct simple_callback_data : public pfc::refcounted_object_root
 {
 	T m_item;
 
-	inline t_simple_callback_data(const T & p_item) : m_item(p_item) {}
+	inline simple_callback_data(const T & p_item) : m_item(p_item) {}
 };
 
 template <class T1, class T2>
-struct t_simple_callback_data_2 : public pfc::refcounted_object_root
+struct simple_callback_data_2 : public pfc::refcounted_object_root
 {
 	T1 m_item1;
 	T2 m_item2;
 
-	inline t_simple_callback_data_2(const T1 & p_item1, const T2 & p_item2) : m_item1(p_item1), m_item2(p_item2) {}
+	inline simple_callback_data_2(const T1 & p_item1, const T2 & p_item2) : m_item1(p_item1), m_item2(p_item2) {}
 };
 
 // Only used in message handler
 template <class T>
-class callback_data_ptr
+class simple_callback_data_scope_releaser
 {
 private:
 	T * m_data;
 
 public:
 	template <class TParam>
-	inline callback_data_ptr(TParam p_data)
+	inline simple_callback_data_scope_releaser(TParam p_data)
 	{
 		m_data = reinterpret_cast<T *>(p_data);
 	}
 
 	template <class TParam>
-	inline callback_data_ptr(TParam * p_data)
+	inline simple_callback_data_scope_releaser(TParam * p_data)
 	{
 		m_data = reinterpret_cast<T *>(p_data);
 	}
 
-	inline virtual ~callback_data_ptr()
+	inline virtual ~simple_callback_data_scope_releaser()
 	{
 		m_data->refcount_release();
 	}

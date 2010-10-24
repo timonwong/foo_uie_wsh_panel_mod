@@ -110,8 +110,8 @@ void config_object_callback::on_watched_object_changed(const service_ptr_t<confi
 
 void playback_stat_callback::on_item_played(metadb_handle_ptr p_item)
 {
-	t_simple_callback_data<metadb_handle_ptr> * on_item_played_data 
-		= new t_simple_callback_data<metadb_handle_ptr>(p_item);
+	simple_callback_data<metadb_handle_ptr> * on_item_played_data 
+		= new simple_callback_data<metadb_handle_ptr>(p_item);
 
 	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_ITEM_PLAYED, 
 		on_item_played_data);
@@ -129,8 +129,8 @@ void nonautoregister_callbacks::on_selection_changed(metadb_handle_list_cref p_s
 {
 	if (p_selection.get_count() > 0)
 	{
-		t_simple_callback_data<metadb_handle_ptr> * on_selection_changed_data 
-			= new t_simple_callback_data<metadb_handle_ptr>(p_selection[0]);
+		simple_callback_data<metadb_handle_ptr> * on_selection_changed_data 
+			= new simple_callback_data<metadb_handle_ptr>(p_selection[0]);
 
 		panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_SELECTION_CHANGED, 
 			on_selection_changed_data);
@@ -149,7 +149,7 @@ void my_play_callback::on_playback_starting(play_control::t_track_command cmd, b
 
 void my_play_callback::on_playback_new_track(metadb_handle_ptr track)
 {
-	t_simple_callback_data<metadb_handle_ptr> * on_playback_new_track_data = new t_simple_callback_data<metadb_handle_ptr>(track);
+	simple_callback_data<metadb_handle_ptr> * on_playback_new_track_data = new simple_callback_data<metadb_handle_ptr>(track);
 
 	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_PLAYBACK_NEW_TRACK, 
 		on_playback_new_track_data);
@@ -164,7 +164,7 @@ void my_play_callback::on_playback_stop(play_control::t_stop_reason reason)
 void my_play_callback::on_playback_seek(double time)
 {
 	// sizeof(double) >= sizeof(WPARAM)
-	t_simple_callback_data<double> * on_playback_seek_data = new t_simple_callback_data<double>(time);
+	simple_callback_data<double> * on_playback_seek_data = new simple_callback_data<double>(time);
 
 	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_PLAYBACK_SEEK,
 		on_playback_seek_data);
@@ -194,7 +194,7 @@ void my_play_callback::on_playback_dynamic_info_track(const file_info& info)
 void my_play_callback::on_playback_time(double time)
 {
 	// sizeof(double) >= sizeof(WPARAM)
-	t_simple_callback_data<double> * on_playback_time_data = new t_simple_callback_data<double>(time);
+	simple_callback_data<double> * on_playback_time_data = new simple_callback_data<double>(time);
 
 	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_PLAYBACK_TIME,
 		on_playback_time_data);
@@ -203,7 +203,7 @@ void my_play_callback::on_playback_time(double time)
 void my_play_callback::on_volume_change(float newval)
 {
 	// though sizeof(float) == sizeof(int), cast of IEEE754 is dangerous, always.
-	t_simple_callback_data<float> * on_volume_change_data = new t_simple_callback_data<float>(newval);
+	simple_callback_data<float> * on_volume_change_data = new simple_callback_data<float>(newval);
 
 	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_VOLUME_CHANGE,
 		on_volume_change_data);

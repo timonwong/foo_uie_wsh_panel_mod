@@ -147,11 +147,17 @@ function on_timer(timer_id) {}
 // For those who what to implement "follow cursor"
 function on_item_focus_change() {}
 
-// [1.1.3] New: Called when metadb contents change. (Or, one of display hook component requests display update).
+// [1.1.3] New:
+// [1.4.0] Changed:
+// Called when metadb contents change. (Or, one of display hook component requests display update).
 // Cooperated with window.WatchMetadb() and window.UnWatchMetadb()
 // metadb: The same metadb as in window.WatchMetadb(metadb)
 // fromhook: boolean, set to true when actual file contents haven't changed but one of metadb_display_field_provider 
 //   implementations requested an update so output of metadb_handle::format_title() etc has changed.
+// NOTE: See Preprocessors.txt if you are using @feature directive.
+// NOTE: metadb will be metadb handle list (already sorted) when preprocessor directive "feature":
+//   1. "v2.0" and later is set;
+//   2. "watch-metadb" is set.
 function on_metadb_changed(metadb, fromhook) {}
 
 // [1.3.0] New:
@@ -176,7 +182,8 @@ function on_script_unload() {}
 function on_playlists_changed() {}
 
 // [1.3.2] New:
+// [1.4.0] Changed:
 // This behavior will be changed when "Display->Selection viewers" of foobar2000 preferences is changed.
 // NOTE: metadb may be null.
+// NOTE: metadb is not valid since 1.4.0 Beta 1 when preprocessor: "feature" "v1.4" or later is set. (See Preprocessors.txt)
 function on_selection_changed(metadb) {}
-

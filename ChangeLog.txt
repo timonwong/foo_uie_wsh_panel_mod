@@ -1,10 +1,17 @@
+v1.4.0 Beta 2
+- ADD: New preprocessor directive "feature" (Preprocessors.txt).
+- ADD: More methods added for IFbMetadbHandleList interface.
+- CHG: IContextMenuManager.InitContext() now accept IFbMetadbHandleList.
+- FIX: Possible memory leaks and script crashes in fb.RunContextCommandWithMetadb(), introduced in 1.4.0 Beta 1.
+- FIX: minor fixes.
+
 v1.4.0 Beta 1
-- ADD: New IFbMetadbHandleList interface for a list of metadb handles.
+- ADD: New IFbMetadbHandleList interface for accessing metadb handle list.
 - ADD: fb.GetSelections() method.
 - CHG: fb.RunContextCommandWithMetadb() now accept IFbMetadbHandleList.
 - ADD: Autoplaylist functions: fb.IsAutoPlaylist(), fb.CreateAutoPlaylist() and fb.ShowAutoPlaylistUI().
-- FIX: Script crashes with themes API while changing Windows themes.
-- ADD: UI improvements.
+- FIX: Using theme APIs make may casue script crash while changing Windows themes.
+- CHG: UI improvements.
 
 v1.3.7
 - ADD: Readonly window.IsVisible property.

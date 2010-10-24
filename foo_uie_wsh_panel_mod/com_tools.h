@@ -98,21 +98,9 @@ FOOGUIDDECL ITypeInfoPtr MyIDispatchImpl<T>::g_typeinfo;
 template <typename _Base, bool _AddRef = true>
 class com_object_impl_t : public _Base
 {
-protected:
+private:
 	volatile LONG m_dwRef;
 
-public:
-	STDMETHODIMP_(ULONG) AddRef()
-	{
-		return AddRef_();
-	}
-
-	STDMETHODIMP_(ULONG) Release()
-	{
-		return Release_();
-	}
-
-private:
 	inline ULONG AddRef_()
 	{
 		return InterlockedIncrement(&m_dwRef);
@@ -139,9 +127,19 @@ private:
 			AddRef_();
 	}
 
-public:
 	virtual ~com_object_impl_t()
 	{
+	}
+
+public:
+	STDMETHODIMP_(ULONG) AddRef()
+	{
+		return AddRef_();
+	}
+
+	STDMETHODIMP_(ULONG) Release()
+	{
+		return Release_();
 	}
 
 	TEMPLATE_CONSTRUCTOR_FORWARD_FLOOD_WITH_INITIALIZER(com_object_impl_t, _Base, { Construct_(); })
@@ -187,3 +185,35 @@ public:
 		return S_OK;
 	}
 };
+
+template <class T>
+class com_object_singleton_t
+{
+public:
+	static inline T * instance()
+	{
+		if (!_instance)
+		{
+			insync(_cs);
+
+			if (!_instance)
+			{
+				_instance = new com_object_impl_t<T, false>();
+			}
+		}
+
+		return reinterpret_cast<T *>(_instance.GetInterfacePtr());
+	}
+
+private:
+	static IDispatchPtr _instance;
+	static critical_section _cs;
+
+	PFC_CLASS_NOT_COPYABLE_EX(com_object_singleton_t)
+};
+
+template <class T>
+FOOGUIDDECL IDispatchPtr com_object_singleton_t<T>::_instance;
+
+template <class T>
+FOOGUIDDECL critical_section com_object_singleton_t<T>::_cs;

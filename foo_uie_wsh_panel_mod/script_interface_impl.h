@@ -188,6 +188,7 @@ public:
 	STDMETHODIMP get_chars(int * p);
 };
 
+// Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
 class GdiUtils : public IDispatchImpl3<IGdiUtils>
 {
 protected:
@@ -269,22 +270,33 @@ public:
 class FbMetadbHandleList : public IDisposableImpl4<IFbMetadbHandleList>
 {
 protected:
-	metadb_handle_list * m_handles_ptr;
+	metadb_handle_list m_handles;
 
-	FbMetadbHandleList(metadb_handle_list * handles) : m_handles_ptr(handles) {}
+	FbMetadbHandleList(metadb_handle_list_cref handles) : m_handles(handles) {}
 
 	virtual ~FbMetadbHandleList() { }
 
 	virtual void FinalRelease()
 	{
-		m_handles_ptr->remove_all();
-		delete m_handles_ptr;
+		m_handles.remove_all();
 	}
 
 public:
 	STDMETHODIMP get__ptr(void ** pp);
 	STDMETHODIMP get_Item(UINT idx, IFbMetadbHandle ** pp);
 	STDMETHODIMP get_Count(UINT * p);
+
+	STDMETHODIMP Clone(IFbMetadbHandleList ** pp);
+	STDMETHODIMP Add(IFbMetadbHandle * handle, UINT * p);
+	STDMETHODIMP RemoveById(UINT idx);
+	STDMETHODIMP Remove(IFbMetadbHandle * handle);
+	STDMETHODIMP RemoveAll();
+	STDMETHODIMP Sort();
+	STDMETHODIMP Find(IFbMetadbHandle * handle, UINT * p);
+	STDMETHODIMP BSearch(IFbMetadbHandle * handle, UINT * p);
+	STDMETHODIMP MakeIntersection(IFbMetadbHandleList * handles);
+	STDMETHODIMP MakeUnion(IFbMetadbHandleList * handles);
+	STDMETHODIMP MakeDifference(IFbMetadbHandleList * handles);
 };
 
 class FbTitleFormat : public IDisposableImpl4<IFbTitleFormat>
@@ -324,7 +336,7 @@ protected:
 	}
 
 public:
-	STDMETHODIMP InitContext(IFbMetadbHandle * handle);
+	STDMETHODIMP InitContext(VARIANT handle);
 	STDMETHODIMP InitNowPlaying();
 	STDMETHODIMP BuildMenu(IMenuObj * p, int base_id, int max_id);
 	STDMETHODIMP ExecuteByID(UINT id, VARIANT_BOOL * p);
@@ -364,6 +376,7 @@ public:
 	STDMETHODIMP get_Time(INT * p);
 };
 
+// Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
 class FbUtils : public IDispatchImpl3<IFbUtils>
 {
 protected:
@@ -499,6 +512,7 @@ public:
 	STDMETHODIMP get_ID(UINT * p);
 };
 
+// Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
 class WSHUtils : public IDispatchImpl3<IWSHUtils>
 {
 protected:

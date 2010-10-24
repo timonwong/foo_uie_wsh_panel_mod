@@ -246,6 +246,18 @@ __interface IFbMetadbHandleList: IDisposable
 	[propget] STDMETHOD(_ptr)([out,retval] void ** pp);
 	[propget] STDMETHOD(Item)(UINT idx, [out,retval] IFbMetadbHandle ** pp);
 	[propget] STDMETHOD(Count)([out,retval] UINT * p);
+
+	STDMETHOD(Clone)([out,retval] IFbMetadbHandleList ** pp);
+	STDMETHOD(Add)(IFbMetadbHandle * handle, [out,retval] UINT * p);
+	STDMETHOD(RemoveById)(UINT idx);
+	STDMETHOD(Remove)(IFbMetadbHandle * handle);
+	STDMETHOD(RemoveAll)();
+	STDMETHOD(Sort)();
+	STDMETHOD(Find)(IFbMetadbHandle * handle, [out,retval] UINT * p);
+	STDMETHOD(BSearch)(IFbMetadbHandle * handle, [out,retval] UINT * p);
+	STDMETHOD(MakeIntersection)(IFbMetadbHandleList * handles);
+	STDMETHOD(MakeUnion)(IFbMetadbHandleList * handles);
+	STDMETHOD(MakeDifference)(IFbMetadbHandleList * handles);
 };
 
 [
@@ -293,7 +305,7 @@ __interface IMenuObj: IDisposable
 ]
 __interface IContextMenuManager: IDisposable
 {
-	STDMETHOD(InitContext)(IFbMetadbHandle * handle);
+	STDMETHOD(InitContext)(VARIANT handles);
 	STDMETHOD(InitNowPlaying)();
 	STDMETHOD(BuildMenu)(IMenuObj * p, int base_id, int max_id);
 	STDMETHOD(ExecuteByID)(UINT id, [out,retval] VARIANT_BOOL * p);

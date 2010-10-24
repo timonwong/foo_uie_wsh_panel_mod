@@ -102,6 +102,9 @@
     <ClCompile Include="scintilla_prop_sets.cpp">
       <Filter>Source Files\Scintilla</Filter>
     </ClCompile>
+    <ClCompile Include="version.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
@@ -195,6 +198,12 @@
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
     <ClInclude Include="SString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hgrev.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="com_tools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
