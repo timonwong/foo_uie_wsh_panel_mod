@@ -482,7 +482,7 @@ public:
 	STDMETHODIMP EnableMenuItem(UINT id_or_pos, UINT enable, VARIANT_BOOL bypos);
 	STDMETHODIMP CheckMenuItem(UINT id_or_pos, VARIANT_BOOL check, VARIANT_BOOL bypos);
 	STDMETHODIMP CheckMenuRadioItem(UINT first, UINT last, UINT check, VARIANT_BOOL bypos);
-	STDMETHODIMP TrackPopupMenu(int x, int y, UINT * item_id);
+	STDMETHODIMP TrackPopupMenu(int x, int y, UINT flags, UINT * item_id);
 	//STDMETHODIMP GetMenuItemCount(INT * p);
 	//STDMETHODIMP GetMenuItemID(int pos, UINT * p);
 	//STDMETHODIMP GetMenuItemState(UINT id_or_pos, VARIANT_BOOL bypos, UINT * p);

@@ -287,7 +287,9 @@ Methods:
 	// [1.3.2] Changed:
 	// Add bypos parameter.
 	void CheckMenuRadioItem(first, last, check, bypos = false);
-	int TrackPopupMenu(x, y);
+	// [1.4.0 Beta 3] Updated:
+	// flags: Control popup positions and animations. (See Flags.txt)
+	int TrackPopupMenu(x, y, flags = 0);
 	// [1.1.10] New:
 	void Dispose();
 }

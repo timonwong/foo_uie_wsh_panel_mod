@@ -2496,7 +2496,7 @@ STDMETHODIMP MenuObj::CheckMenuRadioItem(UINT first, UINT last, UINT check, VARI
 	return S_OK;
 }
 
-STDMETHODIMP MenuObj::TrackPopupMenu(int x, int y, UINT * item_id)
+STDMETHODIMP MenuObj::TrackPopupMenu(int x, int y, UINT flags, UINT * item_id)
 {
 	TRACK_FUNCTION();
 
@@ -2505,9 +2505,13 @@ STDMETHODIMP MenuObj::TrackPopupMenu(int x, int y, UINT * item_id)
 
 	POINT pt = {x, y};
 
+	// Only include specified flags
+	flags |= TPM_NONOTIFY | TPM_RETURNCMD | TPM_RIGHTBUTTON;
+	flags &= ~TPM_RECURSE;
+
 	ClientToScreen(m_wnd_parent, &pt);
 	SendMessage(m_wnd_parent, UWM_TOGGLEQUERYCONTINUE, 0, false);
-	(*item_id) = ::TrackPopupMenu(m_hMenu, TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD, pt.x, pt.y, 0, m_wnd_parent, 0);
+	(*item_id) = ::TrackPopupMenu(m_hMenu, flags, pt.x, pt.y, 0, m_wnd_parent, 0);
 	SendMessage(m_wnd_parent, UWM_TOGGLEQUERYCONTINUE, 0, true);
 	return S_OK;
 }

@@ -1310,12 +1310,12 @@ void CScriptEditorCtrl::ReadAPI()
 	{
 		if (helpers::read_file(api_filename, content))
 		{
-			pfc::list_t<pfc::string8_fast> temp;
+			pfc::string_list_impl temp;
 			pfc::splitStringByLines(temp, content);
 
 			for (t_size i = 0; i < temp.get_count(); ++i)
 			{
-				if (IsIdentifierChar(*(temp[i].get_ptr())))
+				if (IsIdentifierChar(*temp[i]))
 					m_apis.add_item(temp[i]);
 			}
 			/*

@@ -1,9 +1,12 @@
+v1.4.0 Beta 3
+- ADD: New parameter "flags" to IMenuObj.TrackPopupMenu() method.
+
 v1.4.0 Beta 2
 - ADD: New preprocessor directive "feature" (Preprocessors.txt).
 - ADD: More methods added for IFbMetadbHandleList interface.
 - CHG: IContextMenuManager.InitContext() now accept IFbMetadbHandleList.
 - FIX: Possible memory leaks and script crashes in fb.RunContextCommandWithMetadb(), introduced in 1.4.0 Beta 1.
-- FIX: minor fixes.
+- FIX: Minor fixes.
 
 v1.4.0 Beta 1
 - ADD: New IFbMetadbHandleList interface for accessing metadb handle list.

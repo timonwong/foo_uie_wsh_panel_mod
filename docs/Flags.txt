@@ -42,6 +42,23 @@ MF_POPUP = 0x00000010;
 MF_MENUBARBREAK = 0x00000020;
 MF_MENUBREAK = 0x00000040;
 
+// Used in TrackPopupMenu()
+// For more information, see: http://msdn.microsoft.com/en-us/library/ms648002(VS.85).aspx
+TPM_LEFTALIGN       = 0x0000;
+TPM_CENTERALIGN     = 0x0004;
+TPM_RIGHTALIGN      = 0x0008;
+TPM_TOPALIGN        = 0x0000;
+TPM_VCENTERALIGN    = 0x0010;
+TPM_BOTTOMALIGN     = 0x0020;
+TPM_HORIZONTAL      = 0x0000;     /* Horz alignment matters more */
+TPM_VERTICAL        = 0x0040;     /* Vert alignment matters more */
+// Animations
+TPM_HORPOSANIMATION = 0x0400;
+TPM_HORNEGANIMATION = 0x0800;
+TPM_VERPOSANIMATION = 0x1000;
+TPM_VERNEGANIMATION = 0x2000;
+TPM_NOANIMATION     = 0x4000;
+
 // Used in mouse callbacks, as mask, used in on_mouse_lbtn_up(), on_mouse_rbtn_up() and so on
 MK_LBUTTON  = 0x0001;
 MK_RBUTTON  = 0x0002;
