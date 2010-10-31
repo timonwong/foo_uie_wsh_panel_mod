@@ -110,15 +110,17 @@ private:
 	{
 		ULONG nRef = InterlockedDecrement(&m_dwRef);
 
+		pfc::dynamic_assert(nRef >= 0, "Reference count should not go below zero");
+
 		if (nRef == 0)
 		{
 			FinalRelease();
 			delete this;
-		} 
+		}
 
 		return nRef; 
 	}
-
+	
 	inline void Construct_()
 	{
 		m_dwRef = 0; 

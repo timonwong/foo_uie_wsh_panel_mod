@@ -1,5 +1,7 @@
 v1.4.0 Beta 3
 - ADD: New parameter "flags" to IMenuObj.TrackPopupMenu() method.
+- FIX: Fix a bug that IFbMetadbHandleList::Sort() won't work as expected.
+- FIX: Minor fixes.
 
 v1.4.0 Beta 2
 - ADD: New preprocessor directive "feature" (Preprocessors.txt).

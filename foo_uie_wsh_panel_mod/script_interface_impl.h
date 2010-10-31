@@ -274,7 +274,7 @@ protected:
 
 	FbMetadbHandleList(metadb_handle_list_cref handles) : m_handles(handles) {}
 
-	virtual ~FbMetadbHandleList() { }
+	virtual ~FbMetadbHandleList() {}
 
 	virtual void FinalRelease()
 	{

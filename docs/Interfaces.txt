@@ -251,6 +251,7 @@ Methods:
 	void MakeUnion(handles);
 	// Must be sorted
 	void MakeDifference(handles);
+	void Dispose();
 }
 
 interface IFbTitleFormat {
@@ -374,6 +375,7 @@ Methods:
 	IFbMetadbHandle GetSelection();
 	// [1.4.0] New:
 	// Works actually like GetSelection(), but returns a list of metadb handles.
+	// Always return a valid IFbMetadbHandleList instance instead of null.
 	// flags: 1 - no now playing
 	IFbMetadbHandleList GetSelections(flags = 0);
 	// [1.3.2] New:

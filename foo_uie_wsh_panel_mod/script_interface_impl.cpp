@@ -1380,7 +1380,7 @@ STDMETHODIMP FbMetadbHandleList::Sort()
 {
 	TRACK_FUNCTION();
 
-	metadb_handle_list_helper::remove_duplicates(m_handles);
+	metadb_handle_list_helper::sort_by_pointer_remove_duplicates(m_handles);
 	return S_OK;
 }
 

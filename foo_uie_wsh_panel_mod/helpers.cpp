@@ -775,7 +775,8 @@ namespace helpers
 			if (m_only_embed)
 			{
 				get_album_art_embedded(m_rawpath, &bitmap, m_art_id);
-				if (bitmap) image_path = m_handle->get_path();
+				if (bitmap) 
+					image_path = m_handle->get_path();
 			}
 			else
 			{
@@ -798,6 +799,7 @@ namespace helpers
 		if (!helpers::ensure_gdiplus_object(img))
 		{
 			if (img) delete img;
+			img = NULL;
 		}
 		else
 		{

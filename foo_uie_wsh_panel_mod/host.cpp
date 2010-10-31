@@ -1075,20 +1075,17 @@ HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, VARIANTARG * argv /*= N
 	if (!m_script_root || !m_script_engine) return E_NOINTERFACE;
 	if (!name) return E_INVALIDARG;
 
-	DISPID dispid;
+	DISPID dispid = 0;
 	DISPPARAMS param = { argv, NULL, argc, 0 };
+	IDispatchPtr disp = m_script_root;
 
-	HRESULT hr = m_script_root->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
+	HRESULT hr = disp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
 	
 	if (SUCCEEDED(hr))
 	{
-		IDispatch * pdisp = m_script_root;
-
-		pdisp->AddRef();
-
 		try
 		{
-			hr = pdisp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &param, ret, NULL, NULL);
+			hr = disp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &param, ret, NULL, NULL);
 		}
 		catch (std::exception & e)
 		{
@@ -1110,8 +1107,6 @@ HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, VARIANTARG * argv /*= N
 			// breakpoint
 			__debugbreak();
 		}
-
-		pdisp->Release();
 	}
 
 	return hr;
@@ -1920,11 +1915,9 @@ void wsh_panel_window::on_notify_data(WPARAM wp)
 	TRACK_FUNCTION();
 
 	VARIANTARG args[2];
-
 	simple_callback_data_scope_releaser<simple_callback_data_2<_bstr_t, _variant_t> > data(wp);
 
-	args[0].vt = VT_VARIANT | VT_BYREF;
-	args[0].pvarVal = &data->m_item2.GetVARIANT();
+	args[0] = data->m_item2;
 	args[1].vt = VT_BSTR;
 	args[1].bstrVal = data->m_item1;
 	script_invoke_v(L"on_notify_data", args, _countof(args));
