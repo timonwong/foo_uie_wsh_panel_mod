@@ -443,6 +443,7 @@ public:
 	STDMETHODIMP get_PlayingPlaylist(UINT * p);
 	STDMETHODIMP put_PlayingPlaylist(UINT idx);
 	STDMETHODIMP get_PlaylistCount(UINT * p);
+	STDMETHODIMP get_PlaylistItemCount(UINT idx, UINT * p);
 	STDMETHODIMP GetPlaylistName(UINT idx, BSTR * p);
 	STDMETHODIMP CreatePlaylist(UINT idx, BSTR name, UINT * p);
 	STDMETHODIMP RemovePlaylist(UINT idx, VARIANT_BOOL * p);

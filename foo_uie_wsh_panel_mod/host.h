@@ -1,5 +1,6 @@
 #pragma once
 
+#include "delay_loader.h"
 #include "script_preprocessor.h"
 #include "script_interface_impl.h"
 #include "config.h"
@@ -199,10 +200,23 @@ public:
 class CDialogConf;
 class CDialogProperty;
 
-
 class wsh_panel_window : public HostComm, public ui_helpers::container_window
 {
 private:
+	class delay_script_init_action : public delay_loader_action
+	{
+	public:
+		delay_script_init_action(wsh_panel_window * window) : window_(window) {}
+		
+		virtual void execute()
+		{
+			window_->script_init();
+		}
+
+	private:
+		wsh_panel_window * window_;
+	};
+
 	// Scripting
 	ScriptSite       m_script_site;
 	IGdiGraphicsPtr  m_gr_wrap;

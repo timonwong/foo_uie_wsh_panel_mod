@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by d:\Develop\foobar2000-Dev.2010-05-21\foobar2000\foo_uie_wsh_panel_mod\foo_uie_wsh_panel_mod\res\resource.rc
+// Used by F:\Develop\foobar2000-Dev.2010-05-21\foobar2000\foo_uie_wsh_panel_mod\foo_uie_wsh_panel_mod\res\resource.rc
 //
 #define IDD_DIALOG_CONFIG               101
 #define IDR_SCRIPT                      102
@@ -34,8 +34,6 @@
 #define IDC_LIST_PROPERTIES             1022
 #define IDC_SCRIPT_ENGINE               1023
 #define IDC_EDIT                        1024
-#define IDC_RESET_DEFAULT               1025
-#define IDC_RESET_CURRENT               1026
 #define IDC_IMPORT                      1027
 #define IDAPPLY                         1028
 #define IDC_CLEARALL                    1029
@@ -45,6 +43,8 @@
 #define IDC_CHECK_SAFE_MODE             1033
 #define IDC_EDGE_STYLE                  1034
 #define IDC_STATIC_GUID                 1035
+#define IDC_TOOLS                       1036
+#define IDC_CHECK_DELAY_LOAD            1037
 
 // Next default values for new objects
 // 
@@ -52,7 +52,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        110
 #define _APS_NEXT_COMMAND_VALUE         40012
-#define _APS_NEXT_CONTROL_VALUE         1036
+#define _APS_NEXT_CONTROL_VALUE         1038
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

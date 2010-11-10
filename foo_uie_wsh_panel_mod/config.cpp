@@ -20,6 +20,7 @@ void wsh_panel_vars::reset_config()
 	m_wndpl.length = 0;
 	m_grab_focus = true;
 	m_disabled = false;
+	m_delay_load = true;
 	m_edge_style = NO_EDGE;
 	CoCreateGuid(&m_config_guid);
 }
@@ -41,6 +42,9 @@ void wsh_panel_vars::load_config(stream_reader * reader, t_size size, abort_call
 			// fall-thru
 			switch (ver)
 			{
+			case VERSION_0x80:
+				reader->read_object_t(m_delay_load, abort);
+
 			case VERSION_0x79:
 				reader->read_object_t(m_config_guid, abort);
 
@@ -91,6 +95,7 @@ void wsh_panel_vars::save_config(stream_writer * writer, abort_callback & abort)
 		// Write version
 		writer->write_object_t(VERSION_CURRENT, abort);
 		//
+		writer->write_object_t(m_delay_load, abort);
 		writer->write_object_t(m_config_guid, abort);
 		writer->write_object(&m_edge_style, sizeof(m_edge_style), abort);
 		m_config_prop.save(writer, abort);

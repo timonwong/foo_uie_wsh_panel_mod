@@ -90,9 +90,6 @@
     <ClCompile Include="helpers.cpp">
       <Filter>Source Files\Misc</Filter>
     </ClCompile>
-    <ClCompile Include="popup_msg.cpp">
-      <Filter>Source Files\Misc</Filter>
-    </ClCompile>
     <ClCompile Include="simple_thread.cpp">
       <Filter>Source Files\Misc</Filter>
     </ClCompile>
@@ -205,6 +202,9 @@
     </ClInclude>
     <ClInclude Include="com_tools.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="delay_loader.h">
+      <Filter>Header Files\Misc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

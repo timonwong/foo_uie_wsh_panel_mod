@@ -26,8 +26,8 @@ struct t_script_info
 {
 	enum 
 	{
-		kFeatureMetadbHandleList0    =    1 << 0,
-		kFeatureNoWatchMetadb          =    1 << 7,
+		kFeatureMetadbHandleList0	=	1 << 0,
+		kFeatureNoWatchMetadb		=	1 << 7,
 	};
 
 	pfc::string_simple name;

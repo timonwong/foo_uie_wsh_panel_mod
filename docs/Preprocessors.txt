@@ -39,7 +39,8 @@ DIRECTIVES
       "v1.0" - Set by default.
       "v1.4" - Disable on_metadb_changed() callback;
                Disable window.WatchMetadb() and window.UnWatchMetadb() methods permanently ("watch-metadb" won't help);
-               Pass no parameter to on_selection_changed() callback.
+               Passno parameter to on_selection_changed() callback.
+
     commons:
       "watch-metadb" - Set by default when version is "v1.0", unset by any other versions.
                        Enable on_metadb_changed() callback (See Notes in Callbacks.txt);

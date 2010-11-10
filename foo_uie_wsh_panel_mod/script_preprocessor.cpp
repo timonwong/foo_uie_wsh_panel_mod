@@ -106,6 +106,7 @@ bool script_preprocessor::process_script_info(t_script_info & info)
 						default:
 							break;
 						}
+						break;
 
 					default:
 						info.feature_mask = 0;

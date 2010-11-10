@@ -1201,7 +1201,10 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 			panel_notifier_manager::instance().add_window(m_hwnd);
 
-			script_init();
+			if (get_delay_load())
+				delay_loader::enqueue(new service_impl_t<delay_script_init_action>(this));
+			else
+				script_init();
 		}
 		return 0;
 

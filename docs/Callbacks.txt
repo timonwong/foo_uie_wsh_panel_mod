@@ -185,5 +185,5 @@ function on_playlists_changed() {}
 // [1.4.0] Changed:
 // This behavior will be changed when "Display->Selection viewers" of foobar2000 preferences is changed.
 // NOTE: metadb may be null.
-// NOTE: metadb is not valid since 1.4.0 Beta 1 when preprocessor: "feature" "v1.4" or later is set. (See Preprocessors.txt)
+// NOTE: metadb is not valid since 1.4.0 Beta 1 when preprocessor: "feature" is "v1.4" or newer. (See Preprocessors.txt)
 function on_selection_changed(metadb) {}

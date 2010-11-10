@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "simple_thread.h"
+#include "delay_loader.h"
 #include "popup_msg.h"
 #include "panel_notifier.h"
 #include "user_message.h"
@@ -47,9 +48,8 @@ namespace
 		void on_init()
 		{
 			// HACK: popup_message services will not be initialized soon after start.
-			popup_msg::g_set_service_initialized();
 			check_error();
-			popup_msg::g_process_pendings();
+			delay_loader::set_ready();
 		}
 
 		void on_quit()

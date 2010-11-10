@@ -407,6 +407,7 @@ __interface IFbUtils: IDispatch
 	[propget] STDMETHOD(PlayingPlaylist)([out,retval] UINT * p);
 	[propput] STDMETHOD(PlayingPlaylist)(UINT idx);
 	[propget] STDMETHOD(PlaylistCount)([out,retval] UINT * p);
+	[propget] STDMETHOD(PlaylistItemCount)(UINT idx, [out,retval] UINT * p);
 	STDMETHOD(GetPlaylistName)(UINT idx, [out,retval] BSTR * p);
 	STDMETHOD(CreatePlaylist)(UINT idx, BSTR name, [out,retval] UINT * p);
 	STDMETHOD(RemovePlaylist)(UINT idx, [out,retval] VARIANT_BOOL * p);

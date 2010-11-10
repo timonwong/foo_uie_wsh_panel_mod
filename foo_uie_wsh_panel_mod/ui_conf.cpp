@@ -66,6 +66,7 @@ LRESULT CDialogConf::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 	// Checkboxs
 	uButton_SetCheck(m_hWnd, IDC_CHECK_GRABFOCUS, m_parent->get_grab_focus());
 	uButton_SetCheck(m_hWnd, IDC_CHECK_PSEUDO_TRANSPARENT, m_parent->get_pseudo_transparent());
+	uButton_SetCheck(m_hWnd, IDC_CHECK_DELAY_LOAD, m_parent->get_delay_load());
 
 	// GUID Text
 	pfc::string8 guid_text = "GUID: ";
@@ -133,7 +134,7 @@ LRESULT CDialogConf::OnScriptEngineCbnSelEndOk(WORD wNotifyCode, WORD wID, HWND 
 	return 0;
 }
 
-LRESULT CDialogConf::OnResetDefault(WORD wNotifyCode, WORD wID, HWND hWndCtl)
+void CDialogConf::OnResetDefault()
 {
 	pfc::string8 code;
 	HWND combo = GetDlgItem(IDC_SCRIPT_ENGINE);
@@ -141,23 +142,23 @@ LRESULT CDialogConf::OnResetDefault(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 	wsh_panel_vars::get_default_script_code(code);
 	uComboBox_SelectString(combo, "JScript");
 	m_editorctrl.SetContent(code);
-	return 0;
+	return;
 }
 
-LRESULT CDialogConf::OnResetCurrent(WORD wNotifyCode, WORD wID, HWND hWndCtl)
+void CDialogConf::OnResetCurrent()
 {
 	HWND combo = GetDlgItem(IDC_SCRIPT_ENGINE);
 
 	uComboBox_SelectString(combo, m_parent->get_script_engine());			
 	m_editorctrl.SetContent(m_parent->get_script_code());
-	return 0;
+	return;
 }
 
-LRESULT CDialogConf::OnImport(WORD wNotifyCode, WORD wID, HWND hWndCtl)
+void CDialogConf::OnImport()
 {
 	pfc::string8 filename;
 
-	if (uGetOpenFileName(m_hWnd, "Text files|*.txt;*.text|JScript files|*.js|All files|*.*", 0, "txt", "Import from", NULL, filename, FALSE))
+	if (uGetOpenFileName(m_hWnd, "Text files|*.txt|JScript files|*.js|All files|*.*", 0, "txt", "Import from", NULL, filename, FALSE))
 	{
 		// Open file
 		pfc::string8_fast text;
@@ -165,11 +166,9 @@ LRESULT CDialogConf::OnImport(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 		helpers::read_file(filename, text);
 		m_editorctrl.SetContent(text);
 	}
-
-	return 0;
 }
 
-LRESULT CDialogConf::OnExport(WORD wNotifyCode, WORD wID, HWND hWndCtl)
+void CDialogConf::OnExport()
 {
 	pfc::string8 filename;
 
@@ -182,6 +181,51 @@ LRESULT CDialogConf::OnExport(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 		text.unlock_buffer();
 
 		helpers::write_file(filename, text);
+	}
+}
+
+LRESULT CDialogConf::OnTools(WORD wNotifyCode, WORD wID, HWND hWndCtl)
+{
+	enum
+	{
+		kImport = 1,
+		kExport,
+		kResetDefault,
+		kResetCurrent,
+	};
+
+	HMENU menu = CreatePopupMenu();
+	int ret = 0;
+	int flags = TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD;
+	RECT rc = {0};
+
+	AppendMenu(menu, MF_STRING, kImport, _T("&Import"));
+	AppendMenu(menu, MF_STRING, kExport, _T("E&xport"));
+	AppendMenu(menu, MF_SEPARATOR, 0, 0);
+	AppendMenu(menu, MF_STRING, kResetDefault, _T("Reset &Default"));
+	AppendMenu(menu, MF_STRING, kResetCurrent, _T("Reset &Current"));
+
+	::GetWindowRect(::GetDlgItem(m_hWnd, IDC_TOOLS), &rc);
+
+	ret = TrackPopupMenu(menu, flags, rc.left, rc.bottom, 0, m_hWnd, 0);
+
+	switch (ret)
+	{
+	case kImport:
+		OnImport();
+		break;
+
+	case kExport:
+		OnExport();
+		break;
+
+	case kResetDefault:
+		OnResetDefault();
+		break;
+
+	case kResetCurrent:
+		OnResetCurrent();
+		break;
 	}
 
 	return 0;
@@ -204,6 +248,7 @@ void CDialogConf::Apply()
 	m_parent->get_disabled() = false;
 	m_parent->get_grab_focus() = uButton_GetCheck(m_hWnd, IDC_CHECK_GRABFOCUS);
 	m_parent->get_pseudo_transparent() = uButton_GetCheck(m_hWnd, IDC_CHECK_PSEUDO_TRANSPARENT);
+	m_parent->get_delay_load() = uButton_GetCheck(m_hWnd, IDC_CHECK_DELAY_LOAD);
 	m_parent->update_script(name, code.get_ptr());
 
 	// Wndow position

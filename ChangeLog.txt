@@ -1,3 +1,7 @@
+v1.4.0 Beta 4
+- ADD: New fb.PlaylistItemCount() method.
+- ADD: New option "Delay Load" in script editor.
+
 v1.4.0 Beta 3
 - ADD: New parameter "flags" to IMenuObj.TrackPopupMenu() method.
 - FIX: Fix a bug that IFbMetadbHandleList::Sort() won't work as expected.

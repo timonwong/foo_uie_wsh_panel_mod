@@ -109,22 +109,12 @@ private:
 	inline ULONG Release_()
 	{
 		ULONG nRef = InterlockedDecrement(&m_dwRef);
-
-		pfc::dynamic_assert(nRef >= 0, "Reference count should not go below zero");
-
-		if (nRef == 0)
-		{
-			FinalRelease();
-			delete this;
-		}
-
 		return nRef; 
 	}
 	
 	inline void Construct_()
 	{
 		m_dwRef = 0; 
-
 		if (_AddRef)
 			AddRef_();
 	}
@@ -141,7 +131,10 @@ public:
 
 	STDMETHODIMP_(ULONG) Release()
 	{
-		return Release_();
+		ULONG n = Release_();
+		if (n == 0)
+			delete this;
+		return n;
 	}
 
 	TEMPLATE_CONSTRUCTOR_FORWARD_FLOOD_WITH_INITIALIZER(com_object_impl_t, _Base, { Construct_(); })

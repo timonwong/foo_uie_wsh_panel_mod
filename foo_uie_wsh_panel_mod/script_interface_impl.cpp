@@ -2274,6 +2274,16 @@ STDMETHODIMP FbUtils::get_PlaylistCount(UINT * p)
 	return S_OK;
 }
 
+STDMETHODIMP FbUtils::get_PlaylistItemCount(UINT idx, UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	*p = static_api_ptr_t<playlist_manager>()->playlist_get_item_count(idx);
+	return S_OK;
+}
+
 STDMETHODIMP FbUtils::GetPlaylistName(UINT idx, BSTR * p)
 {
 	TRACK_FUNCTION();

@@ -10,7 +10,8 @@ enum t_version_info
 	VERSION_0x77,
 	VERSION_0x78,
 	VERSION_0x79,
-	CONFIG_VERSION_CURRENT = VERSION_0x79,
+	VERSION_0x80,
+	CONFIG_VERSION_CURRENT = VERSION_0x80,
 };
 
 enum t_edge_style : char
@@ -76,6 +77,7 @@ private:
 	bool m_disabled;
 	bool m_grab_focus;
 	bool m_pseudo_transparent;
+	bool m_delay_load;
 
 public:
 	wsh_panel_vars()
@@ -96,6 +98,11 @@ public:
 	inline pfc::string_base& get_script_code()
 	{
 		return m_script_code;
+	}
+
+	inline bool & get_delay_load()
+	{
+		return m_delay_load;
 	}
 
 	inline bool & get_pseudo_transparent()

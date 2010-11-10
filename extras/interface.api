@@ -93,6 +93,7 @@ fb.RenamePlaylist(idx, name)
 fb.IsAutoPlaylist(idx)
 fb.CreateAutoPlaylist(idx, name, query[, sort, flags])
 fb.ShowAutoPlaylistUI(idx)
+fb.PlaylistItemCount(idx)
 
 utils.CheckComponent(name[, is_dll])
 utils.CheckFont(name)
