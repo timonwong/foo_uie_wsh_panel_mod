@@ -107,7 +107,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="&quot;$(SolutionDir)common\preBuild.cmd&quot; &quot;$(SolutionDir)&quot;"
+				CommandLine="&quot;$(SolutionDir)common\preBuild.cmd&quot; &quot;$(ProjectDir)&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -299,10 +299,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\popup_msg.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\simple_thread.cpp"
 					>
 				</File>
@@ -482,6 +478,10 @@
 				</File>
 				<File
 					RelativePath=".\com_array.h"
+					>
+				</File>
+				<File
+					RelativePath=".\delay_loader.h"
 					>
 				</File>
 				<File

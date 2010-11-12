@@ -20,7 +20,7 @@ void wsh_panel_vars::reset_config()
 	m_wndpl.length = 0;
 	m_grab_focus = true;
 	m_disabled = false;
-	m_delay_load = true;
+	m_delay_load = false;
 	m_edge_style = NO_EDGE;
 	CoCreateGuid(&m_config_guid);
 }
@@ -42,8 +42,15 @@ void wsh_panel_vars::load_config(stream_reader * reader, t_size size, abort_call
 			// fall-thru
 			switch (ver)
 			{
-			case VERSION_0x80:
+			case VERSION_0x81:
 				reader->read_object_t(m_delay_load, abort);
+
+			case VERSION_0x80:
+				// Due to default value of delay load had been changed, skip
+				if (ver < VERSION_0x81)
+				{
+					reader->skip_object(sizeof(m_delay_load), abort);
+				}
 
 			case VERSION_0x79:
 				reader->read_object_t(m_config_guid, abort);

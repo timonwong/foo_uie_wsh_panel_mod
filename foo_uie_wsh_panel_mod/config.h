@@ -11,7 +11,8 @@ enum t_version_info
 	VERSION_0x78,
 	VERSION_0x79,
 	VERSION_0x80,
-	CONFIG_VERSION_CURRENT = VERSION_0x80,
+	VERSION_0x81,
+	CONFIG_VERSION_CURRENT = VERSION_0x81,
 };
 
 enum t_edge_style : char

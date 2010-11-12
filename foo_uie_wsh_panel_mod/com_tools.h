@@ -95,51 +95,6 @@ public:
 template<class T>
 FOOGUIDDECL ITypeInfoPtr MyIDispatchImpl<T>::g_typeinfo;
 
-template <typename _Base, bool _AddRef = true>
-class com_object_impl_t : public _Base
-{
-private:
-	volatile LONG m_dwRef;
-
-	inline ULONG AddRef_()
-	{
-		return InterlockedIncrement(&m_dwRef);
-	}
-
-	inline ULONG Release_()
-	{
-		ULONG nRef = InterlockedDecrement(&m_dwRef);
-		return nRef; 
-	}
-	
-	inline void Construct_()
-	{
-		m_dwRef = 0; 
-		if (_AddRef)
-			AddRef_();
-	}
-
-	virtual ~com_object_impl_t()
-	{
-	}
-
-public:
-	STDMETHODIMP_(ULONG) AddRef()
-	{
-		return AddRef_();
-	}
-
-	STDMETHODIMP_(ULONG) Release()
-	{
-		ULONG n = Release_();
-		if (n == 0)
-			delete this;
-		return n;
-	}
-
-	TEMPLATE_CONSTRUCTOR_FORWARD_FLOOD_WITH_INITIALIZER(com_object_impl_t, _Base, { Construct_(); })
-};
-
 
 //-- IDispatch impl -- [T] [IDispatch] [IUnknown]
 template<class T>
@@ -179,6 +134,51 @@ public:
 		FinalRelease();
 		return S_OK;
 	}
+};
+
+template <typename _Base, bool _AddRef = true>
+class com_object_impl_t : public _Base
+{
+private:
+	volatile LONG m_dwRef;
+
+	inline ULONG AddRef_()
+	{
+		return InterlockedIncrement(&m_dwRef);
+	}
+
+	inline ULONG Release_()
+	{
+		ULONG nRef = InterlockedDecrement(&m_dwRef);
+		return nRef; 
+	}
+
+	inline void Construct_()
+	{
+		m_dwRef = 0; 
+		if (_AddRef)
+			AddRef_();
+	}
+
+	virtual ~com_object_impl_t()
+	{
+	}
+
+public:
+	STDMETHODIMP_(ULONG) AddRef()
+	{
+		return AddRef_();
+	}
+
+	STDMETHODIMP_(ULONG) Release()
+	{
+		ULONG n = Release_();
+		if (n == 0)
+			delete this;
+		return n;
+	}
+
+	TEMPLATE_CONSTRUCTOR_FORWARD_FLOOD_WITH_INITIALIZER(com_object_impl_t, _Base, { Construct_(); })
 };
 
 template <class T>

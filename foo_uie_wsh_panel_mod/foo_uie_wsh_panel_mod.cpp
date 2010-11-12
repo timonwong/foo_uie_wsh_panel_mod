@@ -49,7 +49,7 @@ namespace
 		{
 			// HACK: popup_message services will not be initialized soon after start.
 			check_error();
-			delay_loader::set_ready();
+			delay_loader::g_set_ready();
 		}
 
 		void on_quit()

@@ -353,7 +353,7 @@ Properties:
 	(read, write) uint ActivePlaylist;
 	// [1.3.2] New:
 	(read, write) uint PlayingPlaylist;
-	// [1.4.0 Beta 3] New:
+	// [1.4.0 Beta 4] New:
 	(readonly) uint PlaylistItemCount(idx);
 
 Methods:

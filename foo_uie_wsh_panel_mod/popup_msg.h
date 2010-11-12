@@ -21,6 +21,6 @@ public:
 
 	static inline void g_show(const char * p_msg, const char * p_title, popup_message::t_icon p_icon = popup_message::icon_information)
 	{
-		delay_loader::enqueue(new service_impl_t<action>(p_msg, p_title, p_icon));
+		delay_loader::g_enqueue(new service_impl_t<action>(p_msg, p_title, p_icon));
 	}
 };

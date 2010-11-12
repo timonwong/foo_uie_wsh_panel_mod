@@ -4,6 +4,7 @@
 #include "script_preprocessor.h"
 #include "script_interface_impl.h"
 #include "config.h"
+#include "user_message.h"
 
 
 // Smart Pointers
@@ -206,15 +207,15 @@ private:
 	class delay_script_init_action : public delay_loader_action
 	{
 	public:
-		delay_script_init_action(wsh_panel_window * window) : window_(window) {}
+		delay_script_init_action(HWND wnd) : wnd_(wnd) {}
 		
 		virtual void execute()
 		{
-			window_->script_init();
+			SendMessage(wnd_, UWM_SCRIPT_INIT, 0, 0);
 		}
 
 	private:
-		wsh_panel_window * window_;
+		HWND wnd_;
 	};
 
 	// Scripting

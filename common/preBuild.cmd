@@ -8,17 +8,25 @@ SET mydir=%~dp0
 SET projdir=%~dp1
 
 hg id -i > nul
-IF %ERRORLEVEL% NEQ 0 (
-  copy /Y "%mydir%\hgrev_unknown.h" "%projdir%\hgrev.h" > nul
+IF %ERRORLEVEL% EQU 1 GOTO MODS1
+
+hg id -i | find "+" > nul
+IF %ERRORLEVEL% EQU 1 (
+	GOTO MODS0
 ) ELSE (
-  hg id -i | find "+" > nul
-  IF !ERRORLEVEL! EQU 0 (
-    echo #define HG_MODS 1 > %projdir%\hgrev.h
-  ) ELSE (
-    echo #define HG_MODS 0 > %projdir%\hgrev.h
-  )
-  echo. >> %CD%\hgrev.h
+	GOTO MODS1
 )
+
+:MODS0
+echo #define HG_MODS 0 > %projdir%\hgrev.h
+GOTO :END
+
+:MODS1
+echo #define HG_MODS 1 > %projdir%\hgrev.h
+GOTO :END
+
+:END
+echo. >> %projdir%\hgrev.h
 
 ENDLOCAL
 :: Always return an errorlevel of 0

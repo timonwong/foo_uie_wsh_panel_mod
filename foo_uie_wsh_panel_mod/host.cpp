@@ -6,7 +6,6 @@
 #include "global_cfg.h"
 #include "ui_conf.h"
 #include "ui_property.h"
-#include "user_message.h"
 #include "popup_msg.h"
 #include "dbgtrace.h"
 
@@ -1202,7 +1201,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			panel_notifier_manager::instance().add_window(m_hwnd);
 
 			if (get_delay_load())
-				delay_loader::enqueue(new service_impl_t<delay_script_init_action>(this));
+				delay_loader::g_enqueue(new service_impl_t<delay_script_init_action>(m_hwnd));
 			else
 				script_init();
 		}
@@ -1221,6 +1220,10 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		delete_context();
 		ReleaseDC(m_hwnd, m_hdc);
+		return 0;
+
+	case UWM_SCRIPT_INIT:
+		script_init();
 		return 0;
 
 	case UWM_SCRIPT_TERM:
@@ -1709,7 +1712,7 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
 	HDC memdc = CreateCompatibleDC(dc);
 	HBITMAP oldbmp = SelectBitmap(memdc, m_gr_bmp);
 	
-	if (GetScriptState() == SCRIPTSTATE_CONNECTED)
+	if (GetScriptState() != SCRIPTSTATE_CLOSED)
 	{
 		if (get_pseudo_transparent())
 		{
@@ -1841,7 +1844,8 @@ void wsh_panel_window::on_item_played(WPARAM wp)
 	args[0].pdispVal = handle;
 	script_invoke_v(L"on_item_played", args, _countof(args));
 
-	handle->Release();
+	if (handle)
+		handle->Release();
 }
 
 void wsh_panel_window::on_get_album_art_done(LPARAM lp)
@@ -1966,7 +1970,8 @@ void wsh_panel_window::on_playback_new_track(WPARAM wp)
 	args[0].pdispVal = handle;
 	script_invoke_v(L"on_playback_new_track", args, _countof(args));
 
-	handle->Release();
+	if (handle)
+		handle->Release();
 }
 
 void wsh_panel_window::on_playback_stop(play_control::t_stop_reason reason)
@@ -2115,7 +2120,9 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 	args[1].vt = VT_DISPATCH;
 	args[1].pdispVal = handle;
 	script_invoke_v(L"on_metadb_changed", args, _countof(args));
-	handle->Release();
+	
+	if (handle)
+		handle->Release();
 }
 
 void wsh_panel_window::on_selection_changed(WPARAM wp)

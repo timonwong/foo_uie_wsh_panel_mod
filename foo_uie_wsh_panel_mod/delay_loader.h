@@ -17,24 +17,25 @@ FOOGUIDDECL const GUID delay_loader_action::class_guid =
 class delay_loader
 {
 public:
-	static inline void enqueue(service_ptr_t<delay_loader_action> callback)
+	static inline void g_enqueue(service_ptr_t<delay_loader_action> callback)
 	{
-		if (!ready())
+		if (!g_ready())
 			callbacks_.add_item(callback);
 		else
 			callback->execute();
 	}
 
-	static inline void set_ready()
+	static inline void g_set_ready()
 	{
+		services_initialized_ = true;
+
 		for (t_size i = 0; i < callbacks_.get_count(); ++i)
 			callbacks_[i]->execute();
 
-		services_initialized_ = true;
 		callbacks_.remove_all();
 	}
 
-	static inline bool ready()
+	static inline bool g_ready()
 	{
 		return services_initialized_;
 	}
