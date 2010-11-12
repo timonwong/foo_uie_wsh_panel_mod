@@ -1201,7 +1201,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			panel_notifier_manager::instance().add_window(m_hwnd);
 
 			if (get_delay_load())
-				delay_loader::g_enqueue(new service_impl_t<delay_script_init_action>(m_hwnd));
+				delay_loader::g_enqueue(new delay_script_init_action(m_hwnd));
 			else
 				script_init();
 		}
@@ -1805,10 +1805,9 @@ void wsh_panel_window::on_context_menu(int x, int y)
 	int ret = 0;
 
 	build_context_menu(menu, x, y, base_id);
-
 	ret = TrackPopupMenu(menu, TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD, x, y, 0, m_hwnd, 0);
-
 	execute_context_menu_command(ret, base_id);
+	DestroyMenu(menu);
 }
 
 void wsh_panel_window::build_context_menu(HMENU menu, int x, int y, int id_base)

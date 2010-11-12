@@ -142,7 +142,6 @@ void CDialogConf::OnResetDefault()
 	wsh_panel_vars::get_default_script_code(code);
 	uComboBox_SelectString(combo, "JScript");
 	m_editorctrl.SetContent(code);
-	return;
 }
 
 void CDialogConf::OnResetCurrent()
@@ -151,7 +150,6 @@ void CDialogConf::OnResetCurrent()
 
 	uComboBox_SelectString(combo, m_parent->get_script_engine());			
 	m_editorctrl.SetContent(m_parent->get_script_code());
-	return;
 }
 
 void CDialogConf::OnImport()
@@ -228,6 +226,7 @@ LRESULT CDialogConf::OnTools(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 		break;
 	}
 
+	DestroyMenu(menu);
 	return 0;
 }
 

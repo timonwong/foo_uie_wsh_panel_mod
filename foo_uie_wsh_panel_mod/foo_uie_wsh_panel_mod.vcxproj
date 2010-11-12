@@ -86,8 +86,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetPath) "D:\Program Files (x86)\foobar2000\components\"
-copy $(SolutionDir)extras\*.api "D:\Program Files (x86)\foobar2000\components\"
+      <Command>copy $(TargetPath) "%APPDATA%\foobar2000\user-components\foo_uie_wsh_panel_mod\"
+copy $(SolutionDir)extras\*.api "%APPDATA%\foobar2000\user-components\foo_uie_wsh_panel_mod\"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

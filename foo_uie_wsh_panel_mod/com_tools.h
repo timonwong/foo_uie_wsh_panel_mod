@@ -149,8 +149,7 @@ private:
 
 	inline ULONG Release_()
 	{
-		ULONG nRef = InterlockedDecrement(&m_dwRef);
-		return nRef; 
+		return InterlockedDecrement(&m_dwRef);
 	}
 
 	inline void Construct_()
@@ -174,7 +173,10 @@ public:
 	{
 		ULONG n = Release_();
 		if (n == 0)
+		{
+			FinalRelease();
 			delete this;
+		}
 		return n;
 	}
 

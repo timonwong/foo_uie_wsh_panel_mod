@@ -1,8 +1,11 @@
+v1.4.0 Beta 6
+- FIX: Memory leaks introduced in 1.4.0 Beta 4, are fixed.
+
 v1.4.0 Beta 5
 - FIX: Misc bugs fixed.
 
 v1.4.0 Beta 4
-- ADD: New fb.PlaylistItemCount() method.
+- ADD: New fb.PlaylistItemCount() property.
 - ADD: New option "Delay Load" in script editor.
 
 v1.4.0 Beta 3
