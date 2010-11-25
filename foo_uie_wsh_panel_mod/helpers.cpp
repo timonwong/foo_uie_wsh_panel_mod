@@ -577,7 +577,7 @@ namespace helpers
 		return status;
 	}
 
-	bool read_file_wide(const wchar_t * path, pfc::array_t<wchar_t> & content)
+	bool read_file_wide(unsigned codepage, const wchar_t * path, pfc::array_t<wchar_t> & content)
 	{
 		HANDLE hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, 
 			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -645,15 +645,16 @@ namespace helpers
 			}
 		}
 
-		// ANSI?
+		// ANSI, or codepage based?
 		if (!status)
 		{
 			const char * pSource = (const char *)(pAddr);
 			t_size pSourceSize = dwFileSize;
 
-			const t_size size = pfc::stringcvt::estimate_ansi_to_wide(pSource, pSourceSize);
+			const t_size size = pfc::stringcvt::estimate_codepage_to_wide(codepage, pSource, pSourceSize);
 			content.set_size(size);
-			pfc::stringcvt::convert_ansi_to_wide(content.get_ptr(), size, pSource, pSourceSize);
+			pfc::stringcvt::convert_codepage_to_wide(codepage, content.get_ptr(), size, pSource, pSourceSize);
+
 			status = true;
 		}
 

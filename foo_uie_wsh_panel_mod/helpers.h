@@ -186,7 +186,7 @@ namespace helpers
 
 	// File r/w
 	bool read_file(const char * path, pfc::string_base & content);
-	bool read_file_wide(const wchar_t * path, pfc::array_t<wchar_t> & content);
+	bool read_file_wide(unsigned codepage, const wchar_t * path, pfc::array_t<wchar_t> & content);
 	// Always save as UTF8 BOM
 	bool write_file(const char * path, const pfc::string_base & content);
 

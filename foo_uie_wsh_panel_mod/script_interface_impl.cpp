@@ -2957,6 +2957,7 @@ STDMETHODIMP WSHUtils::GetAlbumArtV2(IFbMetadbHandle * handle, int art_id, VARIA
 	TRACK_FUNCTION();
 
 	if (!handle) return E_INVALIDARG;
+	if (!pp) return E_POINTER;
 
 	metadb_handle * ptr = NULL;
 	handle->get__ptr((void**)&ptr);
@@ -2967,6 +2968,9 @@ STDMETHODIMP WSHUtils::GetAlbumArtV2(IFbMetadbHandle * handle, int art_id, VARIA
 STDMETHODIMP WSHUtils::GetAlbumArtEmbedded(BSTR rawpath, int art_id, IGdiBitmap ** pp)
 {
 	TRACK_FUNCTION();
+
+	if (!rawpath) return E_INVALIDARG;
+	if (!pp) return E_POINTER;
 
 	return helpers::get_album_art_embedded(rawpath, pp, art_id);
 }
@@ -3054,6 +3058,8 @@ STDMETHODIMP WSHUtils::IsKeyPressed(UINT vkey, VARIANT_BOOL * p)
 {
 	TRACK_FUNCTION();
 
+	if (!p) return E_POINTER;
+
 	*p = TO_VARIANT_BOOL(::IsKeyPressed(vkey));
 	return S_OK;
 }
@@ -3069,13 +3075,18 @@ STDMETHODIMP WSHUtils::PathWildcardMatch(BSTR pattern, BSTR str, VARIANT_BOOL * 
 	return S_OK;
 }
 
-STDMETHODIMP WSHUtils::ReadTextFile(BSTR filename, BSTR * pp)
+STDMETHODIMP WSHUtils::ReadTextFile(BSTR filename, UINT codepage, BSTR * pp)
 {
+	TRACK_FUNCTION();
+
+	if (!codepage || !filename) return E_INVALIDARG;
+	if (!pp) return E_POINTER;
+
 	pfc::array_t<wchar_t> content;
 
 	*pp = NULL;
 
-	if (helpers::read_file_wide(filename, content))
+	if (helpers::read_file_wide(codepage, filename, content))
 	{
 		*pp = SysAllocString(content.get_ptr());
 	}

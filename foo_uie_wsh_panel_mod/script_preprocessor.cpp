@@ -20,7 +20,7 @@ HRESULT script_preprocessor::process_import(const t_script_info & info, IActiveS
 			expand_var(v.value);
 
 			pfc::array_t<wchar_t> code;
-			bool is_file_read = helpers::read_file_wide(v.value.get_ptr(), code);
+			bool is_file_read = helpers::read_file_wide(CP_ACP, v.value.get_ptr(), code);
 			pfc::string_formatter msg;
 
 			msg << WSPM_NAME " (" << info.build_info_string() << "): "

@@ -2212,11 +2212,11 @@ LRESULT wsh_panel_window_cui::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 		{
 			// Using in Default UI and dockable panels without Columns UI installed?
 			static bool g_reported = false;
-			const char warning[] = "Warning: At least one " WSPM_NAME " instance running in CUI containers"
-								   " (dockable panels or Func UI?), however, some essential services provided"
-								   " by the Columns UI cannot be found (haven't been installed or have a very"
-								   " old version is installed?).\n"
-								   "Please download and install a newer version of Columns UI:\n"
+			const char warning[] = "Warning: At least one " WSPM_NAME " instance is running in CUI containers "
+								   "(dockable panels, Func UI, etc) without some services provided by the "
+								   "Columns UI component (have not been installed or have a very old "
+								   "version installed?).\n"
+								   "Please download and install the latest version of Columns UI:\n"
 								   "http://yuo.be/columns.php";
 
 			if (!g_cfg_cui_warning_reported)

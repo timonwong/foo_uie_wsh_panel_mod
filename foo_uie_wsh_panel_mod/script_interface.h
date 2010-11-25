@@ -537,7 +537,7 @@ __interface IWSHUtils: IDispatch
 	STDMETHOD(WriteINI)(BSTR filename, BSTR section, BSTR key, VARIANT val, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(IsKeyPressed)(UINT vkey, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(PathWildcardMatch)(BSTR pattern, BSTR str, [out,retval] VARIANT_BOOL * p);
-	STDMETHOD(ReadTextFile)(BSTR filename, [out,retval] BSTR * pp);
+	STDMETHOD(ReadTextFile)(BSTR filename, [defaultvalue(0)] UINT codepage, [out,retval] BSTR * pp);
 	STDMETHOD(GetSysColor)(UINT index, [out,retval] DWORD * p);
 	STDMETHOD(GetSystemMetrics)(UINT index, [out,retval] int * p);
 	STDMETHOD(Glob)(BSTR pattern, [defaultvalue(FILE_ATTRIBUTE_DIRECTORY)] UINT exc_mask, [defaultvalue(0xffffffff)] UINT inc_mask, [out,retval] VARIANT * p);

@@ -532,7 +532,7 @@ public:
 	STDMETHODIMP WriteINI(BSTR filename, BSTR section, BSTR key, VARIANT val, VARIANT_BOOL * p);
 	STDMETHODIMP IsKeyPressed(UINT vkey, VARIANT_BOOL * p);
 	STDMETHODIMP PathWildcardMatch(BSTR pattern, BSTR str, VARIANT_BOOL * p);
-	STDMETHODIMP ReadTextFile(BSTR filename, BSTR * pp);
+	STDMETHODIMP ReadTextFile(BSTR filename, UINT codepage, BSTR * pp);
 	STDMETHODIMP GetSysColor(UINT index, DWORD * p);
 	STDMETHODIMP GetSystemMetrics(UINT index, INT * p);
 	STDMETHODIMP Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT * p);

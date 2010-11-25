@@ -66,11 +66,11 @@ namespace
 
 			if (IS_EXPIRED(__DATE__))
 			{
-				err_msg = "This version is expired, please get a new one now.\nVisit: http://foo-wsh-panel-mod.googlecode.com\n\n";
+				err_msg = "This beta version is over two weeks old, please get a new one now.\nVisit: http://foo-wsh-panel-mod.googlecode.com\n\n";
 			}
 			else if (g_load_status != E_OK)
 			{
-				err_msg = "If you see this error message, that means this component will not function properly:\n\n";
+				err_msg = "This error message indicates that means this component will not function properly:\n\n";
 
 				if (g_load_status & E_TYPELIB)
 					err_msg += "Type Library: Load TypeLib Failed.\n\n";
