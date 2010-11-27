@@ -615,7 +615,7 @@ Methods:
 	// [1.2.0] New:
 	// [1.4.0] Updated:
 	// Returns null if file cannot be read or doesn't exist.
-	// Text file can be either: UTF-16 with BOM, UTF-8 with BOM and ANSI.
+	// If codepabe == 0, text file can be either: UTF-16 with BOM, UTF-8 with BOM and ANSI.
 	// You can consider using helper routines for codepage in Codepages.txt.
 	String ReadTextFile(filename, codepage = 0);
 	// [1.2.1] New:

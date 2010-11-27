@@ -3079,7 +3079,7 @@ STDMETHODIMP WSHUtils::ReadTextFile(BSTR filename, UINT codepage, BSTR * pp)
 {
 	TRACK_FUNCTION();
 
-	if (!codepage || !filename) return E_INVALIDARG;
+	if (!filename) return E_INVALIDARG;
 	if (!pp) return E_POINTER;
 
 	pfc::array_t<wchar_t> content;
