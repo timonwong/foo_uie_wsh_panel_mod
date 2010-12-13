@@ -1,5 +1,10 @@
 // vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
 
+// ==PREPROCESSOR==
+// @name "GetAlbumArtAsync"
+// @author "T.P Wang"
+// ==/PREPROCESSOR==
+
 AlbumArtId = {
     front: 0,
     back: 1,
@@ -37,6 +42,8 @@ function on_size() {
 }
 
 function on_playback_new_track(metadb) {
+	// GetAlbumArtAsync will run in the background
+	// When it's finished, on_get_album_art_done() will get called.
     if (metadb) utils.GetAlbumArtAsync(window.ID, metadb, AlbumArtId.front);
     g_img = null;
 }

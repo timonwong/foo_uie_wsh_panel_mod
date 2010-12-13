@@ -1,5 +1,10 @@
 // vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
 
+// ==PREPROCESSOR==
+// @name "Watch Metadb Change (Base)"
+// @author "T.P Wang"
+// ==/PREPROCESSOR==
+
 // This is a demo show how on_metadb_changed(metadb, fromhook), 
 // window.WatchMetadb(metadb)  and window.UnWatchMetadb() works.
 

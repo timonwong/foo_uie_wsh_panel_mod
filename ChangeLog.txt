@@ -1,3 +1,6 @@
+v1.4.1 Beta 2:
+- ADD: New sample "Drag Drop Basic".
+
 v1.4.1 Beta 1:
 - ADD: New feature for drag and drop: @feature "dragdrop".
 - ADD: New callbacks for drag and drop: on_drag_enter(), on_drag_over(), on_drag_leave() and on_drag_drop().

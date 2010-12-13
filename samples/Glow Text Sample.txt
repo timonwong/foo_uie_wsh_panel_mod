@@ -1,5 +1,10 @@
 // vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
 
+// ==PREPROCESSOR==
+// @name "Glow Text Sample"
+// @author "T.P Wang"
+// ==/PREPROCESSOR==
+
 function RGB(r, g, b) {
     return (0xff000000 | (r << 16) | (g << 8) | (b));
 }

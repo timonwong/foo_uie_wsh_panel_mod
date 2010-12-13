@@ -3,6 +3,11 @@
 // USAGE:
 //   Put background.jpg, mask.png and image.jpg to {foobar2000 folder}\images
 
+// ==PREPROCESSOR==
+// @name "ApplyMask"
+// @author "T.P Wang"
+// ==/PREPROCESSOR==
+
 var g_img_background = gdi.Image(fb.FoobarPath + "images\\background.jpg");
 var g_img_mask = gdi.Image(fb.FoobarPath + "images\\mask.png");
 var g_img = gdi.Image(fb.FoobarPath + "images\\image.jpg");

@@ -1,5 +1,10 @@
 // vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
 
+// ==PREPROCESSOR==
+// @name "Scroll with GdiDrawText"
+// @author "T.P Wang"
+// ==/PREPROCESSOR==
+
 var DT_TOP = 0x00000000;
 var DT_CENTER = 0x00000001;
 var DT_VCENTER = 0x00000004;
@@ -25,7 +30,6 @@ var g_drag = false;
 var g_drag_y = 0;
 
 // START
-
 function on_size() {
     ww = window.Width;
     wh = window.Height;

@@ -1,8 +1,12 @@
 // vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
 
-// This is helper function, used in DrawString()/MeasureString()
-// args: h_align, v_align, trimming, flags
+// ==PREPROCESSOR==
+// @name "SimpleFollowCursor"
+// @author "T.P Wang"
+// ==/PREPROCESSOR==
 
+// This is a helper function, for generating flags in DrawString()/MeasureString()
+// args: h_align, v_align, trimming, flags
 function StringFormat() {
     var h_align = 0,
         v_align = 0,

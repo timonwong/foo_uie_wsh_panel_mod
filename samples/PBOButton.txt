@@ -1,5 +1,13 @@
 // vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
 
+// ==PREPROCESSOR==
+// @name "Playback Order Button"
+// @author "tedGo and T.P Wang"
+// ==/PREPROCESSOR==
+
+// NOTE:
+// This sample is lack of button images, you can use your own instead.
+
 function RGB(r, g, b) {
     return (0xff000000 | (r << 16) | (g << 8) | (b));
 }

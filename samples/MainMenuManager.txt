@@ -1,5 +1,10 @@
 // vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
 
+// ==PREPROCESSOR==
+// @name "MainMenuManager"
+// @author "T.P Wang"
+// ==/PREPROCESSOR==
+
 // Flags, used by Menu
 var MF_SEPARATOR = 0x00000800;
 var MF_ENABLED = 0x00000000;

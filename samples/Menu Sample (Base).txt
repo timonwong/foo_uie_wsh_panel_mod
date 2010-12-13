@@ -1,5 +1,10 @@
 // vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
 
+// ==PREPROCESSOR==
+// @name "Menu Sample (Base)"
+// @author "T.P Wang"
+// ==/PREPROCESSOR==
+
 var MF_SEPARATOR = 0x00000800;
 var MF_ENABLED = 0x00000000;
 var MF_GRAYED = 0x00000001;
