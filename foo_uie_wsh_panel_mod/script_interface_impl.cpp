@@ -3142,7 +3142,7 @@ STDMETHODIMP WSHUtils::Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT 
 
 	if (ff)
 	{
-		do 
+		do
 		{
 			DWORD attr = ff->GetAttributes();
 
@@ -3154,6 +3154,9 @@ STDMETHODIMP WSHUtils::Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT 
 			}
 		} while (ff->FindNext());
 	}
+
+	delete ff;
+	ff = NULL;
 
 	helpers::com_array_writer<> helper;
 

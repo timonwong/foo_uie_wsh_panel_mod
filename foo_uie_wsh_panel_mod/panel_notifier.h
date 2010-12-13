@@ -170,16 +170,17 @@ class my_playlist_callback : public playlist_callback_static
 public:
 	virtual unsigned get_flags() 
 	{
-		return flag_on_item_focus_change | flag_on_playlist_activate | 
-			flag_on_playlist_created | flag_on_playlists_reorder |
-			flag_on_playlists_removed | flag_on_playlist_renamed |
-			flag_on_playback_order_changed ; 
+		return flag_on_items_added | flag_on_items_removed | flag_on_item_focus_change | 
+			flag_on_playlist_activate | flag_on_playlist_created | flag_on_playlists_reorder |
+			flag_on_playlists_removed | flag_on_playlist_renamed | flag_on_playback_order_changed ; 
 	}
 
-	virtual void on_items_added(t_size p_playlist,t_size p_start, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection) {}
+	// impl
+	virtual void on_items_added(t_size p_playlist,t_size p_start, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection);
 	virtual void on_items_reordered(t_size p_playlist,const t_size * p_order,t_size p_count) {}
 	virtual void on_items_removing(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
-	virtual void on_items_removed(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
+	// impl
+	virtual void on_items_removed(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count);
 	virtual void on_items_selection_change(t_size p_playlist,const bit_array & p_affected,const bit_array & p_state) {}
 	// impl
 	virtual void on_item_focus_change(t_size p_playlist,t_size p_from,t_size p_to);

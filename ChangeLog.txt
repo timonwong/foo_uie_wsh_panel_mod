@@ -1,3 +1,9 @@
+v1.4.1 Beta 1:
+- ADD: New feature for drag and drop: @feature "dragdrop".
+- ADD: New callbacks for drag and drop: on_drag_enter(), on_drag_over(), on_drag_leave() and on_drag_drop().
+- ADD: New callbacks for playlist: on_playlist_items_added() and on_playlist_items_removed().
+- FIX: Fix memory leaks in utils.Glob().
+
 v1.4.0
 - ADD: New parameter 'codepage' to utils.ReadTextFile(), with new file Codepages.txt and Codepages.html.
 

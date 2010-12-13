@@ -118,6 +118,10 @@ bool script_preprocessor::process_script_info(t_script_info & info)
 			{
 				info.feature_mask &= ~t_script_info::kFeatureNoWatchMetadb;
 			}
+			else if (strcmp(str, "dragdrop") == 0)
+			{
+				info.feature_mask |= t_script_info::kFeatureDragDrop;
+			}
 		}
 	}
 

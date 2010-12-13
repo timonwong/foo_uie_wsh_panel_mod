@@ -229,3 +229,13 @@ void my_playlist_callback::on_playlists_changed()
 {
 	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLISTS_CHANGED, 0, 0);
 }
+
+void my_playlist_callback::on_items_added(t_size p_playlist,t_size p_start, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection)
+{
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_ADDED, p_playlist, 0);
+}
+
+void my_playlist_callback::on_items_removed(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count)
+{
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_REMOVED, p_playlist, p_new_count);
+}

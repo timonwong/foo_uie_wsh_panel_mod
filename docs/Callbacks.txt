@@ -112,7 +112,7 @@ function on_playback_starting(cmd, is_paused) {}
 // [1.1.0] Updated: metadb - Refer to IFbMetadbHandle
 function on_playback_new_track(metadb) {}
 
-// reason: (integer, begin with 0): user, eof, starting_another, shutting_down
+// reason: (integer, begin with 0): user, eof, starting_another
 function on_playback_stop(reason) {}
 
 // time - float value, in sec
@@ -179,6 +179,7 @@ function on_playlist_switch() {}
 function on_script_unload() {}
 
 // [1.3.2] New:
+// Called when any of playlists is removed, reordered, created and renamed.
 function on_playlists_changed() {}
 
 // [1.3.2] New:
@@ -187,3 +188,34 @@ function on_playlists_changed() {}
 // NOTE: metadb may be null.
 // NOTE: metadb is not valid since 1.4.0 Beta 1 when preprocessor: "feature" is "v1.4" or newer. (See Preprocessors.txt)
 function on_selection_changed(metadb) {}
+
+// [1.4.1] Added:
+// playlist: index to indicate that which playlist has newly added items
+function on_playlist_items_added(playlist) {}
+
+// [1.4.1] Added:
+// playlist: index to indicate that which playlist has items removed
+// new_count: new items count of the playlist.
+function on_playlist_items_removed(playlist, new_count) {}
+
+/* 
+ * Note:
+ * In order to get drag and drop callbacks work, you have to set feature="dragdrop" in the preprocessor.
+ * See Preprocessors.txt for more details.
+ */
+
+// [1.4.1] Added:
+// x, y and mask have the same meaning as in on_mouse_*() callbacks.
+function on_drag_enter(x, y, mask) {}
+
+// [1.4.1] Added:
+// x, y and mask have the same meaning as in on_mouse_*() callbacks.
+function on_drag_over(x, y, mask) {}
+
+// [1.4.1] Added:
+function on_drag_leave() {}
+
+// [1.4.1] Added:
+// x, y and mask have the same meaning as in on_mouse_*() callbacks.
+function on_drag_drop(x, y, mask) {}
+

@@ -904,6 +904,45 @@ STDMETHODIMP ScriptSite::QueryContinue()
 	return S_OK;
 }
 
+STDMETHODIMP PanelDropTarget::DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+{
+	if (!pdwEffect) return E_POINTER;
+
+	//ole_interaction
+	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
+	SendMessage(m_host->GetHWND(), UWM_DRAG_ENTER, grfKeyState, MAKELPARAM(pt.x, pt.y));
+	return S_OK;
+}
+
+STDMETHODIMP PanelDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+{
+	if (!pdwEffect) return E_POINTER;
+
+	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
+	SendMessage(m_host->GetHWND(), UWM_DRAG_OVER, grfKeyState, MAKELPARAM(pt.x, pt.y));
+	return S_OK;
+}
+
+STDMETHODIMP PanelDropTarget::DragLeave()
+{
+	SendMessage(m_host->GetHWND(), UWM_DRAG_LEAVE, 0, 0);
+	return S_OK;
+}
+
+STDMETHODIMP PanelDropTarget::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+{
+	if (!pdwEffect) return E_POINTER;
+
+	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
+	SendMessage(m_host->GetHWND(), UWM_DRAG_DROP, grfKeyState, MAKELPARAM(pt.x, pt.y));
+
+	static_api_ptr_t<playlist_incoming_item_filter_v2>()->process_dropped_files_async(pDataObj, 
+		playlist_incoming_item_filter_v2::op_flag_delay_ui,
+		core_api::get_main_window(), new service_impl_t<process_dropped_items>());
+
+	return S_OK;
+}
+
 void wsh_panel_window::update_script(const char * name /*= NULL*/, const char * code /*= NULL*/)
 {
 	if (name && code)
@@ -912,15 +951,15 @@ void wsh_panel_window::update_script(const char * name /*= NULL*/, const char * 
 		get_script_code() = code;
 	}
 
-	script_term();
-	script_init();
+	script_unload();
+	script_load();
 }
 
-HRESULT wsh_panel_window::script_pre_init()
+HRESULT wsh_panel_window::script_init()
 {
 	TRACK_FUNCTION();
 
-	script_term();
+	script_unload();
 
 	HRESULT hr = S_OK;
 	IActiveScriptParsePtr parser;
@@ -962,7 +1001,7 @@ HRESULT wsh_panel_window::script_pre_init()
 	return hr;
 }
 
-bool wsh_panel_window::script_init()
+bool wsh_panel_window::script_load()
 {
 	TRACK_FUNCTION();
 
@@ -994,7 +1033,7 @@ bool wsh_panel_window::script_init()
 		return false;
 	}
 
-	HRESULT hr = script_pre_init();
+	HRESULT hr = script_init();
 
 	if (FAILED(hr))
 	{
@@ -1029,13 +1068,20 @@ bool wsh_panel_window::script_init()
 			<< " ms";
 	}
 
+	if (GetScriptInfo().feature_mask & t_script_info::kFeatureDragDrop)
+	{
+		// Ole Drag and Drop support
+		RegisterDragDrop(m_hwnd, &m_drop_target);
+		m_is_droptarget_registered = true;
+	}
+
 	// HACK: Script update will not call on_size, so invoke it explicitly
 	SendMessage(m_hwnd, UWM_SIZE, 0, 0);
 
 	return result;
 }
 
-void wsh_panel_window::script_stop()
+void wsh_panel_window::script_deinit()
 {
 	TRACK_FUNCTION();
 
@@ -1050,12 +1096,12 @@ void wsh_panel_window::script_stop()
 	m_selection_holder.release();
 }
 
-void wsh_panel_window::script_term()
+void wsh_panel_window::script_unload()
 {
 	TRACK_FUNCTION();
 
 	script_invoke_v(L"on_script_unload");
-	script_stop();
+	script_deinit();
 
 	if (m_script_root)
 	{
@@ -1065,6 +1111,12 @@ void wsh_panel_window::script_term()
 	if (m_script_engine)
 	{
 		m_script_engine.Release();
+	}
+
+	if (m_is_droptarget_registered)
+	{
+		RevokeDragDrop(m_hwnd);
+		m_is_droptarget_registered = false;
 	}
 }
 
@@ -1192,42 +1244,32 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			GetClientRect(m_hwnd, &rect);
 			m_width  = rect.right - rect.left;
 			m_height = rect.bottom - rect.top;
-
 			create_context();
-
 			// Interfaces
 			m_gr_wrap.Attach(new com_object_impl_t<GdiGraphics>(), false);
-
 			panel_notifier_manager::instance().add_window(m_hwnd);
-
 			if (get_delay_load())
 				delay_loader::g_enqueue(new delay_script_init_action(m_hwnd));
 			else
-				script_init();
+				script_load();
 		}
 		return 0;
 
 	case WM_DESTROY:
-		// Term script
-		script_term();
-
+		script_unload();
 		panel_notifier_manager::instance().remove_window(m_hwnd);
-
 		if (m_gr_wrap)
-		{
 			m_gr_wrap.Release();
-		}
-
 		delete_context();
 		ReleaseDC(m_hwnd, m_hdc);
 		return 0;
 
 	case UWM_SCRIPT_INIT:
-		script_init();
+		script_load();
 		return 0;
 
 	case UWM_SCRIPT_TERM:
-		script_term();
+		script_unload();
 		return 0;
 
 	case WM_DISPLAYCHANGE:
@@ -1245,14 +1287,13 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case UWM_REFRESHBKDONE:
-		script_invoke_v(L"on_refresh_background_done");
+		on_refresh_background_done();
 		return 0;
 
 	case WM_PAINT:
 		{
 			if (m_suppress_drawing)
 				break;
-
 			if (get_pseudo_transparent() && !m_paint_pending)
 			{
 				RECT rc;
@@ -1261,10 +1302,8 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				RefreshBackground(&rc);
 				return 0;
 			}
-
 			PAINTSTRUCT ps;
 			HDC dc = BeginPaint(m_hwnd, &ps);
-
 			on_paint(dc, &ps.rcPaint);
 			EndPaint(m_hwnd, &ps);
 			m_paint_pending = false;
@@ -1273,21 +1312,17 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case UWM_SIZE:
 		on_size(m_width, m_height);
-
 		if (get_pseudo_transparent())
 			PostMessage(m_hwnd, UWM_REFRESHBK, 0, 0);
 		else
 			Repaint();
-
 		return 0;
 
 	case WM_SIZE:
 		{
 			RECT rect;
 			GetClientRect(m_hwnd, &rect);
-
 			on_size(rect.right - rect.left, rect.bottom - rect.top);
-
 			if (get_pseudo_transparent())
 				PostMessage(m_hwnd, UWM_REFRESHBK, 0, 0);
 			else
@@ -1298,7 +1333,6 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_GETMINMAXINFO:
 		{
 			LPMINMAXINFO pmmi = reinterpret_cast<LPMINMAXINFO>(lp);
-
 			memcpy(&pmmi->ptMaxTrackSize, &GetMaxSize(), sizeof(POINT));
 			memcpy(&pmmi->ptMinTrackSize, &GetMinSize(), sizeof(POINT));
 		}
@@ -1310,111 +1344,19 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:
-		{
-			if (get_grab_focus())
-				SetFocus(hwnd);
-
-			SetCapture(hwnd);
-
-			VARIANTARG args[3];
-
-			args[0].vt = VT_I4;
-			args[0].lVal = wp;
-			args[1].vt = VT_I4;
-			args[1].lVal = GET_Y_LPARAM(lp);
-			args[2].vt = VT_I4;
-			args[2].lVal = GET_X_LPARAM(lp);
-
-			switch (msg)
-			{
-			case WM_LBUTTONDOWN:
-				script_invoke_v(L"on_mouse_lbtn_down", args, _countof(args));
-				break;
-
-			case WM_MBUTTONDOWN:
-				script_invoke_v(L"on_mouse_mbtn_down", args, _countof(args));
-				break;
-
-			case WM_RBUTTONDOWN:
-				script_invoke_v(L"on_mouse_rbtn_down", args, _countof(args));
-				break;
-			}
-		}
+		on_mouse_button_down(msg, wp, lp);
 		break;
 
 	case WM_LBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP:
-		{
-			ReleaseCapture();
-
-			VARIANTARG args[3];
-
-			args[0].vt = VT_I4;
-			args[0].lVal = wp;
-			args[1].vt = VT_I4;
-			args[1].lVal = GET_Y_LPARAM(lp);
-			args[2].vt = VT_I4;
-			args[2].lVal = GET_X_LPARAM(lp);	
-
-			switch (msg)
-			{
-			case WM_LBUTTONUP:
-				script_invoke_v(L"on_mouse_lbtn_up", args, _countof(args));
-				break;
-
-			case WM_MBUTTONUP:
-				script_invoke_v(L"on_mouse_mbtn_up", args, _countof(args));
-				break;
-
-			case WM_RBUTTONUP:
-				{
-					_variant_t result;
-
-					if (IsKeyPressed(VK_LSHIFT) && IsKeyPressed(VK_LWIN))
-						break;
-
-					if (SUCCEEDED(script_invoke_v(L"on_mouse_rbtn_up", args, _countof(args), &result)))
-					{
-						result.ChangeType(VT_BOOL);
-
-						if ((result.boolVal != VARIANT_FALSE))
-							return 0;
-					}
-				}
-				break;
-			}
-		}
+		on_mouse_button_up(msg, wp, lp);
 		break;
 
 	case WM_LBUTTONDBLCLK:
 	case WM_MBUTTONDBLCLK:
 	case WM_RBUTTONDBLCLK:
-		{
-			VARIANTARG args[3];
-
-			args[0].vt = VT_I4;
-			args[0].lVal = wp;
-			args[1].vt = VT_I4;
-			args[1].lVal = GET_Y_LPARAM(lp);
-			args[2].vt = VT_I4;
-			args[2].lVal = GET_X_LPARAM(lp);
-
-			switch (msg)
-			{
-			case WM_LBUTTONDBLCLK:
-				script_invoke_v(L"on_mouse_lbtn_dblclk", args, _countof(args));
-				break;
-
-			case WM_MBUTTONDBLCLK:
-				script_invoke_v(L"on_mouse_mbtn_dblclk", args, _countof(args));
-				break;
-
-			case WM_RBUTTONDBLCLK:
-				script_invoke_v(L"on_mouse_rbtn_dblclk", args, _countof(args));
-				break;
-			}
-		}
+		on_mouse_button_dblclk(wp, lp, msg);
 		break;
 
 	case WM_CONTEXTMENU:
@@ -1422,49 +1364,15 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 1;
 
 	case WM_MOUSEMOVE:
-		{
-			if (!m_is_mouse_tracked)
-			{
-				TRACKMOUSEEVENT tme;
-
-				tme.cbSize = sizeof(tme);
-				tme.hwndTrack = m_hwnd;
-				tme.dwFlags = TME_LEAVE;
-				TrackMouseEvent(&tme);
-				m_is_mouse_tracked = true;
-
-				// Restore default cursor
-				SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
-			}
-
-			VARIANTARG args[2];
-
-			args[0].vt = VT_I4;
-			args[0].lVal = GET_Y_LPARAM(lp);
-			args[1].vt = VT_I4;
-			args[1].lVal = GET_X_LPARAM(lp);	
-			script_invoke_v(L"on_mouse_move", args, _countof(args));
-		}
+		on_mouse_move(lp);
 		break;
 
 	case WM_MOUSELEAVE:
-		{
-			m_is_mouse_tracked = false;
-
-			script_invoke_v(L"on_mouse_leave");
-			// Restore default cursor
-			SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
-		}
+		on_mouse_leave();
 		break;
 
 	case WM_MOUSEWHEEL:
-		{
-			VARIANTARG args[1];
-
-			args[0].vt = VT_I4;
-			args[0].lVal = GET_WHEEL_DELTA_WPARAM(wp) / WHEEL_DELTA;
-			script_invoke_v(L"on_mouse_wheel", args, _countof(args));
-		}
+		on_mouse_wheel(wp);
 		break;
 
 	case WM_SETCURSOR:
@@ -1533,7 +1441,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case UWM_SCRIPT_ERROR_TIMEOUT:
 		get_disabled() = true;
-		script_stop();
+		script_deinit();
 
 		popup_msg::g_show(pfc::string_formatter() << "Script terminated due to the panel (" 
 			<< GetScriptInfo().build_info_string()
@@ -1545,7 +1453,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case UWM_SCRIPT_ERROR:
-		script_stop();
+		script_deinit();
 
 		if (lp)
 		{
@@ -1583,6 +1491,22 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case UWM_TOGGLEQUERYCONTINUE:
 		GetQueryContinue() = (wp != 0);
+		return 0;
+
+	case UWM_DRAG_ENTER:
+		on_drag_enter(wp, lp);
+		return 0;
+
+	case UWM_DRAG_OVER:
+		on_drag_over(wp, lp);
+		return 0;
+
+	case UWM_DRAG_LEAVE:
+		on_drag_leave();
+		return 0;
+
+	case UWM_DRAG_DROP:
+		on_drag_drop(wp, lp);
 		return 0;
 
 	case CALLBACK_UWM_PLAYLIST_STOP_AFTER_CURRENT:
@@ -1684,6 +1608,14 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case CALLBACK_UWM_ON_PLAYLISTS_CHANGED:
 		on_playlists_changed();
 		return 0;
+
+	case CALLBACK_UWM_ON_PLAYLIST_ITEMS_ADDED:
+		on_playlist_items_added(wp);
+		return 0;
+
+	case CALLBACK_UWM_ON_PLAYLIST_ITEMS_REMOVED:
+		on_playlist_items_removed(wp, lp);
+		return 0;
 	}
 
 	return uDefWindowProc(hwnd, msg, wp, lp);
@@ -1738,7 +1670,7 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
 			lpUpdateRect->right - lpUpdateRect->left,
 			lpUpdateRect->bottom - lpUpdateRect->top);
 
-		// SetClip() may improve performance
+		// SetClip() may improve performance slightly
 		gr.SetClip(rect);
 
 		m_gr_wrap->put__ptr(&gr);
@@ -1810,10 +1742,175 @@ void wsh_panel_window::on_context_menu(int x, int y)
 	DestroyMenu(menu);
 }
 
+void wsh_panel_window::on_mouse_wheel(WPARAM wp)
+{
+	TRACK_FUNCTION();
+
+	VARIANTARG args[1];
+
+	args[0].vt = VT_I4;
+	args[0].lVal = GET_WHEEL_DELTA_WPARAM(wp) / WHEEL_DELTA;
+	script_invoke_v(L"on_mouse_wheel", args, _countof(args));
+}
+
+void wsh_panel_window::on_mouse_leave()
+{
+	TRACK_FUNCTION();
+
+	m_is_mouse_tracked = false;
+
+	script_invoke_v(L"on_mouse_leave");
+	// Restore default cursor
+	SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+}
+
+void wsh_panel_window::on_mouse_move(LPARAM lp)
+{
+	TRACK_FUNCTION();
+
+	if (!m_is_mouse_tracked)
+	{
+		TRACKMOUSEEVENT tme;
+
+		tme.cbSize = sizeof(tme);
+		tme.hwndTrack = m_hwnd;
+		tme.dwFlags = TME_LEAVE;
+		TrackMouseEvent(&tme);
+		m_is_mouse_tracked = true;
+
+		// Restore default cursor
+		SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
+	}
+
+	VARIANTARG args[2];
+
+	args[0].vt = VT_I4;
+	args[0].lVal = GET_Y_LPARAM(lp);
+	args[1].vt = VT_I4;
+	args[1].lVal = GET_X_LPARAM(lp);	
+	script_invoke_v(L"on_mouse_move", args, _countof(args));
+}
+
+void wsh_panel_window::on_mouse_button_dblclk(UINT msg, WPARAM wp, LPARAM lp)
+{
+	TRACK_FUNCTION();
+
+	VARIANTARG args[3];
+
+	args[0].vt = VT_I4;
+	args[0].lVal = wp;
+	args[1].vt = VT_I4;
+	args[1].lVal = GET_Y_LPARAM(lp);
+	args[2].vt = VT_I4;
+	args[2].lVal = GET_X_LPARAM(lp);
+
+	switch (msg)
+	{
+	case WM_LBUTTONDBLCLK:
+		script_invoke_v(L"on_mouse_lbtn_dblclk", args, _countof(args));
+		break;
+
+	case WM_MBUTTONDBLCLK:
+		script_invoke_v(L"on_mouse_mbtn_dblclk", args, _countof(args));
+		break;
+
+	case WM_RBUTTONDBLCLK:
+		script_invoke_v(L"on_mouse_rbtn_dblclk", args, _countof(args));
+		break;
+	}
+}
+
+bool wsh_panel_window::on_mouse_button_up(UINT msg, WPARAM wp, LPARAM lp)
+{
+	TRACK_FUNCTION();
+
+	ReleaseCapture();
+
+	VARIANTARG args[3];
+
+	args[0].vt = VT_I4;
+	args[0].lVal = wp;
+	args[1].vt = VT_I4;
+	args[1].lVal = GET_Y_LPARAM(lp);
+	args[2].vt = VT_I4;
+	args[2].lVal = GET_X_LPARAM(lp);	
+
+	switch (msg)
+	{
+	case WM_LBUTTONUP:
+		script_invoke_v(L"on_mouse_lbtn_up", args, _countof(args));
+		break;
+
+	case WM_MBUTTONUP:
+		script_invoke_v(L"on_mouse_mbtn_up", args, _countof(args));
+		break;
+
+	case WM_RBUTTONUP:
+		{
+			_variant_t result;
+
+			if (IsKeyPressed(VK_LSHIFT) && IsKeyPressed(VK_LWIN))
+				break;
+
+			if (SUCCEEDED(script_invoke_v(L"on_mouse_rbtn_up", args, _countof(args), &result)))
+			{
+				result.ChangeType(VT_BOOL);
+
+				if ((result.boolVal != VARIANT_FALSE))
+					return false;
+			}
+		}
+		break;
+	}
+
+	return true;
+}
+
+void wsh_panel_window::on_mouse_button_down(UINT msg, WPARAM wp, LPARAM lp)
+{
+	TRACK_FUNCTION();
+
+	if (get_grab_focus())
+		SetFocus(m_hwnd);
+
+	SetCapture(m_hwnd);
+
+	VARIANTARG args[3];
+
+	args[0].vt = VT_I4;
+	args[0].lVal = wp;
+	args[1].vt = VT_I4;
+	args[1].lVal = GET_Y_LPARAM(lp);
+	args[2].vt = VT_I4;
+	args[2].lVal = GET_X_LPARAM(lp);
+
+	switch (msg)
+	{
+	case WM_LBUTTONDOWN:
+		script_invoke_v(L"on_mouse_lbtn_down", args, _countof(args));
+		break;
+
+	case WM_MBUTTONDOWN:
+		script_invoke_v(L"on_mouse_mbtn_down", args, _countof(args));
+		break;
+
+	case WM_RBUTTONDOWN:
+		script_invoke_v(L"on_mouse_rbtn_down", args, _countof(args));
+		break;
+	}
+}
+
+void wsh_panel_window::on_refresh_background_done()
+{
+	TRACK_FUNCTION();
+
+	script_invoke_v(L"on_refresh_background_done");
+}
+
 void wsh_panel_window::build_context_menu(HMENU menu, int x, int y, int id_base)
 {
-	AppendMenu(menu, MF_STRING, id_base + 1, _T("&Properties"));
-	AppendMenu(menu, MF_STRING, id_base + 2, _T("&Configure..."));
+	::AppendMenu(menu, MF_STRING, id_base + 1, _T("&Properties"));
+	::AppendMenu(menu, MF_STRING, id_base + 2, _T("&Configure..."));
 }
 
 void wsh_panel_window::execute_context_menu_command(int id, int id_base)
@@ -2087,6 +2184,28 @@ void wsh_panel_window::on_playlists_changed()
 	script_invoke_v(L"on_playlists_changed");
 }
 
+void wsh_panel_window::on_playlist_items_added(WPARAM wp)
+{
+	TRACK_FUNCTION();
+
+	VARIANTARG args[1];
+	args[0].vt = VT_UI4;
+	args[0].uintVal = wp;
+	script_invoke_v(L"on_playlist_items_added", args, _countof(args));
+}
+
+void wsh_panel_window::on_playlist_items_removed(WPARAM wp, LPARAM lp)
+{
+	TRACK_FUNCTION();
+
+	VARIANTARG args[2];
+	args[0].vt = VT_UI4;
+	args[0].uintVal = lp;
+	args[1].vt = VT_UI4;
+	args[1].uintVal = wp;
+	script_invoke_v(L"on_playlist_items_removed", args, _countof(args));
+}
+
 void wsh_panel_window::on_changed_sorted(WPARAM wp)
 {
 	TRACK_FUNCTION();
@@ -2152,6 +2271,58 @@ void wsh_panel_window::on_selection_changed(WPARAM wp)
 			}
 		}
 	}
+}
+
+void wsh_panel_window::on_drag_enter(WPARAM wp, LPARAM lp)
+{
+	TRACK_FUNCTION();
+
+	VARIANTARG args[3];
+	args[0].vt = VT_I4;
+	args[0].lVal = wp;
+	args[1].vt = VT_I4;
+	args[1].lVal = GET_Y_LPARAM(lp);
+	args[2].vt = VT_I4;
+	args[2].lVal = GET_X_LPARAM(lp);	
+
+	script_invoke_v(L"on_drag_enter", args, _countof(args));
+}
+
+void wsh_panel_window::on_drag_over(WPARAM wp, LPARAM lp)
+{
+	TRACK_FUNCTION();
+
+	VARIANTARG args[3];
+	args[0].vt = VT_I4;
+	args[0].lVal = wp;
+	args[1].vt = VT_I4;
+	args[1].lVal = GET_Y_LPARAM(lp);
+	args[2].vt = VT_I4;
+	args[2].lVal = GET_X_LPARAM(lp);	
+
+	script_invoke_v(L"on_drag_over", args, _countof(args));
+}
+
+void wsh_panel_window::on_drag_leave()
+{
+	TRACK_FUNCTION();
+
+	script_invoke_v(L"on_drag_leave");
+}
+
+void wsh_panel_window::on_drag_drop(WPARAM wp, LPARAM lp)
+{
+	TRACK_FUNCTION();
+
+	VARIANTARG args[3];
+	args[0].vt = VT_I4;
+	args[0].lVal = wp;
+	args[1].vt = VT_I4;
+	args[1].lVal = GET_Y_LPARAM(lp);
+	args[2].vt = VT_I4;
+	args[2].lVal = GET_X_LPARAM(lp);	
+
+	script_invoke_v(L"on_drag_drop", args, _countof(args));
 }
 
 const GUID& wsh_panel_window_cui::get_extension_guid() const

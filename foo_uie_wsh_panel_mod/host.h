@@ -59,7 +59,7 @@ public:
 	inline SCRIPTSTATE & GetScriptState() { return m_script_state; }
 	inline bool & GetQueryContinue() { return m_query_continue; }
 	IGdiBitmap * GetBackgroundImage();
-	inline void PreserveSelection() { m_selection_holder = static_api_ptr_t<ui_selection_manager_v2>()->acquire(); }
+	inline void PreserveSelection() { m_selection_holder = static_api_ptr_t<ui_selection_manager>()->acquire(); }
 	inline t_script_info & GetScriptInfo() { return m_script_info; }
 
 	void Redraw();
@@ -143,7 +143,6 @@ private:
 	IGdiUtilsPtr m_gdi;
 	IFbUtilsPtr  m_fb2k;
 	IWSHUtilsPtr m_utils;
-	DWORD        m_dwRef;
 	DWORD        m_dwStartTime;
 
 	BEGIN_COM_QI_IMPL()
@@ -160,7 +159,6 @@ public:
 		, m_gdi(com_object_singleton_t<GdiUtils>::instance())
 		, m_fb2k(com_object_singleton_t<FbUtils>::instance())
 		, m_utils(com_object_singleton_t<WSHUtils>::instance())
-		, m_dwRef(0)
 		, m_dwStartTime(0)
 	{}
 
@@ -170,15 +168,8 @@ public:
 
 public:
 	// IUnknown
-	STDMETHODIMP_(ULONG) AddRef()
-	{
-		return ++m_dwRef;
-	}
-
-	STDMETHODIMP_(ULONG) Release()
-	{
-		return --m_dwRef; 
-	}
+	STDMETHODIMP_(ULONG) AddRef() { return 1; }
+	STDMETHODIMP_(ULONG) Release() { return 1; }
 
 	// IActiveScriptSite
 	STDMETHODIMP GetLCID(LCID* plcid);
@@ -196,6 +187,45 @@ public:
 
 	// IActiveScriptSiteInterruptPoll
 	STDMETHODIMP QueryContinue();
+};
+
+class PanelDropTarget : public IDropTarget
+{
+private:
+	class process_dropped_items : public process_locations_notify 
+	{
+	public:
+		void on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items) 
+		{
+			bit_array_range selection(0, p_items.get_count());
+
+			static_api_ptr_t<playlist_manager>()->activeplaylist_clear_selection();
+			static_api_ptr_t<playlist_manager>()->activeplaylist_add_items(p_items, selection);
+		}
+		void on_aborted() {}
+	};
+
+	HostComm * m_host;
+
+	BEGIN_COM_QI_IMPL()
+		COM_QI_ENTRY_MULTI(IUnknown, IDropTarget)
+		COM_QI_ENTRY(IDropTarget)
+	END_COM_QI_IMPL()
+
+public:
+	PanelDropTarget(HostComm * host) : m_host(host) {}
+	virtual ~PanelDropTarget() {}
+
+public:
+	// IUnknown
+	STDMETHODIMP_(ULONG) AddRef() { return 1; }
+	STDMETHODIMP_(ULONG) Release() { return 1; }
+
+	// IDropTarget
+	STDMETHODIMP DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+	STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+	STDMETHODIMP DragLeave();
+	STDMETHODIMP Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
 };
 
 class CDialogConf;
@@ -218,13 +248,20 @@ private:
 		HWND wnd_;
 	};
 
+	PanelDropTarget  m_drop_target;
 	// Scripting
 	ScriptSite       m_script_site;
 	IGdiGraphicsPtr  m_gr_wrap;
 	bool             m_is_mouse_tracked;
+	bool			 m_is_droptarget_registered;
 
 public:
-	wsh_panel_window() : m_is_mouse_tracked(false), m_script_site(this) {}
+	wsh_panel_window() 
+		: m_drop_target(this)
+		, m_script_site(this) 
+		, m_is_mouse_tracked(false)
+		, m_is_droptarget_registered(false)
+	{}
 
 	virtual ~wsh_panel_window()
 	{
@@ -235,10 +272,10 @@ public:
 	void update_script(const char * name = NULL, const char * code = NULL);
 
 private:
-	HRESULT script_pre_init();
-	bool script_init();
-	void script_stop();
-	void script_term();
+	HRESULT script_init();
+	bool script_load();
+	void script_deinit();
+	void script_unload();
 	HRESULT script_invoke_v(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);
 	void create_context();
 	void delete_context();
@@ -255,9 +292,16 @@ private:
 	void on_paint(HDC dc, LPRECT lpUpdateRect);
 	void on_timer(UINT timer_id);
 	void on_context_menu(int x, int y);
+	void on_mouse_wheel(WPARAM wp);
+	void on_mouse_leave();
+	void on_mouse_move(LPARAM lp);
+	void on_mouse_button_dblclk(UINT msg, WPARAM wp, LPARAM lp);
+	bool on_mouse_button_up(UINT msg, WPARAM wp, LPARAM lp);
+	void on_mouse_button_down(UINT msg, WPARAM wp, LPARAM lp);
+	void on_refresh_background_done();
 
 protected:
-	void build_context_menu(HMENU menu, int x, int y, int id_base);
+	static void build_context_menu(HMENU menu, int x, int y, int id_base);
 	void execute_context_menu_command(int id, int id_base);
 
 private:
@@ -286,6 +330,8 @@ private:
 	void on_volume_change(WPARAM wp);
 
 	// playlist_callback
+	void on_playlist_items_added(WPARAM wp);
+	void on_playlist_items_removed(WPARAM wp, LPARAM lp);
 	void on_item_focus_change();
 	void on_playback_order_changed(t_size p_new_index);
 	void on_playlist_switch();
@@ -296,6 +342,12 @@ private:
 
 	// ui_selection_callback
 	void on_selection_changed(WPARAM wp);
+
+	// drag and drop
+	void on_drag_enter(WPARAM wp, LPARAM lp);
+	void on_drag_over(WPARAM wp, LPARAM lp);
+	void on_drag_leave();
+	void on_drag_drop(WPARAM wp, LPARAM lp);
 
 protected:
 	// override me

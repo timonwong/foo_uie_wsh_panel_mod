@@ -35,22 +35,25 @@ DIRECTIVES
   Set feature(s).
   NOTE: Read these carefully.
   "feature-string":
-    versions:
+    -versions:
       "v1.0" - Set by default.
       "v1.4" - Disable on_metadb_changed() callback;
                Disable window.WatchMetadb() and window.UnWatchMetadb() methods permanently ("watch-metadb" won't help);
                Passno parameter to on_selection_changed() callback.
 
-    commons:
+    -commons:
       "watch-metadb" - Set by default when version is "v1.0", unset by any other versions.
                        Enable on_metadb_changed() callback (See Notes in Callbacks.txt);
                        Enable window.WatchMetadb() and window.UnWatchMetadb() methods.
+      "dragdrop"     - Enable drag drop callbacks.
+
   e.g:
     JScript:
       // ==PREPROCESSOR==
       // ...
       // @feature "v1.4"
       // @feature "watch-metadb"
+      // @feature "dragdrop"
       // ==/PREPROCESSOR==
 
   @name "name"

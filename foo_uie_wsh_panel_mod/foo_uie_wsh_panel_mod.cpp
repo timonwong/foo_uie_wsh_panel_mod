@@ -34,10 +34,11 @@ namespace
 	// Is there anything not correctly loaded?
 	enum t_load_status_error
 	{
-		E_OK = 0,
-		E_TYPELIB = 1 << 0,
+		E_OK		= 0,
+		E_TYPELIB	= 1 << 0,
 		E_SCINTILLA = 1 << 1,
-		E_GDIPLUS = 1 << 2,
+		E_GDIPLUS	= 1 << 2,
+		E_OLE		= 1 << 3,
 	};
 
 	static int g_load_status = E_OK;
@@ -72,6 +73,9 @@ namespace
 			{
 				err_msg = "This error message indicates that means this component will not function properly:\n\n";
 
+				if (g_load_status & E_OLE)
+					err_msg += "OLE: Initialize OLE Failed.\n\n";
+
 				if (g_load_status & E_TYPELIB)
 					err_msg += "Type Library: Load TypeLib Failed.\n\n";
 
@@ -104,6 +108,9 @@ namespace
 
 				path[len] = 0;
 
+				if (FAILED(OleInitialize(NULL)))
+					g_load_status |= E_OLE;
+
 				if (FAILED(LoadTypeLibEx(path, REGKIND_NONE, &g_typelib)))
 					g_load_status |= E_TYPELIB;
 
@@ -131,6 +138,8 @@ namespace
 
 				// Free Scintilla resource
 				Scintilla_ReleaseResources();
+
+				OleUninitialize();
 			}
 			break;
 		}

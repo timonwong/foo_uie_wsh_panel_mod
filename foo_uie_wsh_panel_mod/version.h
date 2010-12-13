@@ -3,8 +3,8 @@
 #include "hgrev.h"
 
 // TODO: Change Version Number Every Time
-#define WSPM_VERSION_NUMBER "1.4.0"
-//#define WSPM_VERSION_TEST "Beta 6"
+#define WSPM_VERSION_NUMBER "1.4.1"
+#define WSPM_VERSION_TEST "Beta 1"
 
 #ifdef WSPM_VERSION_TEST
 #	define WSPM_TESTING 1
