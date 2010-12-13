@@ -206,6 +206,7 @@ private:
 	};
 
 	HostComm * m_host;
+	DWORD m_effect;
 
 	BEGIN_COM_QI_IMPL()
 		COM_QI_ENTRY_MULTI(IUnknown, IDropTarget)
@@ -213,7 +214,7 @@ private:
 	END_COM_QI_IMPL()
 
 public:
-	PanelDropTarget(HostComm * host) : m_host(host) {}
+	PanelDropTarget(HostComm * host) : m_host(host), m_effect(DROPEFFECT_NONE) {}
 	virtual ~PanelDropTarget() {}
 
 public:
@@ -294,7 +295,7 @@ private:
 	void on_context_menu(int x, int y);
 	void on_mouse_wheel(WPARAM wp);
 	void on_mouse_leave();
-	void on_mouse_move(LPARAM lp);
+	void on_mouse_move(WPARAM wp, LPARAM lp);
 	void on_mouse_button_dblclk(UINT msg, WPARAM wp, LPARAM lp);
 	bool on_mouse_button_up(UINT msg, WPARAM wp, LPARAM lp);
 	void on_mouse_button_down(UINT msg, WPARAM wp, LPARAM lp);

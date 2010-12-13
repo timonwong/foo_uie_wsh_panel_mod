@@ -37,7 +37,8 @@ function on_mouse_mbtn_up(x, y, mask) {}
 // mask, see Flags.txt for more details
 function on_mouse_mbtn_dblclk(x, y, mask) {}
 
-function on_mouse_move(x, y) {}
+// [1.4.1] Updated:
+function on_mouse_move(x, y, mask) {}
 
 // Called when mouse leaves WSH Panel Mod
 function on_mouse_leave() {}
@@ -202,20 +203,25 @@ function on_playlist_items_removed(playlist, new_count) {}
  * Note:
  * In order to get drag and drop callbacks work, you have to set feature="dragdrop" in the preprocessor.
  * See Preprocessors.txt for more details.
+ *
+ * While dragging, you cannot receive callbacks like on_mouse_move().
  */
 
 // [1.4.1] Added:
 // x, y and mask have the same meaning as in on_mouse_*() callbacks.
-function on_drag_enter(x, y, mask) {}
+// void is reserved for future use.
+function on_drag_enter(void, x, y, mask) {}
 
 // [1.4.1] Added:
 // x, y and mask have the same meaning as in on_mouse_*() callbacks.
-function on_drag_over(x, y, mask) {}
+// void is reserved for future use.
+function on_drag_over(void, x, y, mask) {}
 
 // [1.4.1] Added:
 function on_drag_leave() {}
 
 // [1.4.1] Added:
 // x, y and mask have the same meaning as in on_mouse_*() callbacks.
-function on_drag_drop(x, y, mask) {}
+// void is reserved for future use.
+function on_drag_drop(void, x, y, mask) {}
 

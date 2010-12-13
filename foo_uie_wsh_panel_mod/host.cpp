@@ -908,9 +908,13 @@ STDMETHODIMP PanelDropTarget::DragEnter(IDataObject *pDataObj, DWORD grfKeyState
 {
 	if (!pdwEffect) return E_POINTER;
 
-	//ole_interaction
+	// Parsable?
+	if (!static_api_ptr_t<playlist_incoming_item_filter>()->process_dropped_files_check_ex(pDataObj, &m_effect))
+		m_effect = DROPEFFECT_NONE;
+
 	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
 	SendMessage(m_host->GetHWND(), UWM_DRAG_ENTER, grfKeyState, MAKELPARAM(pt.x, pt.y));
+	*pdwEffect = m_effect;
 	return S_OK;
 }
 
@@ -920,6 +924,7 @@ STDMETHODIMP PanelDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwE
 
 	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
 	SendMessage(m_host->GetHWND(), UWM_DRAG_OVER, grfKeyState, MAKELPARAM(pt.x, pt.y));
+	*pdwEffect = m_effect;
 	return S_OK;
 }
 
@@ -940,6 +945,7 @@ STDMETHODIMP PanelDropTarget::Drop(IDataObject *pDataObj, DWORD grfKeyState, POI
 		playlist_incoming_item_filter_v2::op_flag_delay_ui,
 		core_api::get_main_window(), new service_impl_t<process_dropped_items>());
 
+	*pdwEffect = m_effect;
 	return S_OK;
 }
 
@@ -1364,7 +1370,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 1;
 
 	case WM_MOUSEMOVE:
-		on_mouse_move(lp);
+		on_mouse_move(wp, lp);
 		break;
 
 	case WM_MOUSELEAVE:
@@ -1726,7 +1732,7 @@ void wsh_panel_window::on_timer(UINT timer_id)
 	VARIANTARG args[1];
 
 	args[0].vt = VT_UI4;
-	args[0].uintVal = timer_id;
+	args[0].ulVal = timer_id;
 	script_invoke_v(L"on_timer", args, _countof(args));
 }
 
@@ -1764,7 +1770,7 @@ void wsh_panel_window::on_mouse_leave()
 	SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
 }
 
-void wsh_panel_window::on_mouse_move(LPARAM lp)
+void wsh_panel_window::on_mouse_move(WPARAM wp, LPARAM lp)
 {
 	TRACK_FUNCTION();
 
@@ -1782,12 +1788,14 @@ void wsh_panel_window::on_mouse_move(LPARAM lp)
 		SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
 	}
 
-	VARIANTARG args[2];
+	VARIANTARG args[3];
 
 	args[0].vt = VT_I4;
-	args[0].lVal = GET_Y_LPARAM(lp);
+	args[0].lVal = wp;
 	args[1].vt = VT_I4;
-	args[1].lVal = GET_X_LPARAM(lp);	
+	args[1].lVal = GET_Y_LPARAM(lp);
+	args[2].vt = VT_I4;
+	args[2].lVal = GET_X_LPARAM(lp);	
 	script_invoke_v(L"on_mouse_move", args, _countof(args));
 }
 
@@ -2190,7 +2198,7 @@ void wsh_panel_window::on_playlist_items_added(WPARAM wp)
 
 	VARIANTARG args[1];
 	args[0].vt = VT_UI4;
-	args[0].uintVal = wp;
+	args[0].ulVal = wp;
 	script_invoke_v(L"on_playlist_items_added", args, _countof(args));
 }
 
@@ -2200,9 +2208,9 @@ void wsh_panel_window::on_playlist_items_removed(WPARAM wp, LPARAM lp)
 
 	VARIANTARG args[2];
 	args[0].vt = VT_UI4;
-	args[0].uintVal = lp;
+	args[0].ulVal = lp;
 	args[1].vt = VT_UI4;
-	args[1].uintVal = wp;
+	args[1].ulVal = wp;
 	script_invoke_v(L"on_playlist_items_removed", args, _countof(args));
 }
 
@@ -2277,14 +2285,15 @@ void wsh_panel_window::on_drag_enter(WPARAM wp, LPARAM lp)
 {
 	TRACK_FUNCTION();
 
-	VARIANTARG args[3];
+	VARIANTARG args[4];
 	args[0].vt = VT_I4;
 	args[0].lVal = wp;
 	args[1].vt = VT_I4;
 	args[1].lVal = GET_Y_LPARAM(lp);
 	args[2].vt = VT_I4;
-	args[2].lVal = GET_X_LPARAM(lp);	
-
+	args[2].lVal = GET_X_LPARAM(lp);
+	args[3].vt = VT_I4;
+	args[3].lVal = 0;
 	script_invoke_v(L"on_drag_enter", args, _countof(args));
 }
 
@@ -2292,14 +2301,15 @@ void wsh_panel_window::on_drag_over(WPARAM wp, LPARAM lp)
 {
 	TRACK_FUNCTION();
 
-	VARIANTARG args[3];
+	VARIANTARG args[4];
 	args[0].vt = VT_I4;
 	args[0].lVal = wp;
 	args[1].vt = VT_I4;
 	args[1].lVal = GET_Y_LPARAM(lp);
 	args[2].vt = VT_I4;
 	args[2].lVal = GET_X_LPARAM(lp);	
-
+	args[3].vt = VT_I4;
+	args[3].lVal = 0;
 	script_invoke_v(L"on_drag_over", args, _countof(args));
 }
 
@@ -2314,14 +2324,15 @@ void wsh_panel_window::on_drag_drop(WPARAM wp, LPARAM lp)
 {
 	TRACK_FUNCTION();
 
-	VARIANTARG args[3];
+	VARIANTARG args[4];
 	args[0].vt = VT_I4;
 	args[0].lVal = wp;
 	args[1].vt = VT_I4;
 	args[1].lVal = GET_Y_LPARAM(lp);
 	args[2].vt = VT_I4;
 	args[2].lVal = GET_X_LPARAM(lp);	
-
+	args[3].vt = VT_I4;
+	args[3].lVal = 0;
 	script_invoke_v(L"on_drag_drop", args, _countof(args));
 }
 
