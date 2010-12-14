@@ -1362,7 +1362,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_LBUTTONDBLCLK:
 	case WM_MBUTTONDBLCLK:
 	case WM_RBUTTONDBLCLK:
-		on_mouse_button_dblclk(wp, lp, msg);
+		on_mouse_button_dblclk(msg, wp, lp);
 		break;
 
 	case WM_CONTEXTMENU:

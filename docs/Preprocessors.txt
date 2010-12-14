@@ -37,14 +37,15 @@ DIRECTIVES
   "feature-string":
     -versions:
       "v1.0" - Set by default.
-      "v1.4" - Disable on_metadb_changed() callback;
+      "v1.4" - Effects:
+               Disable on_metadb_changed() callback;
                Disable window.WatchMetadb() and window.UnWatchMetadb() methods permanently ("watch-metadb" won't help);
-               Passno parameter to on_selection_changed() callback.
+               No parameter will be passed to on_selection_changed() callback.
 
     -commons:
       "watch-metadb" - Set by default when version is "v1.0", unset by any other versions.
                        Enable on_metadb_changed() callback (See Notes in Callbacks.txt);
-                       Enable window.WatchMetadb() and window.UnWatchMetadb() methods.
+                       Enable window.WatchMetadb() and window.UnWatchMetadb() methods (prior to "v1.4").
       "dragdrop"     - Enable drag drop callbacks.
 
   e.g:

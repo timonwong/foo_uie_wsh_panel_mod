@@ -157,7 +157,7 @@ function on_item_focus_change() {}
 //   implementations requested an update so output of metadb_handle::format_title() etc has changed.
 // NOTE: See Preprocessors.txt if you are using @feature directive.
 // NOTE: metadb will be metadb handle list (already sorted) when preprocessor directive "feature":
-//   1. "v2.0" and later is set;
+//   1. "v1.4" and later is set;
 //   2. "watch-metadb" is set.
 function on_metadb_changed(metadb, fromhook) {}
 
