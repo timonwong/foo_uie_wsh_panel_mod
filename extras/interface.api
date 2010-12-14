@@ -162,5 +162,5 @@ on_playlist_items_removed(playlist, new_count)
 on_drag_enter(void, x, y, mask)
 on_drag_over(void, x, y, mask)
 on_drag_leave()
-on_drag_drop(void, x, y, mask)
+on_drag_drop(action, x, y, mask)
 

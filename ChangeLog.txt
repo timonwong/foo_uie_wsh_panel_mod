@@ -1,5 +1,7 @@
 v1.4.1 Beta 2:
 - ADD: New sample "Drag Drop Basic".
+- ADD: New IDropTargetAction interface.
+- FIX: Fix a problem that callbacks for double clicks won't get called, introduced in 1.4.1 Beta 1.
 
 v1.4.1 Beta 1:
 - ADD: New feature for drag and drop: @feature "dragdrop".

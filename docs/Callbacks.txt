@@ -222,6 +222,6 @@ function on_drag_leave() {}
 
 // [1.4.1] Added:
 // x, y and mask have the same meaning as in on_mouse_*() callbacks.
-// void is reserved for future use.
-function on_drag_drop(void, x, y, mask) {}
+// action: an object of IDropTargetAction interface.
+function on_drag_drop(action, x, y, mask) {}
 

@@ -1747,7 +1747,7 @@ STDMETHODIMP FbUtils::GetSelection(IFbMetadbHandle** pp)
 
 	metadb_handle_list items;
 
-	static_api_ptr_t<ui_selection_manager_v2>()->get_selection(items, 0);
+	static_api_ptr_t<ui_selection_manager>()->get_selection(items);
 
 	if (items.get_count() > 0)
 	{
@@ -3644,4 +3644,49 @@ STDMETHODIMP ThemeManager::DrawThemeBackground(IGdiGraphics * gr, int x, int y, 
 
 	graphics->ReleaseHDC(dc);
 	return hr;
+}
+
+STDMETHODIMP DropSourceAction::get_Mode(int * mode)
+{
+	TRACK_FUNCTION();
+	if (!mode) return E_POINTER;
+	*mode = m_action_mode;
+	return S_OK;
+}
+
+STDMETHODIMP DropSourceAction::get_Playlist(int * id)
+{
+	TRACK_FUNCTION();
+	if (!id) return E_POINTER;
+	*id = m_playlist_idx;
+	return S_OK;
+}
+
+STDMETHODIMP DropSourceAction::put_Playlist(int id)
+{
+	TRACK_FUNCTION();
+	m_playlist_idx = id;
+	return S_OK;
+}
+
+STDMETHODIMP DropSourceAction::get_ToSelect(VARIANT_BOOL * select)
+{
+	TRACK_FUNCTION();
+	if (!select) return E_POINTER;
+	*select = TO_VARIANT_BOOL(m_to_select);
+	return S_OK;
+}
+
+STDMETHODIMP DropSourceAction::put_ToSelect(VARIANT_BOOL select)
+{
+	TRACK_FUNCTION();
+	m_to_select = (select == VARIANT_TRUE);
+	return S_OK;
+}
+
+STDMETHODIMP DropSourceAction::ToPlaylist()
+{
+	TRACK_FUNCTION();
+	m_action_mode = kActionModePlaylist;
+	return S_OK;
 }

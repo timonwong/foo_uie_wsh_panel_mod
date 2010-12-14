@@ -3,7 +3,7 @@
 // ==PREPROCESSOR==
 // @name "Drag Drop Basic"
 // @author "T.P Wang"
-// line below is required for enabling drag and drop support
+// Add feature below to enable drag and drop support
 // @feature "dragdrop"
 // ==/PREPROCESSOR==
 
@@ -17,6 +17,7 @@ var dragging            =   false;
 
 function on_paint(gr) {
     var color = dragging ? color_background2 : color_background;
+
     gr.FillSolidRect(0, 0, window.Width, window.Height, color);
 }
 
@@ -31,7 +32,7 @@ function on_drag_leave() {
 }
 
 // Here we create a new playlist for hosting the dropped objects.
-function on_drag_drop() {
+function on_drag_drop(action) {
     var playlist_name = "Dropped Items";
     var idx = -1;
 
@@ -46,13 +47,15 @@ function on_drag_drop() {
     // If not found, then create one.
     if (idx == -1)
         idx = fb.CreatePlaylist(fb.PlaylistCount, playlist_name);
-
-    // Switch to the playlist
-    fb.ActivePlaylist = idx;
     
     // This is required because when a drop event is fired, you won't get on_drag_leave() called.
     dragging = false;
     window.Repaint();
+    
+    // We are going to process the dropped items to a playlist.
+    action.ToPlaylist();
+    action.Playlist = idx;
+    action.SelectThem = false;
 
     // Dropped items will be added to the active playlist later.
 }

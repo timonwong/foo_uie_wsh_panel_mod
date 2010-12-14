@@ -642,3 +642,35 @@ public:
 	STDMETHODIMP IsThemePartDefined(int partid, int stateid, VARIANT_BOOL * p);
 	STDMETHODIMP DrawThemeBackground(IGdiGraphics * gr, int x, int y, int w, int h, int clip_x, int clip_y, int clip_w, int clip_h);
 };
+
+class DropSourceAction : public IDisposableImpl4<IDropSourceAction>
+{
+public:
+	enum t_action_mode
+	{
+		kActionModeNone = 0,
+		kActionModePlaylist,
+	};
+
+protected:
+	// -1 means active playlist
+	int m_playlist_idx;
+	bool m_to_select;
+	t_action_mode m_action_mode;
+
+	DropSourceAction() : m_playlist_idx(-1), m_to_select(true), m_action_mode(kActionModeNone) {}
+	virtual ~DropSourceAction() {}
+
+	virtual void FinalRelease()
+	{
+	}
+
+public:
+	STDMETHODIMP get_Mode(int * mode);
+	STDMETHODIMP get_Playlist(int * id);
+	STDMETHODIMP put_Playlist(int id);
+	STDMETHODIMP get_ToSelect(VARIANT_BOOL * to_select);
+	STDMETHODIMP put_ToSelect(VARIANT_BOOL to_select);
+
+	STDMETHODIMP ToPlaylist();
+};

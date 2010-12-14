@@ -904,6 +904,34 @@ STDMETHODIMP ScriptSite::QueryContinue()
 	return S_OK;
 }
 
+void PanelDropTarget::process_dropped_items::on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items)
+{
+	bit_array_true selection_them;
+	bit_array_false selection_none;
+	bit_array * select_ptr = &selection_them;
+	static_api_ptr_t<playlist_manager> pm;
+	t_size playlist;
+
+	if (m_playlist_idx == -1)
+	{
+		playlist = pm->get_active_playlist();
+	}
+	else
+	{
+		playlist = m_playlist_idx;
+	}
+
+	if (!m_to_select)
+	{
+		select_ptr = &selection_none;
+	}
+
+	if (playlist != pfc_infinite && playlist < pm->get_playlist_count())
+	{
+		pm->playlist_add_items(playlist, p_items, *select_ptr);
+	}
+}
+
 STDMETHODIMP PanelDropTarget::DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
 	if (!pdwEffect) return E_POINTER;
@@ -939,13 +967,35 @@ STDMETHODIMP PanelDropTarget::Drop(IDataObject *pDataObj, DWORD grfKeyState, POI
 	if (!pdwEffect) return E_POINTER;
 
 	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
-	SendMessage(m_host->GetHWND(), UWM_DRAG_DROP, grfKeyState, MAKELPARAM(pt.x, pt.y));
+	DropSourceAction * action = new com_object_impl_t<DropSourceAction>();
+	MessageParam param = {grfKeyState, pt.x, pt.y, action };
+	SendMessage(m_host->GetHWND(), UWM_DRAG_DROP, 0, (LPARAM)&param);
 
-	static_api_ptr_t<playlist_incoming_item_filter_v2>()->process_dropped_files_async(pDataObj, 
+	int playlist;
+	VARIANT_BOOL select;
+	int mode;
+
+	action->get_Playlist(&playlist);
+	action->get_ToSelect(&select);
+	action->get_Mode(&mode);
+
+	switch (mode)
+	{
+	case DropSourceAction::kActionModePlaylist:
+		static_api_ptr_t<playlist_incoming_item_filter_v2>()->process_dropped_files_async(pDataObj, 
 		playlist_incoming_item_filter_v2::op_flag_delay_ui,
-		core_api::get_main_window(), new service_impl_t<process_dropped_items>());
+		core_api::get_main_window(), new service_impl_t<process_dropped_items>(playlist, select == VARIANT_TRUE));
+		break;
+
+	default:
+		break;
+	}
 
 	*pdwEffect = m_effect;
+
+	if (action)
+		action->Release();
+
 	return S_OK;
 }
 
@@ -1512,7 +1562,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case UWM_DRAG_DROP:
-		on_drag_drop(wp, lp);
+		on_drag_drop(lp);
 		return 0;
 
 	case CALLBACK_UWM_PLAYLIST_STOP_AFTER_CURRENT:
@@ -2320,19 +2370,20 @@ void wsh_panel_window::on_drag_leave()
 	script_invoke_v(L"on_drag_leave");
 }
 
-void wsh_panel_window::on_drag_drop(WPARAM wp, LPARAM lp)
+void wsh_panel_window::on_drag_drop(LPARAM lp)
 {
 	TRACK_FUNCTION();
 
+	PanelDropTarget::MessageParam * param = reinterpret_cast<PanelDropTarget::MessageParam *>(lp);
 	VARIANTARG args[4];
 	args[0].vt = VT_I4;
-	args[0].lVal = wp;
+	args[0].lVal = param->key_state;
 	args[1].vt = VT_I4;
-	args[1].lVal = GET_Y_LPARAM(lp);
+	args[1].lVal = GET_Y_LPARAM(param->y);
 	args[2].vt = VT_I4;
-	args[2].lVal = GET_X_LPARAM(lp);	
-	args[3].vt = VT_I4;
-	args[3].lVal = 0;
+	args[2].lVal = GET_X_LPARAM(param->x);	
+	args[3].vt = VT_DISPATCH;
+	args[3].pdispVal = param->action;
 	script_invoke_v(L"on_drag_drop", args, _countof(args));
 }
 

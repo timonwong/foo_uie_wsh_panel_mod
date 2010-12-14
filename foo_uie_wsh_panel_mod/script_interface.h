@@ -471,6 +471,24 @@ __interface IThemeManager: IDisposable
 	dual,
 	pointer_default(unique),
 	library_block,
+	uuid("91830eda-b5f2-4061-9923-7880192a2734")
+]
+__interface IDropSourceAction: IDisposable
+{
+	[propget] STDMETHOD(Mode)([out,retval] int * mode);
+	[propget] STDMETHOD(Playlist)([out,retval] int * id);
+	[propput] STDMETHOD(Playlist)(int id);
+	[propget] STDMETHOD(ToSelect)([out,retval] VARIANT_BOOL * to_select);
+	[propput] STDMETHOD(ToSelect)(VARIANT_BOOL to_select);
+	
+	STDMETHOD(ToPlaylist)();
+};
+
+[
+	object,
+	dual,
+	pointer_default(unique),
+	library_block,
 	uuid("81e1f0c0-1dfe-4996-abd9-ba98dff69e4c")
 ]
 __interface IFbWindow: IDispatch

@@ -191,18 +191,28 @@ public:
 
 class PanelDropTarget : public IDropTarget
 {
+public:
+	struct MessageParam
+	{
+		DWORD key_state;
+		LONG x;
+		LONG y;
+		DropSourceAction * action;
+	};
+
 private:
 	class process_dropped_items : public process_locations_notify 
 	{
 	public:
-		void on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items) 
-		{
-			bit_array_range selection(0, p_items.get_count());
+		process_dropped_items(int playlist_idx, bool to_select) 
+			: m_playlist_idx(playlist_idx), m_to_select(to_select) {}
 
-			static_api_ptr_t<playlist_manager>()->activeplaylist_clear_selection();
-			static_api_ptr_t<playlist_manager>()->activeplaylist_add_items(p_items, selection);
-		}
+		void on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items);
 		void on_aborted() {}
+
+	private:
+		bool m_to_select;
+		int m_playlist_idx;
 	};
 
 	HostComm * m_host;
@@ -348,7 +358,7 @@ private:
 	void on_drag_enter(WPARAM wp, LPARAM lp);
 	void on_drag_over(WPARAM wp, LPARAM lp);
 	void on_drag_leave();
-	void on_drag_drop(WPARAM wp, LPARAM lp);
+	void on_drag_drop(LPARAM lp);
 
 protected:
 	// override me
