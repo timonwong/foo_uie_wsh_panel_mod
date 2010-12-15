@@ -1,3 +1,8 @@
+v1.4.1 Beta 3:
+- ADD: New property IDropSourceAction::Parsable.
+- CHG: Callback on_drag_enter(), on_drag_over() and on_drag_drop() accept first parameter "action" now.
+- FIX: Fix mistyped in sample "Drag Drop Basic".
+
 v1.4.1 Beta 2:
 - ADD: New sample "Drag Drop Basic".
 - ADD: New IDropTargetAction interface.

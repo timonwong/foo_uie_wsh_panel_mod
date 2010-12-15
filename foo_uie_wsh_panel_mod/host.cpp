@@ -51,8 +51,9 @@ namespace
 
 HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_bmp(NULL), 
 	m_suppress_drawing(false), m_paint_pending(false), m_accuracy(0), 
-	m_script_state(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false), 
-	m_instance_type(KInstanceTypeCUI), m_dlg_code(0), m_script_info(get_config_guid())
+	m_script_state(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false),
+	m_instance_type(KInstanceTypeCUI), m_dlg_code(0), m_engine_inited(false),
+	m_script_info(get_config_guid())
 {
 	m_max_size.x = INT_MAX;
 	m_max_size.y = INT_MAX;
@@ -814,7 +815,7 @@ STDMETHODIMP ScriptSite::OnScriptTerminate(const VARIANT* result, const EXCEPINF
 
 STDMETHODIMP ScriptSite::OnStateChange(SCRIPTSTATE state)
 {
-	m_host->GetScriptState() = state;
+	//m_host->GetScriptState() = state;
 	return S_OK;
 }
 
@@ -913,18 +914,12 @@ void PanelDropTarget::process_dropped_items::on_completion(const pfc::list_base_
 	t_size playlist;
 
 	if (m_playlist_idx == -1)
-	{
 		playlist = pm->get_active_playlist();
-	}
 	else
-	{
 		playlist = m_playlist_idx;
-	}
 
 	if (!m_to_select)
-	{
 		select_ptr = &selection_none;
-	}
 
 	if (playlist != pfc_infinite && playlist < pm->get_playlist_count())
 	{
@@ -936,12 +931,16 @@ STDMETHODIMP PanelDropTarget::DragEnter(IDataObject *pDataObj, DWORD grfKeyState
 {
 	if (!pdwEffect) return E_POINTER;
 
+	m_action->Reset();
 	// Parsable?
-	if (!static_api_ptr_t<playlist_incoming_item_filter>()->process_dropped_files_check_ex(pDataObj, &m_effect))
+	m_action->Parsable() = static_api_ptr_t<playlist_incoming_item_filter>()->process_dropped_files_check_ex(pDataObj, &m_effect);
+
+	if (!m_action->Parsable())
 		m_effect = DROPEFFECT_NONE;
 
 	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
-	SendMessage(m_host->GetHWND(), UWM_DRAG_ENTER, grfKeyState, MAKELPARAM(pt.x, pt.y));
+	MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
+	SendMessage(m_host->GetHWND(), UWM_DRAG_ENTER, 0, (LPARAM)&param);
 	*pdwEffect = m_effect;
 	return S_OK;
 }
@@ -951,7 +950,8 @@ STDMETHODIMP PanelDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwE
 	if (!pdwEffect) return E_POINTER;
 
 	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
-	SendMessage(m_host->GetHWND(), UWM_DRAG_OVER, grfKeyState, MAKELPARAM(pt.x, pt.y));
+	MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
+	SendMessage(m_host->GetHWND(), UWM_DRAG_OVER, 0, (LPARAM)&param);
 	*pdwEffect = m_effect;
 	return S_OK;
 }
@@ -967,35 +967,30 @@ STDMETHODIMP PanelDropTarget::Drop(IDataObject *pDataObj, DWORD grfKeyState, POI
 	if (!pdwEffect) return E_POINTER;
 
 	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
-	DropSourceAction * action = new com_object_impl_t<DropSourceAction>();
-	MessageParam param = {grfKeyState, pt.x, pt.y, action };
+	MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
 	SendMessage(m_host->GetHWND(), UWM_DRAG_DROP, 0, (LPARAM)&param);
 
 	int playlist;
-	VARIANT_BOOL select;
-	int mode;
+	VARIANT_BOOL to_select;
+	m_action->get_Playlist(&playlist);
+	m_action->get_ToSelect(&to_select);
 
-	action->get_Playlist(&playlist);
-	action->get_ToSelect(&select);
-	action->get_Mode(&mode);
-
-	switch (mode)
+	if (m_action->Parsable())
 	{
-	case DropSourceAction::kActionModePlaylist:
-		static_api_ptr_t<playlist_incoming_item_filter_v2>()->process_dropped_files_async(pDataObj, 
-		playlist_incoming_item_filter_v2::op_flag_delay_ui,
-		core_api::get_main_window(), new service_impl_t<process_dropped_items>(playlist, select == VARIANT_TRUE));
-		break;
+		switch (m_action->Mode())
+		{
+		case DropSourceAction::kActionModePlaylist:
+			static_api_ptr_t<playlist_incoming_item_filter_v2>()->process_dropped_files_async(pDataObj, 
+				playlist_incoming_item_filter_v2::op_flag_delay_ui,
+				core_api::get_main_window(), new service_impl_t<process_dropped_items>(playlist, to_select == VARIANT_TRUE));
+			break;
 
-	default:
-		break;
+		default:
+			break;
+		}
 	}
 
 	*pdwEffect = m_effect;
-
-	if (action)
-		action->Release();
-
 	return S_OK;
 }
 
@@ -1083,9 +1078,9 @@ bool wsh_panel_window::script_load()
 	m_min_size.x = 0;
 	PostMessage(m_hwnd, UWM_SIZELIMITECHANGED, 0, uie::size_limit_all);
 
-	if (get_disabled())
+	if (get_disabled_before())
 	{
-		PostMessage(m_hwnd, UWM_SCRIPT_DISABLE, 0, 0);
+		PostMessage(m_hwnd, UWM_SCRIPT_DISABLED_BEFORE, 0, 0);
 		return false;
 	}
 
@@ -1116,6 +1111,18 @@ bool wsh_panel_window::script_load()
 	}
 	else
 	{
+		m_engine_inited = true;
+
+		if (GetScriptInfo().feature_mask & t_script_info::kFeatureDragDrop)
+		{
+			// Ole Drag and Drop support
+			RegisterDragDrop(m_hwnd, &m_drop_target);
+			m_is_droptarget_registered = true;
+		}
+
+		// HACK: Script update will not call on_size, so invoke it explicitly
+		SendMessage(m_hwnd, UWM_SIZE, 0, 0);
+
 		// Show init message
 		console::formatter() << WSPM_NAME " (" 
 			<< GetScriptInfo().build_info_string()
@@ -1124,32 +1131,7 @@ bool wsh_panel_window::script_load()
 			<< " ms";
 	}
 
-	if (GetScriptInfo().feature_mask & t_script_info::kFeatureDragDrop)
-	{
-		// Ole Drag and Drop support
-		RegisterDragDrop(m_hwnd, &m_drop_target);
-		m_is_droptarget_registered = true;
-	}
-
-	// HACK: Script update will not call on_size, so invoke it explicitly
-	SendMessage(m_hwnd, UWM_SIZE, 0, 0);
-
 	return result;
-}
-
-void wsh_panel_window::script_deinit()
-{
-	TRACK_FUNCTION();
-
-	if (m_script_engine)
-	{
-		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
-		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
-		m_script_engine->Close();
-	}
-
-	m_watched_handle.release();
-	m_selection_holder.release();
 }
 
 void wsh_panel_window::script_unload()
@@ -1157,16 +1139,24 @@ void wsh_panel_window::script_unload()
 	TRACK_FUNCTION();
 
 	script_invoke_v(L"on_script_unload");
-	script_deinit();
-
-	if (m_script_root)
+	
+	if (m_script_engine && m_engine_inited)
 	{
-		m_script_root.Release();
+		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
+		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
+
+		m_engine_inited = false;
 	}
 
 	if (m_script_engine)
 	{
+		m_script_engine->Close();
 		m_script_engine.Release();
+	}
+
+	if (m_script_root)
+	{
+		m_script_root.Release();
 	}
 
 	if (m_is_droptarget_registered)
@@ -1174,12 +1164,15 @@ void wsh_panel_window::script_unload()
 		RevokeDragDrop(m_hwnd);
 		m_is_droptarget_registered = false;
 	}
+
+	m_watched_handle.release();
+	m_selection_holder.release();
 }
 
 HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, VARIANTARG * argv /*= NULL*/, UINT argc /*= 0*/, VARIANT * ret /*= NULL*/)
 {
-	if (GetScriptState() != SCRIPTSTATE_CONNECTED) return E_NOINTERFACE;
-	if (!m_script_root || !m_script_engine) return E_NOINTERFACE;
+	//if (GetScriptState() != SCRIPTSTATE_CONNECTED) return E_FAIL;
+	if (!m_script_root || !m_engine_inited) return E_FAIL;
 	if (!name) return E_INVALIDARG;
 
 	DISPID dispid = 0;
@@ -1496,8 +1489,8 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		break;
 
 	case UWM_SCRIPT_ERROR_TIMEOUT:
-		get_disabled() = true;
-		script_deinit();
+		get_disabled_before() = true;
+		script_unload();
 
 		popup_msg::g_show(pfc::string_formatter() << "Script terminated due to the panel (" 
 			<< GetScriptInfo().build_info_string()
@@ -1509,7 +1502,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case UWM_SCRIPT_ERROR:
-		script_deinit();
+		script_unload();
 
 		if (lp)
 		{
@@ -1522,7 +1515,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		Repaint();
 		return 0;
 
-	case UWM_SCRIPT_DISABLE:
+	case UWM_SCRIPT_DISABLED_BEFORE:
 		// Show error message
 		popup_msg::g_show(pfc::string_formatter() 
 			<< "Panel ("
@@ -1550,11 +1543,11 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case UWM_DRAG_ENTER:
-		on_drag_enter(wp, lp);
+		on_drag_enter(lp);
 		return 0;
 
 	case UWM_DRAG_OVER:
-		on_drag_over(wp, lp);
+		on_drag_over(lp);
 		return 0;
 
 	case UWM_DRAG_LEAVE:
@@ -1700,7 +1693,7 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
 	HDC memdc = CreateCompatibleDC(dc);
 	HBITMAP oldbmp = SelectBitmap(memdc, m_gr_bmp);
 	
-	if (GetScriptState() != SCRIPTSTATE_CLOSED)
+	if (m_engine_inited)
 	{
 		if (get_pseudo_transparent())
 		{
@@ -2331,35 +2324,37 @@ void wsh_panel_window::on_selection_changed(WPARAM wp)
 	}
 }
 
-void wsh_panel_window::on_drag_enter(WPARAM wp, LPARAM lp)
+void wsh_panel_window::on_drag_enter(LPARAM lp)
 {
 	TRACK_FUNCTION();
 
+	PanelDropTarget::MessageParam * param = reinterpret_cast<PanelDropTarget::MessageParam *>(lp);
 	VARIANTARG args[4];
 	args[0].vt = VT_I4;
-	args[0].lVal = wp;
+	args[0].lVal = param->key_state;
 	args[1].vt = VT_I4;
-	args[1].lVal = GET_Y_LPARAM(lp);
+	args[1].lVal = param->x;
 	args[2].vt = VT_I4;
-	args[2].lVal = GET_X_LPARAM(lp);
-	args[3].vt = VT_I4;
-	args[3].lVal = 0;
+	args[2].lVal = param->y;	
+	args[3].vt = VT_DISPATCH;
+	args[3].pdispVal = param->action;
 	script_invoke_v(L"on_drag_enter", args, _countof(args));
 }
 
-void wsh_panel_window::on_drag_over(WPARAM wp, LPARAM lp)
+void wsh_panel_window::on_drag_over(LPARAM lp)
 {
 	TRACK_FUNCTION();
 
+	PanelDropTarget::MessageParam * param = reinterpret_cast<PanelDropTarget::MessageParam *>(lp);
 	VARIANTARG args[4];
 	args[0].vt = VT_I4;
-	args[0].lVal = wp;
+	args[0].lVal = param->key_state;
 	args[1].vt = VT_I4;
-	args[1].lVal = GET_Y_LPARAM(lp);
+	args[1].lVal = param->x;
 	args[2].vt = VT_I4;
-	args[2].lVal = GET_X_LPARAM(lp);	
-	args[3].vt = VT_I4;
-	args[3].lVal = 0;
+	args[2].lVal = param->y;	
+	args[3].vt = VT_DISPATCH;
+	args[3].pdispVal = param->action;
 	script_invoke_v(L"on_drag_over", args, _countof(args));
 }
 
@@ -2379,9 +2374,9 @@ void wsh_panel_window::on_drag_drop(LPARAM lp)
 	args[0].vt = VT_I4;
 	args[0].lVal = param->key_state;
 	args[1].vt = VT_I4;
-	args[1].lVal = GET_Y_LPARAM(param->y);
+	args[1].lVal = param->y;
 	args[2].vt = VT_I4;
-	args[2].lVal = GET_X_LPARAM(param->x);	
+	args[2].lVal = param->x;	
 	args[3].vt = VT_DISPATCH;
 	args[3].pdispVal = param->action;
 	script_invoke_v(L"on_drag_drop", args, _countof(args));

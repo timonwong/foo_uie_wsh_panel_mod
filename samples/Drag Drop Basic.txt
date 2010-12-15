@@ -55,7 +55,7 @@ function on_drag_drop(action) {
     // We are going to process the dropped items to a playlist.
     action.ToPlaylist();
     action.Playlist = idx;
-    action.SelectThem = false;
+    action.ToSelect = false;
 
     // Dropped items will be added to the active playlist later.
 }

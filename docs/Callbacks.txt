@@ -209,13 +209,13 @@ function on_playlist_items_removed(playlist, new_count) {}
 
 // [1.4.1] Added:
 // x, y and mask have the same meaning as in on_mouse_*() callbacks.
-// void is reserved for future use.
-function on_drag_enter(void, x, y, mask) {}
+// action: an object of IDropTargetAction interface.
+function on_drag_enter(action, x, y, mask) {}
 
 // [1.4.1] Added:
 // x, y and mask have the same meaning as in on_mouse_*() callbacks.
-// void is reserved for future use.
-function on_drag_over(void, x, y, mask) {}
+// action: an object of IDropTargetAction interface.
+function on_drag_over(action, x, y, mask) {}
 
 // [1.4.1] Added:
 function on_drag_leave() {}

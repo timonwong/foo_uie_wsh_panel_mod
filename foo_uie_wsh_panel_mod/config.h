@@ -72,10 +72,10 @@ private:
 	GUID m_config_guid;
 	WINDOWPLACEMENT m_wndpl;
 	prop_kv_config m_config_prop;
-	pfc::string8 m_script_engine;
+	pfc::string8 m_script_engine_str;
 	pfc::string8 m_script_code;
 	t_edge_style m_edge_style;
-	bool m_disabled;
+	bool m_disabled_before;
 	bool m_grab_focus;
 	bool m_pseudo_transparent;
 	bool m_delay_load;
@@ -93,7 +93,7 @@ public:
 
 	inline pfc::string_base& get_script_engine()
 	{
-		return m_script_engine;
+		return m_script_engine_str;
 	}
 
 	inline pfc::string_base& get_script_code()
@@ -126,9 +126,9 @@ public:
 		return m_wndpl;
 	}
 
-	inline bool & get_disabled()
+	inline bool & get_disabled_before()
 	{
-		return m_disabled;
+		return m_disabled_before;
 	}
 
 	inline prop_kv_config & get_config_prop()

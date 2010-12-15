@@ -41,7 +41,8 @@ protected:
 	bool              m_query_continue;
 	bool              m_suppress_drawing;
 	bool              m_paint_pending;
-
+	bool              m_engine_inited;
+	
 	HostComm();
 	virtual ~HostComm();
 
@@ -217,6 +218,7 @@ private:
 
 	HostComm * m_host;
 	DWORD m_effect;
+	DropSourceAction * m_action;
 
 	BEGIN_COM_QI_IMPL()
 		COM_QI_ENTRY_MULTI(IUnknown, IDropTarget)
@@ -224,8 +226,9 @@ private:
 	END_COM_QI_IMPL()
 
 public:
-	PanelDropTarget(HostComm * host) : m_host(host), m_effect(DROPEFFECT_NONE) {}
-	virtual ~PanelDropTarget() {}
+	PanelDropTarget(HostComm * host) 
+		: m_host(host), m_effect(DROPEFFECT_NONE), m_action(new com_object_impl_t<DropSourceAction>()) {}
+	virtual ~PanelDropTarget() { if (m_action) m_action->Release(); }
 
 public:
 	// IUnknown
@@ -276,8 +279,6 @@ public:
 
 	virtual ~wsh_panel_window()
 	{
-		// Ensure active scripting is closed
-		// script_term();
 	}
 
 	void update_script(const char * name = NULL, const char * code = NULL);
@@ -285,7 +286,6 @@ public:
 private:
 	HRESULT script_init();
 	bool script_load();
-	void script_deinit();
 	void script_unload();
 	HRESULT script_invoke_v(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);
 	void create_context();
@@ -355,8 +355,8 @@ private:
 	void on_selection_changed(WPARAM wp);
 
 	// drag and drop
-	void on_drag_enter(WPARAM wp, LPARAM lp);
-	void on_drag_over(WPARAM wp, LPARAM lp);
+	void on_drag_enter(LPARAM lp);
+	void on_drag_over(LPARAM lp);
 	void on_drag_leave();
 	void on_drag_drop(LPARAM lp);
 

@@ -14,12 +14,12 @@ void wsh_panel_vars::get_default_script_code(pfc::string_base & out)
 
 void wsh_panel_vars::reset_config()
 {
-	m_script_engine = "JScript";
+	m_script_engine_str = "JScript";
 	get_default_script_code(m_script_code);
 	m_pseudo_transparent = false;
 	m_wndpl.length = 0;
 	m_grab_focus = true;
-	m_disabled = false;
+	m_disabled_before = false;
 	m_delay_load = false;
 	m_edge_style = NO_EDGE;
 	CoCreateGuid(&m_config_guid);
@@ -62,7 +62,7 @@ void wsh_panel_vars::load_config(stream_reader * reader, t_size size, abort_call
 				m_config_prop.load(reader, abort);
 
 			case VERSION_0x76:
-				reader->read_object_t(m_disabled, abort);
+				reader->read_object_t(m_disabled_before, abort);
 
 			case VERSION_0x75:
 				reader->read_object_t(m_grab_focus, abort);
@@ -71,7 +71,7 @@ void wsh_panel_vars::load_config(stream_reader * reader, t_size size, abort_call
 				reader->read_object(&m_wndpl, sizeof(m_wndpl), abort);
 
 			case VERSION_0x73:
-				reader->read_string(m_script_engine, abort);
+				reader->read_string(m_script_engine_str, abort);
 				reader->read_string(m_script_code, abort);
 				reader->read_object_t(m_pseudo_transparent, abort);
 				have_read_config = true;
@@ -106,10 +106,10 @@ void wsh_panel_vars::save_config(stream_writer * writer, abort_callback & abort)
 		writer->write_object_t(m_config_guid, abort);
 		writer->write_object(&m_edge_style, sizeof(m_edge_style), abort);
 		m_config_prop.save(writer, abort);
-		writer->write_object_t(m_disabled, abort);
+		writer->write_object_t(m_disabled_before, abort);
 		writer->write_object_t(m_grab_focus, abort);
 		writer->write_object(&m_wndpl, sizeof(m_wndpl), abort);
-		writer->write_string(m_script_engine, abort);
+		writer->write_string(m_script_engine_str, abort);
 		writer->write_string(m_script_code, abort);
 		writer->write_object_t(m_pseudo_transparent, abort);
 	}

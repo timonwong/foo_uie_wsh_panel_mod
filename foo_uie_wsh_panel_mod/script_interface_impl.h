@@ -655,17 +655,29 @@ public:
 protected:
 	// -1 means active playlist
 	int m_playlist_idx;
-	bool m_to_select;
 	t_action_mode m_action_mode;
+	bool m_to_select;
+	bool m_parsable;
 
-	DropSourceAction() : m_playlist_idx(-1), m_to_select(true), m_action_mode(kActionModeNone) {}
+	DropSourceAction() { Reset(); }
 	virtual ~DropSourceAction() {}
 
-	virtual void FinalRelease()
-	{
-	}
+	virtual void FinalRelease() {}
 
 public:
+	inline void Reset()
+	{
+		m_playlist_idx = -1;
+		m_to_select = true;
+		m_action_mode = kActionModeNone;
+		m_parsable = false;
+	}
+
+	inline t_action_mode & Mode() { return m_action_mode; }
+	inline bool & Parsable() { return m_parsable; }
+
+public:
+	STDMETHODIMP get_Parsable(VARIANT_BOOL * parsable);
 	STDMETHODIMP get_Mode(int * mode);
 	STDMETHODIMP get_Playlist(int * id);
 	STDMETHODIMP put_Playlist(int id);

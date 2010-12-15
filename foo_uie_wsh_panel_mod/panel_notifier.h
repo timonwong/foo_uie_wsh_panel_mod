@@ -94,7 +94,7 @@ public:
 		m_data = reinterpret_cast<T *>(p_data);
 	}
 
-	inline virtual ~simple_callback_data_scope_releaser()
+	inline ~simple_callback_data_scope_releaser()
 	{
 		m_data->refcount_release();
 	}

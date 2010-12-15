@@ -3646,6 +3646,14 @@ STDMETHODIMP ThemeManager::DrawThemeBackground(IGdiGraphics * gr, int x, int y, 
 	return hr;
 }
 
+STDMETHODIMP DropSourceAction::get_Parsable(VARIANT_BOOL * parsable)
+{
+	TRACK_FUNCTION();
+	if (!parsable) return E_POINTER;
+	*parsable = m_parsable;
+	return S_OK;
+}
+
 STDMETHODIMP DropSourceAction::get_Mode(int * mode)
 {
 	TRACK_FUNCTION();
