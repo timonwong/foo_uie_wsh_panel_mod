@@ -152,6 +152,7 @@ private:
 	DWORD                      m_app_cookie;
 
 	// debugging helper
+	// cookie => IDebugDocumentHelper map
 	typedef pfc::map_t<DWORD, IDebugDocumentHelperPtr> t_debug_doc_map;
 	t_debug_doc_map   m_debug_docs;
 
@@ -220,7 +221,7 @@ public:
 	inline bool HasError() { return m_has_error; }
 	inline void StartDebugger()
 	{
-		if (m_debug_application)
+		if (m_debug_application && m_debug_application->FCanJitDebug())
 		{
 			if (FAILED(m_debug_application->StartDebugSession()))
 			{

@@ -48,7 +48,6 @@ namespace
 	static service_factory_t<my_ui_element_impl<wsh_panel_window_dui> > g_wsh_panel_wndow_dui;
 }
 
-
 HostComm::HostComm() 
 	: m_hwnd(NULL)
 	, m_hdc(NULL)
@@ -890,20 +889,23 @@ STDMETHODIMP ScriptHost::OnLeaveScript()
 
 STDMETHODIMP ScriptHost::GetDocumentContextFromPosition(DWORD dwSourceContext, ULONG uCharacterOffset, ULONG uNumChars, IDebugDocumentContext **ppsc)
 {
-	t_debug_doc_map::iterator iter = m_debug_docs.find(dwSourceContext);
-
-	if (iter.is_valid())
+	if (g_cfg_debug_mode)
 	{
-		IDebugDocumentHelper * helper = iter->m_value;
-		ULONG ulStartPos = 0;
-		HRESULT hr = helper->GetScriptBlockInfo(dwSourceContext, NULL, &ulStartPos, NULL);
+		t_debug_doc_map::iterator iter = m_debug_docs.find(dwSourceContext);
 
-		if (SUCCEEDED(hr)) 
+		if (iter.is_valid())
 		{
-			hr = helper->CreateDebugDocumentContext(ulStartPos + uCharacterOffset, uNumChars, ppsc);
-		}
+			IDebugDocumentHelper * helper = iter->m_value;
+			ULONG ulStartPos = 0;
+			HRESULT hr = helper->GetScriptBlockInfo(dwSourceContext, NULL, &ulStartPos, NULL);
 
-		return hr;
+			if (SUCCEEDED(hr)) 
+			{
+				hr = helper->CreateDebugDocumentContext(ulStartPos + uCharacterOffset, uNumChars, ppsc);
+			}
+
+			return hr;
+		}
 	}
 
 	return E_FAIL;
@@ -915,6 +917,7 @@ STDMETHODIMP ScriptHost::GetApplication(IDebugApplication **ppda)
 
 	if (m_debug_application)
 	{
+		// FIXME: Should AddRef() first?
 		m_debug_application.AddRef();
 		*ppda = m_debug_application;
 	}
@@ -946,40 +949,15 @@ STDMETHODIMP ScriptHost::OnScriptErrorDebug(IActiveScriptErrorDebug *pErrorDebug
 	int ret = ::uMessageBox(core_api::get_main_window(), 
 		"A script error occured. Do you want to debug?",
 		WSPM_NAME,
-		MB_ICONINFORMATION | MB_SETFOREGROUND | MB_TASKMODAL | MB_YESNO);
+		MB_ICONQUESTION | MB_SETFOREGROUND | MB_YESNO);
 
 	*pfEnterDebugger = (ret == IDYES);
 	*pfCallOnScriptErrorWhenContinuing = FALSE;
 
 	if (ret == IDNO)
-	{
-		// HACK: Additional Info
-		_COM_SMARTPTR_TYPEDEF(IDebugDocumentContext, IID_IDebugDocumentContext);
-		_COM_SMARTPTR_TYPEDEF(IDebugDocument, IID_IDebugDocument);
-		_COM_SMARTPTR_TYPEDEF(IDebugDocumentText, IID_IDebugDocumentText);
-		HRESULT hr = S_OK;
-		IDebugDocumentContextPtr context;
-		IDebugDocumentPtr doc;
-		IDebugDocumentTextPtr text;
-		
-		if (SUCCEEDED(hr)) hr = pErrorDebug->GetDocumentContext(&context);
-		if (SUCCEEDED(hr)) hr = context->GetDocument(&doc);
-		if (SUCCEEDED(hr)) hr = doc.QueryInterface(IID_IDebugDocumentText, &text);
-		
-		if (SUCCEEDED(hr))
-		{
-			_bstr_t name;
-			
-			text->GetName(DOCUMENTNAMETYPE_TITLE, name.GetAddress());
-			console::formatter() << "Occured in: " << pfc::stringcvt::string_utf8_from_wide(name);
-		}	
-
 		ReportError(pErrorDebug);
-	}
 	else
-	{
 		SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, 0);
-	}
 
 	m_has_error = true;
 	return S_OK;
@@ -1113,8 +1091,13 @@ void ScriptHost::Finalize()
 
 	for (t_debug_doc_map::iterator iter = m_debug_docs.first(); iter.is_valid(); ++iter)
 	{
-		iter->m_value->Detach();
-		iter->m_value.Release();
+		IDebugDocumentHelperPtr & helper = iter->m_value;
+
+		if (helper)
+		{
+			helper->Detach();
+			helper.Release();
+		}
 	}
 
 	m_debug_docs.remove_all();
@@ -1204,6 +1187,10 @@ HRESULT ScriptHost::GenerateSourceContext(const wchar_t * path, const wchar_t * 
 		if (SUCCEEDED(hr)) hr = helper->DefineScriptBlock(0, len, m_script_engine, FALSE, &source_context);
 		if (SUCCEEDED(hr)) m_debug_docs.find_or_add(source_context) = helper;
 	}
+	else
+	{
+		source_context = 0;
+	}
 
 	return hr;
 }
@@ -1214,8 +1201,9 @@ void ScriptHost::ReportError(IActiveScriptError* err)
 	ULONG line = 0;
 	LONG  charpos = 0;
 	EXCEPINFO excep = { 0 };
-	WCHAR buf[512] = { 0 };
+	//WCHAR buf[512] = { 0 };
 	_bstr_t sourceline;
+	_bstr_t name;
 
 	if (FAILED(err->GetSourcePosition(&ctx, &line, &charpos)))
 	{
@@ -1225,8 +1213,73 @@ void ScriptHost::ReportError(IActiveScriptError* err)
 
 	if (FAILED(err->GetSourceLineText(sourceline.GetAddress())))
 	{
-		sourceline = L"<source text only available in compile time>";
+		sourceline = L"<source text only available at compile time>";
 	}
+
+	// HACK: Additional Info
+	{
+		_COM_SMARTPTR_TYPEDEF(IActiveScriptErrorDebug, IID_IActiveScriptErrorDebug);
+		_COM_SMARTPTR_TYPEDEF(IDebugDocumentContext, IID_IDebugDocumentContext);
+		_COM_SMARTPTR_TYPEDEF(IDebugDocumentText, IID_IDebugDocumentText);
+		_COM_SMARTPTR_TYPEDEF(IDebugDocument, IID_IDebugDocument);
+		
+
+		HRESULT hr = S_OK;
+		IActiveScriptErrorDebugPtr  pErrorDebug;
+		IDebugDocumentContextPtr    context;
+		IDebugDocumentTextPtr       text;
+		IDebugDocumentPtr           document;
+
+		if (SUCCEEDED(hr)) hr = err->QueryInterface(IID_IActiveScriptErrorDebug, (void **)&pErrorDebug);
+		if (SUCCEEDED(hr)) hr = pErrorDebug->GetDocumentContext(&context);
+		if (SUCCEEDED(hr)) hr = context->GetDocument(&document);
+		if (SUCCEEDED(hr)) hr = document->QueryInterface(IID_IDebugDocumentText, (void **)&text);
+		
+		if (SUCCEEDED(hr))
+		{
+			ULONG charPosLine = 0;
+			ULONG linePos = 0;
+			ULONG lines = 0;
+			ULONG numChars = 0;
+			ULONG charsToRead;
+			// Must be set to 0 first
+			ULONG charsRead = 0;
+
+			text->GetName(DOCUMENTNAMETYPE_TITLE, name.GetAddress());
+
+			text->GetPositionOfLine(line, &charPosLine);
+			text->GetSize(&lines, &numChars);
+
+			if (lines > line)
+			{
+				// Has next line?
+				ULONG charPosNextLine;
+
+				text->GetPositionOfLine(line + 1, &charPosNextLine);
+				charsToRead = charPosNextLine - 1 - charPosLine;
+			}
+			else
+			{
+				// Read to the end of current line.
+				charsToRead = numChars - charPosLine;
+			}
+			
+			pfc::array_t<wchar_t> code;
+			code.set_size(charsToRead + 1);
+			text->GetText(charPosLine, code.get_ptr(), NULL, &charsRead, charsToRead);
+			code[charsRead] = 0;
+			--charsRead;
+
+			while (charsRead && (code[charsRead] == '\r' || code[charsRead] == '\n'))
+			{
+				code[charsRead] = 0;
+				--charsRead;
+			}
+
+			if (*code.get_ptr())
+				sourceline = code.get_ptr();
+		}
+	}	
 
 	if (SUCCEEDED(err->GetExceptionInfo(&excep)))
 	{
@@ -1234,16 +1287,26 @@ void ScriptHost::ReportError(IActiveScriptError* err)
 		if (excep.pfnDeferredFillIn)
 			(*excep.pfnDeferredFillIn)(&excep);
 
-		StringCbPrintf(buf, sizeof(buf), _T(WSPM_NAME) _T(" (%s): %s:\n%s\nLn: %d, Col: %d\n%s\n"),
-			pfc::stringcvt::string_wide_from_utf8(m_host->GetScriptInfo().build_info_string()).get_ptr(), 
-			excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, 
-			static_cast<const wchar_t *>(sourceline));
+		//StringCbPrintf(buf, sizeof(buf), _T(WSPM_NAME) _T(" (%s): %s:\n%s\nLn: %d, Col: %d\n%s\n%s\n"),
+		//	pfc::stringcvt::string_wide_from_utf8(m_host->GetScriptInfo().build_info_string()).get_ptr(), 
+		//	excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, 
+		//	static_cast<const wchar_t *>(sourceline),
+		//	static_cast<const wchar_t *>(name));
+		
+		using namespace pfc::stringcvt;
+		pfc::string_formatter formatter;
+		formatter << WSPM_NAME << " (" << m_host->GetScriptInfo().build_info_string().get_ptr() << "): ";
+		formatter << string_utf8_from_wide(excep.bstrSource) << ":\n";
+		formatter << string_utf8_from_wide(excep.bstrDescription) << "\n";
+		formatter << "Ln: " << (t_uint32)(line + 1) << ", Col: " << (t_uint32)(charpos + 1) << "\n";
+		formatter << string_utf8_from_wide(sourceline);
+		if (name.length() > 0) formatter << "\n(at): " << name;
 
-		SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, (LPARAM)buf);
+		SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, (LPARAM)formatter.get_ptr());
 
-		SysFreeString(excep.bstrSource);
-		SysFreeString(excep.bstrDescription);
-		SysFreeString(excep.bstrHelpFile);
+		if (excep.bstrSource)      SysFreeString(excep.bstrSource);
+		if (excep.bstrDescription) SysFreeString(excep.bstrDescription);
+		if (excep.bstrHelpFile)    SysFreeString(excep.bstrHelpFile);
 	}
 }
 
@@ -1749,9 +1812,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 		if (lp)
 		{
-			pfc::stringcvt::string_utf8_from_wide utf8((LPCWSTR)lp);
-
-			console::error(utf8);
+			console::error(reinterpret_cast<const char *>(lp));
 			MessageBeep(MB_ICONASTERISK);
 		}
 
@@ -1959,6 +2020,7 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
 
 		if (m_script_host->Ready())
 		{
+			// Prepare graphics object to the script.
 			Gdiplus::Graphics gr(memdc);
 			Gdiplus::Rect rect(lpUpdateRect->left, lpUpdateRect->top,
 				lpUpdateRect->right - lpUpdateRect->left,

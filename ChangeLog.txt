@@ -1,6 +1,6 @@
 v1.4.1 Beta 4:
 - CHG: Now IDropSourceAction::Parsable is write-able.
-- ADD: Basic debugger support.
+- ADD: Basic script debugger support.
 - FIX: Fix minor bugs introduced in previous betas.
 
 v1.4.1 Beta 3:

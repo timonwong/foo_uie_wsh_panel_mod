@@ -99,7 +99,7 @@ LRESULT CDialogConf::OnCloseCmd(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 		if (m_editorctrl.GetModify())
 		{
 			// Prompt?
-			int ret = uMessageBox(m_hWnd, "Save and apply changes?", m_caption, MB_ICONWARNING | MB_YESNOCANCEL);
+			int ret = uMessageBox(m_hWnd, "Save and apply changes?", m_caption, MB_ICONWARNING | MB_SETFOREGROUND | MB_YESNOCANCEL);
 
 			switch (ret)
 			{

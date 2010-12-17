@@ -41,7 +41,7 @@ void CDialogFind::FindResult(int pos)
 
 		temp += m_text;
 		temp += "\"";
-		uMessageBox(m_hWnd, temp.get_ptr(), WSPM_NAME, MB_ICONINFORMATION);
+		uMessageBox(m_hWnd, temp.get_ptr(), WSPM_NAME, MB_ICONINFORMATION | MB_SETFOREGROUND);
 	}
 }
 
