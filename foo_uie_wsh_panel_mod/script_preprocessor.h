@@ -68,13 +68,21 @@ private:
 class script_preprocessor
 {
 public:
+	struct t_script_code
+	{
+		pfc::array_t<wchar_t> path;
+		pfc::array_t<wchar_t> code;
+	};
+
+	typedef pfc::list_t<t_script_code> t_script_list;
+
 	script_preprocessor(const wchar_t * script)
 	{
 		PFC_ASSERT(script != NULL);
 		m_is_ok = preprocess(script);
 	}
 
-	HRESULT process_import(const t_script_info & info, IActiveScriptParse * parser);
+	HRESULT process_import(const t_script_info & info, t_script_list & scripts);
 	bool process_script_info(t_script_info & info);
 
 private:

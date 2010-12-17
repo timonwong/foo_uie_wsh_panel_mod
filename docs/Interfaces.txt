@@ -488,10 +488,11 @@ Methods:
 // [1.4.1 Beta 1] New interface
 interface IDropTargetAction {
 Properties:
+	(read, write) bool Parsable;
 	// Default: -1 (active playlist)
 	(read, write) int Playlist;
 	// Default: true
-	(read, write) boolean SelectThem;
+	(read, write) boolean ToSelect;
 
 Methods:
 	// Parse dropped items as playlist

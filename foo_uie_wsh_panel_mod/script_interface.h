@@ -476,6 +476,7 @@ __interface IThemeManager: IDisposable
 __interface IDropSourceAction: IDisposable
 {
 	[propget] STDMETHOD(Parsable)([out,retval] VARIANT_BOOL * parsable);
+	[propput] STDMETHOD(Parsable)(VARIANT_BOOL parsable);
 	//[propget] STDMETHOD(Mode)([out,retval] int * mode);
 	[propget] STDMETHOD(Playlist)([out,retval] int * id);
 	[propput] STDMETHOD(Playlist)(int id);

@@ -49,11 +49,19 @@ namespace
 }
 
 
-HostComm::HostComm() : m_hwnd(NULL), m_hdc(NULL), m_width(0), m_height(0), m_gr_bmp(NULL), 
-	m_suppress_drawing(false), m_paint_pending(false), m_accuracy(0), 
-	m_script_state(SCRIPTSTATE_UNINITIALIZED), m_query_continue(false),
-	m_instance_type(KInstanceTypeCUI), m_dlg_code(0), m_engine_inited(false),
-	m_script_info(get_config_guid())
+HostComm::HostComm() 
+	: m_hwnd(NULL)
+	, m_hdc(NULL)
+	, m_width(0)
+	, m_height(0)
+	, m_gr_bmp(NULL)
+	, m_suppress_drawing(false)
+	, m_paint_pending(false)
+	, m_accuracy(0) 
+	, m_query_continue(false)
+	, m_instance_type(KInstanceTypeCUI)
+	, m_dlg_code(0)
+	, m_script_info(get_config_guid())
 {
 	m_max_size.x = INT_MAX;
 	m_max_size.y = INT_MAX;
@@ -110,11 +118,6 @@ void HostComm::RepaintRect(UINT x, UINT y, UINT w, UINT h, bool force /*= false*
 	{
 		InvalidateRect(m_hwnd, &rc, FALSE);
 	}
-}
-
-void HostComm::OnScriptError(LPCWSTR str)
-{
-	SendMessage(m_hwnd, UWM_SCRIPT_ERROR, 0, (LPARAM)str);
 }
 
 void HostComm::RefreshBackground(LPRECT lprcUpdate /*= NULL*/)
@@ -758,12 +761,56 @@ STDMETHODIMP FbWindow::CreateThemeManager(BSTR classid, IThemeManager ** pp)
 	return S_OK;
 }
 
-STDMETHODIMP ScriptSite::GetLCID(LCID* plcid)
+ScriptHost::ScriptHost(HostComm * host) 
+	: m_host(host)
+	, m_window(new com_object_impl_t<FbWindow, false>(host))
+	, m_gdi(com_object_singleton_t<GdiUtils>::instance())
+	, m_fb2k(com_object_singleton_t<FbUtils>::instance())
+	, m_utils(com_object_singleton_t<WSHUtils>::instance())
+	, m_dwStartTime(0)
+	, m_dwRef(1)
+	, m_engine_inited(false)
+	, m_has_error(false)
+{
+	if (g_cfg_debug_mode)
+	{
+		HRESULT hr = S_OK;
+
+		if (SUCCEEDED(hr)) hr = m_debug_manager.CreateInstance(CLSID_ProcessDebugManager, NULL, CLSCTX_INPROC_SERVER);
+		if (SUCCEEDED(hr)) hr = m_debug_manager->CreateApplication(&m_debug_application);
+		if (SUCCEEDED(hr)) hr = m_debug_application->SetName(L"WSH Panel Mod");
+		if (SUCCEEDED(hr)) hr = m_debug_manager->AddApplication(m_debug_application, &m_app_cookie);
+
+		if (FAILED(hr))
+		{
+			g_cfg_debug_mode = false;
+
+			// TODO: popup error text.
+			// popup_msg::g_show("", WSPM_NAME);
+		}
+	}
+}
+
+ScriptHost::~ScriptHost()
+{
+	if (m_debug_manager)
+	{
+		m_debug_manager->RemoveApplication(m_app_cookie);
+		m_debug_manager.Release();
+	}
+
+	if (m_debug_application)
+	{
+		m_debug_application->Close();
+	}
+}
+
+STDMETHODIMP ScriptHost::GetLCID(LCID* plcid)
 {
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP ScriptSite::GetItemInfo(LPCOLESTR name, DWORD mask, IUnknown** ppunk, ITypeInfo** ppti)
+STDMETHODIMP ScriptHost::GetItemInfo(LPCOLESTR name, DWORD mask, IUnknown** ppunk, ITypeInfo** ppti)
 {
 	if (ppti) *ppti = NULL;
 
@@ -803,29 +850,366 @@ STDMETHODIMP ScriptSite::GetItemInfo(LPCOLESTR name, DWORD mask, IUnknown** ppun
 	return TYPE_E_ELEMENTNOTFOUND;
 }
 
-STDMETHODIMP ScriptSite::GetDocVersionString(BSTR* pstr)
+STDMETHODIMP ScriptHost::GetDocVersionString(BSTR* pstr)
 {
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP ScriptSite::OnScriptTerminate(const VARIANT* result, const EXCEPINFO* excep)
+STDMETHODIMP ScriptHost::OnScriptTerminate(const VARIANT* result, const EXCEPINFO* excep)
 {
 	return E_NOTIMPL;
 }
 
-STDMETHODIMP ScriptSite::OnStateChange(SCRIPTSTATE state)
+STDMETHODIMP ScriptHost::OnStateChange(SCRIPTSTATE state)
 {
 	//m_host->GetScriptState() = state;
 	return S_OK;
 }
 
-STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
+STDMETHODIMP ScriptHost::OnScriptError(IActiveScriptError* err)
 {
 	TRACK_FUNCTION();
 
-	if (!err)
-		return S_OK;
+	if (!err) return E_POINTER;
 
+	ReportError(err);
+	m_has_error = true;
+	return S_OK;
+}
+
+STDMETHODIMP ScriptHost::OnEnterScript()
+{
+	m_dwStartTime = GetTickCount();
+	return S_OK;
+}
+
+STDMETHODIMP ScriptHost::OnLeaveScript()
+{
+	return S_OK;
+}
+
+STDMETHODIMP ScriptHost::GetDocumentContextFromPosition(DWORD dwSourceContext, ULONG uCharacterOffset, ULONG uNumChars, IDebugDocumentContext **ppsc)
+{
+	t_debug_doc_map::iterator iter = m_debug_docs.find(dwSourceContext);
+
+	if (iter.is_valid())
+	{
+		IDebugDocumentHelper * helper = iter->m_value;
+		ULONG ulStartPos = 0;
+		HRESULT hr = helper->GetScriptBlockInfo(dwSourceContext, NULL, &ulStartPos, NULL);
+
+		if (SUCCEEDED(hr)) 
+		{
+			hr = helper->CreateDebugDocumentContext(ulStartPos + uCharacterOffset, uNumChars, ppsc);
+		}
+
+		return hr;
+	}
+
+	return E_FAIL;
+}
+
+STDMETHODIMP ScriptHost::GetApplication(IDebugApplication **ppda)
+{
+	if (!ppda) return E_POINTER;
+
+	if (m_debug_application)
+	{
+		m_debug_application.AddRef();
+		*ppda = m_debug_application;
+	}
+	else
+	{
+		return E_NOTIMPL;
+	}
+
+	return S_OK;
+}
+
+STDMETHODIMP ScriptHost::GetRootApplicationNode(IDebugApplicationNode **ppdanRoot)
+{
+	if (!ppdanRoot) return E_POINTER;
+
+	if (m_debug_application)
+		return m_debug_application->GetRootNode(ppdanRoot);
+	else
+		*ppdanRoot = NULL;
+
+	return S_OK;
+}
+
+STDMETHODIMP ScriptHost::OnScriptErrorDebug(IActiveScriptErrorDebug *pErrorDebug, BOOL *pfEnterDebugger, BOOL *pfCallOnScriptErrorWhenContinuing)
+{
+	if (!pErrorDebug || !pfEnterDebugger || !pfCallOnScriptErrorWhenContinuing)
+		return E_POINTER;
+
+	int ret = ::uMessageBox(core_api::get_main_window(), 
+		"A script error occured. Do you want to debug?",
+		WSPM_NAME,
+		MB_ICONINFORMATION | MB_SETFOREGROUND | MB_TASKMODAL | MB_YESNO);
+
+	*pfEnterDebugger = (ret == IDYES);
+	*pfCallOnScriptErrorWhenContinuing = FALSE;
+
+	if (ret == IDNO)
+	{
+		// HACK: Additional Info
+		_COM_SMARTPTR_TYPEDEF(IDebugDocumentContext, IID_IDebugDocumentContext);
+		_COM_SMARTPTR_TYPEDEF(IDebugDocument, IID_IDebugDocument);
+		_COM_SMARTPTR_TYPEDEF(IDebugDocumentText, IID_IDebugDocumentText);
+		HRESULT hr = S_OK;
+		IDebugDocumentContextPtr context;
+		IDebugDocumentPtr doc;
+		IDebugDocumentTextPtr text;
+		
+		if (SUCCEEDED(hr)) hr = pErrorDebug->GetDocumentContext(&context);
+		if (SUCCEEDED(hr)) hr = context->GetDocument(&doc);
+		if (SUCCEEDED(hr)) hr = doc.QueryInterface(IID_IDebugDocumentText, &text);
+		
+		if (SUCCEEDED(hr))
+		{
+			_bstr_t name;
+			
+			text->GetName(DOCUMENTNAMETYPE_TITLE, name.GetAddress());
+			console::formatter() << "Occured in: " << pfc::stringcvt::string_utf8_from_wide(name);
+		}	
+
+		ReportError(pErrorDebug);
+	}
+	else
+	{
+		SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, 0);
+	}
+
+	m_has_error = true;
+	return S_OK;
+}
+
+STDMETHODIMP ScriptHost::GetWindow(HWND *phwnd)
+{
+	*phwnd = m_host->GetHWND();
+
+	return S_OK;
+}
+
+STDMETHODIMP ScriptHost::EnableModeless(BOOL fEnable)
+{
+	return S_OK;
+}
+
+STDMETHODIMP ScriptHost::QueryContinue()
+{
+	if (m_host->GetQueryContinue())
+	{
+		unsigned timeout = g_cfg_timeout * 1000;
+		unsigned delta = GetTickCount() - m_dwStartTime;
+
+		if (timeout != 0 && (delta > timeout))
+		{
+			SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR_TIMEOUT, 0, 0);
+			return S_FALSE;
+		}
+	}
+
+	return S_OK;
+}
+
+HRESULT ScriptHost::Initialize()
+{
+	Finalize();
+
+	m_has_error = false;
+
+	HRESULT hr = S_OK;
+	IActiveScriptParsePtr parser;
+	pfc::stringcvt::string_wide_from_utf8_fast wname(m_host->get_script_engine());
+	pfc::stringcvt::string_wide_from_utf8_fast wcode(m_host->get_script_code());
+	// Load preprocessor module
+	script_preprocessor preprocessor(wcode.get_ptr());
+
+	preprocessor.process_script_info(m_host->GetScriptInfo());
+
+	if (SUCCEEDED(hr)) hr = m_script_engine.CreateInstance(wname.get_ptr(), NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER);
+	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptSite(this);
+	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
+	if (SUCCEEDED(hr)) hr = parser->InitNew();
+
+	if (g_cfg_safe_mode)
+	{
+		_COM_SMARTPTR_TYPEDEF(IObjectSafety, IID_IObjectSafety);
+
+		IObjectSafetyPtr psafe;
+
+		if (SUCCEEDED(m_script_engine->QueryInterface(&psafe)))
+		{
+			psafe->SetInterfaceSafetyOptions(IID_IDispatch, 
+				INTERFACE_USES_SECURITY_MANAGER, INTERFACE_USES_SECURITY_MANAGER);
+		}
+	}
+
+	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"window", SCRIPTITEM_ISVISIBLE);
+	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
+	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"fb", SCRIPTITEM_ISVISIBLE);
+	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
+	//if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_STARTED);
+	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
+	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
+	
+	// processing "@import"
+	{
+		script_preprocessor::t_script_list scripts;
+		if (SUCCEEDED(hr)) hr = preprocessor.process_import(m_host->GetScriptInfo(), scripts);
+
+		for (t_size i = 0; i < scripts.get_count(); ++i)
+		{
+			DWORD source_context;
+
+			if (SUCCEEDED(hr)) 
+				hr = GenerateSourceContext(scripts[i].path.get_ptr(), scripts[i].code.get_ptr(), source_context);
+
+			if (SUCCEEDED(hr))
+			{
+				hr = parser->ParseScriptText(scripts[i].code.get_ptr(), NULL, NULL, NULL, 
+					source_context, 0, SCRIPTTEXT_HOSTMANAGESSOURCE | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	// Parse main script
+	DWORD source_context;
+	if (SUCCEEDED(hr)) hr = GenerateSourceContext(NULL, wcode, source_context);
+	if (SUCCEEDED(hr)) hr = parser->ParseScriptText(wcode.get_ptr(), NULL, NULL, NULL, 
+		source_context, 0, SCRIPTTEXT_HOSTMANAGESSOURCE | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
+
+	//
+	if (SUCCEEDED(hr)) m_engine_inited = true;
+	return hr;
+}
+
+void ScriptHost::Finalize()
+{
+	InvokeV(L"on_script_unload");
+
+	if (m_script_engine && m_engine_inited)
+	{
+		// Call GC explicitly 
+		IActiveScriptGarbageCollector * gc = NULL;
+
+		if (SUCCEEDED(m_script_engine->QueryInterface(IID_IActiveScriptGarbageCollector, (void **)&gc)))
+		{
+			gc->CollectGarbage(SCRIPTGCTYPE_EXHAUSTIVE);
+			gc->Release();
+		}
+
+		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
+		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
+
+		m_engine_inited = false;
+	}
+
+	for (t_debug_doc_map::iterator iter = m_debug_docs.first(); iter.is_valid(); ++iter)
+	{
+		iter->m_value->Detach();
+		iter->m_value.Release();
+	}
+
+	m_debug_docs.remove_all();
+
+	if (m_script_engine)
+	{
+		m_script_engine->Close();
+		m_script_engine.Release();
+	}
+
+	if (m_script_root)
+	{
+		m_script_root.Release();
+	}
+}
+
+HRESULT ScriptHost::InvokeV(LPOLESTR name, VARIANTARG * argv /*= NULL*/, UINT argc /*= 0*/, VARIANT * ret /*= NULL*/)
+{
+	//if (GetScriptState() != SCRIPTSTATE_CONNECTED) return E_FAIL;
+	if (!m_script_root || !m_engine_inited) return E_FAIL;
+	if (!name) return E_INVALIDARG;
+
+	DISPID dispid = 0;
+	DISPPARAMS param = { argv, NULL, argc, 0 };
+	IDispatchPtr disp = m_script_root;
+
+	HRESULT hr = disp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
+
+	if (SUCCEEDED(hr))
+	{
+		try
+		{
+			hr = disp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &param, ret, NULL, NULL);
+		}
+		catch (std::exception & e)
+		{
+			pfc::print_guid guid(m_host->get_config_guid());
+
+			console::printf(WSPM_NAME " (%s): Unhandled C++ Exception: \"%s\", will crash now...", 
+				m_host->GetScriptInfo().build_info_string().get_ptr(), e.what());
+			PRINT_DISPATCH_TRACK_MESSAGE();
+			// breakpoint
+			__debugbreak();
+		}
+		catch (...)
+		{
+			pfc::print_guid guid(m_host->get_config_guid());
+
+			console::printf(WSPM_NAME " (%s): Unhandled Unknown Exception, will crash now...", 
+				m_host->GetScriptInfo().build_info_string().get_ptr());
+			PRINT_DISPATCH_TRACK_MESSAGE();
+			// breakpoint
+			__debugbreak();
+		}
+	}
+
+	return hr;
+}
+
+HRESULT ScriptHost::GenerateSourceContext(const wchar_t * path, const wchar_t * code, DWORD & source_context)
+{
+	pfc::stringcvt::string_wide_from_utf8_fast namebuf, guidstring;
+	HRESULT hr = S_OK;
+	t_size len = wcslen(code);
+
+	if (!path) 
+	{
+		if (m_host->GetScriptInfo().name.is_empty())
+			namebuf.convert(pfc::print_guid(m_host->GetGUID()));
+		else
+			namebuf.convert(m_host->GetScriptInfo().name);
+
+		guidstring.convert(pfc::print_guid(m_host->GetGUID()));
+	}	
+
+	if (m_debug_manager) 
+	{
+		IDebugDocumentHelperPtr helper;
+
+		if (SUCCEEDED(hr)) hr = m_debug_manager->CreateDebugDocumentHelper(NULL, &helper);
+		if (SUCCEEDED(hr)) hr = helper->Init(m_debug_application, 
+			(!path) ? namebuf.get_ptr() : path, 
+			(!path) ? guidstring.get_ptr() : path,
+			TEXT_DOC_ATTR_READONLY);
+		if (SUCCEEDED(hr)) hr = helper->Attach(NULL);
+		if (SUCCEEDED(hr)) hr = helper->AddUnicodeText(code);
+		if (SUCCEEDED(hr)) hr = helper->DefineScriptBlock(0, len, m_script_engine, FALSE, &source_context);
+		if (SUCCEEDED(hr)) m_debug_docs.find_or_add(source_context) = helper;
+	}
+
+	return hr;
+}
+
+void ScriptHost::ReportError(IActiveScriptError* err)
+{
 	DWORD ctx = 0;
 	ULONG line = 0;
 	LONG  charpos = 0;
@@ -855,54 +1239,12 @@ STDMETHODIMP ScriptSite::OnScriptError(IActiveScriptError* err)
 			excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, 
 			static_cast<const wchar_t *>(sourceline));
 
-		m_host->OnScriptError(buf);
+		SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, (LPARAM)buf);
 
 		SysFreeString(excep.bstrSource);
 		SysFreeString(excep.bstrDescription);
 		SysFreeString(excep.bstrHelpFile);
 	}
-
-	return S_OK;
-}
-
-STDMETHODIMP ScriptSite::OnEnterScript()
-{
-	m_dwStartTime = GetTickCount();
-	return S_OK;
-}
-
-STDMETHODIMP ScriptSite::OnLeaveScript()
-{
-	return S_OK;
-}
-
-STDMETHODIMP ScriptSite::GetWindow(HWND *phwnd)
-{
-	*phwnd = m_host->GetHWND();
-
-	return S_OK;
-}
-
-STDMETHODIMP ScriptSite::EnableModeless(BOOL fEnable)
-{
-	return S_OK;
-}
-
-STDMETHODIMP ScriptSite::QueryContinue()
-{
-	if (m_host->GetQueryContinue())
-	{
-		unsigned timeout = g_cfg_timeout * 1000;
-		unsigned delta = GetTickCount() - m_dwStartTime;
-
-		if (timeout != 0 && (delta > timeout))
-		{
-			SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR_TIMEOUT, 0, 0);
-			return S_FALSE;
-		}
-	}
-
-	return S_OK;
 }
 
 void PanelDropTarget::process_dropped_items::on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items)
@@ -935,13 +1277,14 @@ STDMETHODIMP PanelDropTarget::DragEnter(IDataObject *pDataObj, DWORD grfKeyState
 	// Parsable?
 	m_action->Parsable() = static_api_ptr_t<playlist_incoming_item_filter>()->process_dropped_files_check_ex(pDataObj, &m_effect);
 
-	if (!m_action->Parsable())
-		m_effect = DROPEFFECT_NONE;
-
 	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
 	MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
 	SendMessage(m_host->GetHWND(), UWM_DRAG_ENTER, 0, (LPARAM)&param);
-	*pdwEffect = m_effect;
+
+	if (!m_action->Parsable())
+		*pdwEffect = DROPEFFECT_NONE;
+	else
+		*pdwEffect = m_effect;
 	return S_OK;
 }
 
@@ -952,7 +1295,12 @@ STDMETHODIMP PanelDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwE
 	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
 	MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
 	SendMessage(m_host->GetHWND(), UWM_DRAG_OVER, 0, (LPARAM)&param);
-	*pdwEffect = m_effect;
+
+	if (!m_action->Parsable())
+		*pdwEffect = DROPEFFECT_NONE;
+	else
+		*pdwEffect = m_effect;
+
 	return S_OK;
 }
 
@@ -970,10 +1318,8 @@ STDMETHODIMP PanelDropTarget::Drop(IDataObject *pDataObj, DWORD grfKeyState, POI
 	MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
 	SendMessage(m_host->GetHWND(), UWM_DRAG_DROP, 0, (LPARAM)&param);
 
-	int playlist;
-	VARIANT_BOOL to_select;
-	m_action->get_Playlist(&playlist);
-	m_action->get_ToSelect(&to_select);
+	int playlist = m_action->Playlist();
+	bool to_select = m_action->ToSelect();
 
 	if (m_action->Parsable())
 	{
@@ -982,7 +1328,7 @@ STDMETHODIMP PanelDropTarget::Drop(IDataObject *pDataObj, DWORD grfKeyState, POI
 		case DropSourceAction::kActionModePlaylist:
 			static_api_ptr_t<playlist_incoming_item_filter_v2>()->process_dropped_files_async(pDataObj, 
 				playlist_incoming_item_filter_v2::op_flag_delay_ui,
-				core_api::get_main_window(), new service_impl_t<process_dropped_items>(playlist, to_select == VARIANT_TRUE));
+				core_api::get_main_window(), new service_impl_t<process_dropped_items>(playlist, to_select));
 			break;
 
 		default:
@@ -990,7 +1336,11 @@ STDMETHODIMP PanelDropTarget::Drop(IDataObject *pDataObj, DWORD grfKeyState, POI
 		}
 	}
 
-	*pdwEffect = m_effect;
+	if (!m_action->Parsable())
+		*pdwEffect = DROPEFFECT_NONE;
+	else
+		*pdwEffect = m_effect;
+
 	return S_OK;
 }
 
@@ -1004,52 +1354,6 @@ void wsh_panel_window::update_script(const char * name /*= NULL*/, const char * 
 
 	script_unload();
 	script_load();
-}
-
-HRESULT wsh_panel_window::script_init()
-{
-	TRACK_FUNCTION();
-
-	script_unload();
-
-	HRESULT hr = S_OK;
-	IActiveScriptParsePtr parser;
-	pfc::stringcvt::string_wide_from_utf8_fast wname(get_script_engine());
-	pfc::stringcvt::string_wide_from_utf8_fast wcode(get_script_code());
-	// Load preprocessor module
-	script_preprocessor preprocessor(wcode.get_ptr());
-	
-	preprocessor.process_script_info(GetScriptInfo());
-
-	if (SUCCEEDED(hr)) hr = m_script_engine.CreateInstance(wname.get_ptr(), NULL, CLSCTX_ALL);
-	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptSite(&m_script_site);
-	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
-	if (SUCCEEDED(hr)) hr = parser->InitNew();
-
-	if (g_cfg_safe_mode)
-	{
-		_COM_SMARTPTR_TYPEDEF(IObjectSafety, IID_IObjectSafety);
-
-		IObjectSafetyPtr psafe;
-
-		if (SUCCEEDED(m_script_engine->QueryInterface(&psafe)))
-		{
-			psafe->SetInterfaceSafetyOptions(IID_IDispatch, INTERFACE_USES_SECURITY_MANAGER, INTERFACE_USES_SECURITY_MANAGER);
-		}
-	}
-
-	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"window", SCRIPTITEM_ISVISIBLE);
-	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
-	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"fb", SCRIPTITEM_ISVISIBLE);
-	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
-	//if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_STARTED);
-	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
-	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
-	// processing "@import"
-	if (SUCCEEDED(hr)) hr = preprocessor.process_import(GetScriptInfo(), parser);
-	if (SUCCEEDED(hr)) hr = parser->ParseScriptText(wcode.get_ptr(), NULL, NULL, NULL, NULL, 0, SCRIPTTEXT_ISVISIBLE, NULL, NULL);
-
-	return hr;
 }
 
 bool wsh_panel_window::script_load()
@@ -1084,7 +1388,7 @@ bool wsh_panel_window::script_load()
 		return false;
 	}
 
-	HRESULT hr = script_init();
+	HRESULT hr = m_script_host->Initialize();
 
 	if (FAILED(hr))
 	{
@@ -1111,8 +1415,6 @@ bool wsh_panel_window::script_load()
 	}
 	else
 	{
-		m_engine_inited = true;
-
 		if (GetScriptInfo().feature_mask & t_script_info::kFeatureDragDrop)
 		{
 			// Ole Drag and Drop support
@@ -1136,28 +1438,7 @@ bool wsh_panel_window::script_load()
 
 void wsh_panel_window::script_unload()
 {
-	TRACK_FUNCTION();
-
-	script_invoke_v(L"on_script_unload");
-	
-	if (m_script_engine && m_engine_inited)
-	{
-		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
-		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
-
-		m_engine_inited = false;
-	}
-
-	if (m_script_engine)
-	{
-		m_script_engine->Close();
-		m_script_engine.Release();
-	}
-
-	if (m_script_root)
-	{
-		m_script_root.Release();
-	}
+	m_script_host->Finalize();
 
 	if (m_is_droptarget_registered)
 	{
@@ -1167,49 +1448,6 @@ void wsh_panel_window::script_unload()
 
 	m_watched_handle.release();
 	m_selection_holder.release();
-}
-
-HRESULT wsh_panel_window::script_invoke_v(LPOLESTR name, VARIANTARG * argv /*= NULL*/, UINT argc /*= 0*/, VARIANT * ret /*= NULL*/)
-{
-	//if (GetScriptState() != SCRIPTSTATE_CONNECTED) return E_FAIL;
-	if (!m_script_root || !m_engine_inited) return E_FAIL;
-	if (!name) return E_INVALIDARG;
-
-	DISPID dispid = 0;
-	DISPPARAMS param = { argv, NULL, argc, 0 };
-	IDispatchPtr disp = m_script_root;
-
-	HRESULT hr = disp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
-	
-	if (SUCCEEDED(hr))
-	{
-		try
-		{
-			hr = disp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &param, ret, NULL, NULL);
-		}
-		catch (std::exception & e)
-		{
-			pfc::print_guid guid(get_config_guid());
-
-			console::printf(WSPM_NAME " (%s): Unhandled C++ Exception: \"%s\", will crash now...", 
-				GetScriptInfo().build_info_string().get_ptr(), e.what());
-			PRINT_DISPATCH_TRACK_MESSAGE();
-			// breakpoint
-			__debugbreak();
-		}
-		catch (...)
-		{
-			pfc::print_guid guid(get_config_guid());
-
-			console::printf(WSPM_NAME " (%s): Unhandled Unknown Exception, will crash now...", 
-				GetScriptInfo().build_info_string().get_ptr());
-			PRINT_DISPATCH_TRACK_MESSAGE();
-			// breakpoint
-			__debugbreak();
-		}
-	}
-
-	return hr;
 }
 
 void wsh_panel_window::create_context()
@@ -1343,6 +1581,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		{
 			if (m_suppress_drawing)
 				break;
+
 			if (get_pseudo_transparent() && !m_paint_pending)
 			{
 				RECT rc;
@@ -1351,6 +1590,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 				RefreshBackground(&rc);
 				return 0;
 			}
+
 			PAINTSTRUCT ps;
 			HDC dc = BeginPaint(m_hwnd, &ps);
 			on_paint(dc, &ps.rcPaint);
@@ -1399,7 +1639,8 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case WM_LBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP:
-		on_mouse_button_up(msg, wp, lp);
+		if (on_mouse_button_up(msg, wp, lp))
+			return 0;
 		break;
 
 	case WM_LBUTTONDBLCLK:
@@ -1490,7 +1731,8 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case UWM_SCRIPT_ERROR_TIMEOUT:
 		get_disabled_before() = true;
-		script_unload();
+		//script_unload();
+		m_script_host->Stop();
 
 		popup_msg::g_show(pfc::string_formatter() << "Script terminated due to the panel (" 
 			<< GetScriptInfo().build_info_string()
@@ -1502,7 +1744,8 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case UWM_SCRIPT_ERROR:
-		script_unload();
+		//script_unload();
+		m_script_host->Stop();
 
 		if (lp)
 		{
@@ -1693,7 +1936,7 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
 	HDC memdc = CreateCompatibleDC(dc);
 	HBITMAP oldbmp = SelectBitmap(memdc, m_gr_bmp);
 	
-	if (m_engine_inited)
+	if (!m_script_host->HasError())
 	{
 		if (get_pseudo_transparent())
 		{
@@ -1714,25 +1957,28 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
 			FillRect(memdc, &rc, (HBRUSH)(COLOR_WINDOW + 1));
 		}
 
-		Gdiplus::Graphics gr(memdc);
-		Gdiplus::Rect rect(lpUpdateRect->left, lpUpdateRect->top,
-			lpUpdateRect->right - lpUpdateRect->left,
-			lpUpdateRect->bottom - lpUpdateRect->top);
-
-		// SetClip() may improve performance slightly
-		gr.SetClip(rect);
-
-		m_gr_wrap->put__ptr(&gr);
-
+		if (m_script_host->Ready())
 		{
-			VARIANTARG args[1];
+			Gdiplus::Graphics gr(memdc);
+			Gdiplus::Rect rect(lpUpdateRect->left, lpUpdateRect->top,
+				lpUpdateRect->right - lpUpdateRect->left,
+				lpUpdateRect->bottom - lpUpdateRect->top);
 
-			args[0].vt = VT_DISPATCH;
-			args[0].pdispVal = m_gr_wrap;
-			script_invoke_v(L"on_paint", args, _countof(args));
+			// SetClip() may improve performance slightly
+			gr.SetClip(rect);
+
+			m_gr_wrap->put__ptr(&gr);
+
+			{
+				VARIANTARG args[1];
+
+				args[0].vt = VT_DISPATCH;
+				args[0].pdispVal = m_gr_wrap;
+				script_invoke_v(L"on_paint", args, _countof(args));
+			}
+
+			m_gr_wrap->put__ptr(NULL);
 		}
-
-		m_gr_wrap->put__ptr(NULL);
 	}
 	else
 	{
@@ -1875,10 +2121,8 @@ bool wsh_panel_window::on_mouse_button_up(UINT msg, WPARAM wp, LPARAM lp)
 {
 	TRACK_FUNCTION();
 
-	ReleaseCapture();
-
+	bool ret = false;
 	VARIANTARG args[3];
-
 	args[0].vt = VT_I4;
 	args[0].lVal = wp;
 	args[1].vt = VT_I4;
@@ -1901,20 +2145,28 @@ bool wsh_panel_window::on_mouse_button_up(UINT msg, WPARAM wp, LPARAM lp)
 			_variant_t result;
 
 			if (IsKeyPressed(VK_LSHIFT) && IsKeyPressed(VK_LWIN))
+			{
+				// HACK: Start debugger manually
+				if (IsKeyPressed(VK_LCONTROL) && IsKeyPressed(VK_LMENU))
+				{
+					m_script_host->StartDebugger();
+				}
+
 				break;
+			}
 
 			if (SUCCEEDED(script_invoke_v(L"on_mouse_rbtn_up", args, _countof(args), &result)))
 			{
 				result.ChangeType(VT_BOOL);
-
 				if ((result.boolVal != VARIANT_FALSE))
-					return false;
+					ret = true;
 			}
 		}
 		break;
 	}
 
-	return true;
+	ReleaseCapture();
+	return ret;
 }
 
 void wsh_panel_window::on_mouse_button_down(UINT msg, WPARAM wp, LPARAM lp)
@@ -2333,9 +2585,9 @@ void wsh_panel_window::on_drag_enter(LPARAM lp)
 	args[0].vt = VT_I4;
 	args[0].lVal = param->key_state;
 	args[1].vt = VT_I4;
-	args[1].lVal = param->x;
+	args[1].lVal = param->y;
 	args[2].vt = VT_I4;
-	args[2].lVal = param->y;	
+	args[2].lVal = param->x;	
 	args[3].vt = VT_DISPATCH;
 	args[3].pdispVal = param->action;
 	script_invoke_v(L"on_drag_enter", args, _countof(args));
@@ -2350,9 +2602,9 @@ void wsh_panel_window::on_drag_over(LPARAM lp)
 	args[0].vt = VT_I4;
 	args[0].lVal = param->key_state;
 	args[1].vt = VT_I4;
-	args[1].lVal = param->x;
+	args[1].lVal = param->y;
 	args[2].vt = VT_I4;
-	args[2].lVal = param->y;	
+	args[2].lVal = param->x;	
 	args[3].vt = VT_DISPATCH;
 	args[3].pdispVal = param->action;
 	script_invoke_v(L"on_drag_over", args, _countof(args));

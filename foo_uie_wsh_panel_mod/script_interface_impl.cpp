@@ -3650,7 +3650,15 @@ STDMETHODIMP DropSourceAction::get_Parsable(VARIANT_BOOL * parsable)
 {
 	TRACK_FUNCTION();
 	if (!parsable) return E_POINTER;
-	*parsable = m_parsable;
+	*parsable = TO_VARIANT_BOOL(m_parsable);
+	return S_OK;
+}
+
+STDMETHODIMP DropSourceAction::put_Parsable(VARIANT_BOOL parsable)
+{
+	TRACK_FUNCTION();
+	if (m_parsable && !parsable)
+		m_parsable = false;
 	return S_OK;
 }
 

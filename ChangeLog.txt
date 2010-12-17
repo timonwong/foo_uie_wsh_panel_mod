@@ -1,3 +1,8 @@
+v1.4.1 Beta 4:
+- CHG: Now IDropSourceAction::Parsable is write-able.
+- ADD: Basic debugger support.
+- FIX: Fix minor bugs introduced in previous betas.
+
 v1.4.1 Beta 3:
 - ADD: New property IDropSourceAction::Parsable.
 - CHG: Callback on_drag_enter(), on_drag_over() and on_drag_drop() accept first parameter "action" now.

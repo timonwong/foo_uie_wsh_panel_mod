@@ -9,7 +9,9 @@
 
 // Smart Pointers
 _COM_SMARTPTR_TYPEDEF(IActiveScriptParse, IID_IActiveScriptParse);
-
+_COM_SMARTPTR_TYPEDEF(IProcessDebugManager, IID_IProcessDebugManager);
+_COM_SMARTPTR_TYPEDEF(IDebugDocumentHelper, IID_IDebugDocumentHelper);
+_COM_SMARTPTR_TYPEDEF(IDebugApplication, IID_IDebugApplication);
 
 class HostComm : public wsh_panel_vars
 {
@@ -34,14 +36,10 @@ protected:
 	metadb_handle_ptr m_watched_handle;
 	t_script_info m_script_info;
 	ui_selection_holder::ptr m_selection_holder;
-	IActiveScriptPtr  m_script_engine;
-	IDispatchPtr      m_script_root;
-	SCRIPTSTATE       m_script_state;
 	int               m_instance_type;
 	bool              m_query_continue;
 	bool              m_suppress_drawing;
 	bool              m_paint_pending;
-	bool              m_engine_inited;
 	
 	HostComm();
 	virtual ~HostComm();
@@ -57,7 +55,6 @@ public:
 	inline POINT & GetMinSize() { return m_min_size; }
 	inline UINT & GetDlgCode() { return m_dlg_code; }
 	inline metadb_handle_ptr & GetWatchedMetadbHandle() { return m_watched_handle; }
-	inline SCRIPTSTATE & GetScriptState() { return m_script_state; }
 	inline bool & GetQueryContinue() { return m_query_continue; }
 	IGdiBitmap * GetBackgroundImage();
 	inline void PreserveSelection() { m_selection_holder = static_api_ptr_t<ui_selection_manager>()->acquire(); }
@@ -66,10 +63,7 @@ public:
 	void Redraw();
 	void Repaint(bool force = false);
 	void RepaintRect(UINT x, UINT y, UINT w, UINT h, bool force = false);
-
-	void OnScriptError(LPCWSTR str);
 	void RefreshBackground(LPRECT lprcUpdate = NULL);
-
 	ITimerObj * CreateTimerTimeout(UINT timeout);
 	ITimerObj * CreateTimerInterval(UINT delay);
 	void KillTimer(ITimerObj * p);
@@ -133,44 +127,67 @@ public:
 	STDMETHODIMP CreateThemeManager(BSTR classid, IThemeManager ** pp);
 };
 
-class ScriptSite : 
+class ScriptHost : 
 	public IActiveScriptSite,
+	public IActiveScriptSiteDebug,
 	public IActiveScriptSiteWindow,
 	public IActiveScriptSiteInterruptPoll
 {
 private:
-	HostComm*    m_host;
-	IFbWindowPtr m_window;
-	IGdiUtilsPtr m_gdi;
-	IFbUtilsPtr  m_fb2k;
-	IWSHUtilsPtr m_utils;
-	DWORD        m_dwStartTime;
+	volatile DWORD   m_dwRef;
+	HostComm*        m_host;
+	IFbWindowPtr     m_window;
+	IGdiUtilsPtr     m_gdi;
+	IFbUtilsPtr      m_fb2k;
+	IWSHUtilsPtr     m_utils;
+	DWORD            m_dwStartTime;
+
+	// Scripting
+	IActiveScriptPtr  m_script_engine;
+	IDispatchPtr      m_script_root;
+
+	// Debugger
+	IProcessDebugManagerPtr    m_debug_manager;
+	IDebugApplicationPtr       m_debug_application;
+	DWORD                      m_app_cookie;
+
+	// debugging helper
+	typedef pfc::map_t<DWORD, IDebugDocumentHelperPtr> t_debug_doc_map;
+	t_debug_doc_map   m_debug_docs;
+
+	bool  m_engine_inited;
+	bool  m_has_error;
 
 	BEGIN_COM_QI_IMPL()
 		COM_QI_ENTRY_MULTI(IUnknown, IActiveScriptSite)
 		COM_QI_ENTRY(IActiveScriptSite)
+		COM_QI_ENTRY(IActiveScriptSiteDebug)
 		COM_QI_ENTRY(IActiveScriptSiteWindow)
 		COM_QI_ENTRY(IActiveScriptSiteInterruptPoll)
 	END_COM_QI_IMPL()
 
 public:
-	ScriptSite(HostComm * host)
-		: m_host(host)
-		, m_window(new com_object_impl_t<FbWindow, false>(host))
-		, m_gdi(com_object_singleton_t<GdiUtils>::instance())
-		, m_fb2k(com_object_singleton_t<FbUtils>::instance())
-		, m_utils(com_object_singleton_t<WSHUtils>::instance())
-		, m_dwStartTime(0)
-	{}
-
-	virtual ~ScriptSite()
-	{
-	}
+	ScriptHost(HostComm * host);
+	virtual ~ScriptHost();
 
 public:
 	// IUnknown
-	STDMETHODIMP_(ULONG) AddRef() { return 1; }
-	STDMETHODIMP_(ULONG) Release() { return 1; }
+	STDMETHODIMP_(ULONG) AddRef()
+	{
+		return InterlockedIncrement(&m_dwRef); 
+	}
+
+	STDMETHODIMP_(ULONG) Release() 
+	{
+		ULONG n = InterlockedDecrement(&m_dwRef); 
+
+		if (n == 0)
+		{
+			delete this;
+		}
+
+		return n;
+	}
 
 	// IActiveScriptSite
 	STDMETHODIMP GetLCID(LCID* plcid);
@@ -182,12 +199,38 @@ public:
 	STDMETHODIMP OnEnterScript();
 	STDMETHODIMP OnLeaveScript();
 
+	// IActiveScriptSiteDebug
+	STDMETHODIMP GetDocumentContextFromPosition(DWORD dwSourceContext, ULONG uCharacterOffset, ULONG uNumChars, IDebugDocumentContext **ppsc);
+	STDMETHODIMP GetApplication(IDebugApplication **ppda);
+	STDMETHODIMP GetRootApplicationNode(IDebugApplicationNode **ppdanRoot);
+	STDMETHODIMP OnScriptErrorDebug(IActiveScriptErrorDebug *pErrorDebug, BOOL *pfEnterDebugger, BOOL *pfCallOnScriptErrorWhenContinuing);
+
 	// IActiveScriptSiteWindow
 	STDMETHODIMP GetWindow(HWND *phwnd);
 	STDMETHODIMP EnableModeless(BOOL fEnable);
 
 	// IActiveScriptSiteInterruptPoll
 	STDMETHODIMP QueryContinue();
+
+public:
+	HRESULT Initialize();
+	void Finalize();
+	inline void Stop() { m_engine_inited = false; m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED); }
+	inline bool Ready() { return m_engine_inited; }
+	inline bool HasError() { return m_has_error; }
+	inline void StartDebugger()
+	{
+		if (m_debug_application)
+		{
+			if (FAILED(m_debug_application->StartDebugSession()))
+			{
+				console::error("WSH Panel Mod: StartDebugger(): Cannot start debugger session.");
+			}
+		}
+	}
+	HRESULT InvokeV(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);
+	HRESULT GenerateSourceContext(const wchar_t * path, const wchar_t * code, DWORD & source_context);
+	void ReportError(IActiveScriptError* err);
 };
 
 class PanelDropTarget : public IDropTarget
@@ -264,30 +307,35 @@ private:
 
 	PanelDropTarget  m_drop_target;
 	// Scripting
-	ScriptSite       m_script_site;
 	IGdiGraphicsPtr  m_gr_wrap;
+	ScriptHost      *m_script_host;
 	bool             m_is_mouse_tracked;
-	bool			 m_is_droptarget_registered;
+	bool	         m_is_droptarget_registered;
 
 public:
 	wsh_panel_window() 
 		: m_drop_target(this)
-		, m_script_site(this) 
+		, m_script_host(new ScriptHost(this)) 
 		, m_is_mouse_tracked(false)
 		, m_is_droptarget_registered(false)
 	{}
 
 	virtual ~wsh_panel_window()
 	{
+		m_script_host->Release();
 	}
 
 	void update_script(const char * name = NULL, const char * code = NULL);
 
 private:
-	HRESULT script_init();
+	inline HRESULT script_invoke_v(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL)
+	{
+		return m_script_host->InvokeV(name, argv, argc, ret);
+	}
+
 	bool script_load();
 	void script_unload();
-	HRESULT script_invoke_v(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);
+
 	void create_context();
 	void delete_context();
 

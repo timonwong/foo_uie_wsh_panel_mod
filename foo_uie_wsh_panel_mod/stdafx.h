@@ -17,6 +17,7 @@
 #include <Windows.h>
 #include <GdiPlus.h>
 #include <ActivScp.h>
+#include <activdbg.h>
 #include <ShellApi.h>
 #include <CommCtrl.h>
 #include <ComDef.h>

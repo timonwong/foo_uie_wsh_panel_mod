@@ -4,27 +4,27 @@
 #include "helpers.h"
 
 
-HRESULT script_preprocessor::process_import(const t_script_info & info, IActiveScriptParse * parser)
+HRESULT script_preprocessor::process_import(const t_script_info & info, t_script_list & scripts)
 {
 	HRESULT hr = S_OK;
 
-	if (!m_is_ok || !parser) return hr;
+	if (!m_is_ok) return hr;
 
 	for (t_size i = 0; i < m_directive_value_list.get_count(); ++i)
 	{
-		t_directive_value & v = m_directive_value_list[i];
+		t_directive_value & val = m_directive_value_list[i];
 
-		if (wcscmp(v.directive.get_ptr(), L"import") == 0)
+		if (wcscmp(val.directive.get_ptr(), L"import") == 0)
 		{
 			// Try parse
-			expand_var(v.value);
+			expand_var(val.value);
 
 			pfc::array_t<wchar_t> code;
-			bool is_file_read = helpers::read_file_wide(CP_ACP, v.value.get_ptr(), code);
+			bool is_file_read = helpers::read_file_wide(CP_ACP, val.value.get_ptr(), code);
 			pfc::string_formatter msg;
 
 			msg << WSPM_NAME " (" << info.build_info_string() << "): "
-				<< "Parsing file \"" << pfc::stringcvt::string_utf8_from_wide(v.value.get_ptr())
+				<< "Parsing file \"" << pfc::stringcvt::string_utf8_from_wide(val.value.get_ptr())
 				<< "\"";
 
 			if (!is_file_read)
@@ -36,11 +36,11 @@ HRESULT script_preprocessor::process_import(const t_script_info & info, IActiveS
 
 			if (is_file_read)
 			{
-				hr = parser->ParseScriptText(code.get_ptr(), NULL, NULL, NULL, NULL, 0,
-					SCRIPTTEXT_ISPERSISTENT | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
+				t_script_code script;
+				script.path = val.value;
+				script.code = code;
 
-				if (FAILED(hr))
-					break;
+				scripts.add_item(script);
 			}
 		}
 	}

@@ -675,9 +675,12 @@ public:
 
 	inline t_action_mode & Mode() { return m_action_mode; }
 	inline bool & Parsable() { return m_parsable; }
+	inline int & Playlist() { return m_playlist_idx; }
+	inline bool & ToSelect() { return m_to_select; }
 
 public:
 	STDMETHODIMP get_Parsable(VARIANT_BOOL * parsable);
+	STDMETHODIMP put_Parsable(VARIANT_BOOL parsable);
 	STDMETHODIMP get_Mode(int * mode);
 	STDMETHODIMP get_Playlist(int * id);
 	STDMETHODIMP put_Playlist(int id);
