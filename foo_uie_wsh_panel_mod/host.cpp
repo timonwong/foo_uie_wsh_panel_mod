@@ -784,8 +784,8 @@ ScriptHost::ScriptHost(HostComm * host)
 		{
 			g_cfg_debug_mode = false;
 
-			// TODO: popup error text.
-			// popup_msg::g_show("", WSPM_NAME);
+			popup_msg::g_show("Debug mod is enabled but it seems that there is no valid script debugger "
+				"associated with your system, so this option will be disabled.", WSPM_NAME);
 		}
 	}
 }
