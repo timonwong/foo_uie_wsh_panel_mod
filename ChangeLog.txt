@@ -1,3 +1,6 @@
+v1.4.1 Beta 5:
+- FIX: Crashes when debug mode is off.
+
 v1.4.1 Beta 4:
 - CHG: Now IDropSourceAction::Parsable is write-able.
 - ADD: Basic script debugger support.

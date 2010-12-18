@@ -867,12 +867,11 @@ STDMETHODIMP ScriptHost::OnStateChange(SCRIPTSTATE state)
 
 STDMETHODIMP ScriptHost::OnScriptError(IActiveScriptError* err)
 {
-	TRACK_FUNCTION();
+	m_has_error = true;
 
 	if (!err) return E_POINTER;
 
 	ReportError(err);
-	m_has_error = true;
 	return S_OK;
 }
 
@@ -943,6 +942,8 @@ STDMETHODIMP ScriptHost::GetRootApplicationNode(IDebugApplicationNode **ppdanRoo
 
 STDMETHODIMP ScriptHost::OnScriptErrorDebug(IActiveScriptErrorDebug *pErrorDebug, BOOL *pfEnterDebugger, BOOL *pfCallOnScriptErrorWhenContinuing)
 {
+	m_has_error = true;
+
 	if (!pErrorDebug || !pfEnterDebugger || !pfCallOnScriptErrorWhenContinuing)
 		return E_POINTER;
 
@@ -959,7 +960,6 @@ STDMETHODIMP ScriptHost::OnScriptErrorDebug(IActiveScriptErrorDebug *pErrorDebug
 	else
 		SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, 0);
 
-	m_has_error = true;
 	return S_OK;
 }
 
@@ -1116,8 +1116,8 @@ void ScriptHost::Finalize()
 
 HRESULT ScriptHost::InvokeV(LPOLESTR name, VARIANTARG * argv /*= NULL*/, UINT argc /*= 0*/, VARIANT * ret /*= NULL*/)
 {
-	//if (GetScriptState() != SCRIPTSTATE_CONNECTED) return E_FAIL;
-	if (!m_script_root || !m_engine_inited) return E_FAIL;
+	if (HasError()) return E_FAIL;
+	if (!m_script_root || !Ready()) return E_FAIL;
 	if (!name) return E_INVALIDARG;
 
 	DISPID dispid = 0;
@@ -1197,6 +1197,8 @@ HRESULT ScriptHost::GenerateSourceContext(const wchar_t * path, const wchar_t * 
 
 void ScriptHost::ReportError(IActiveScriptError* err)
 {
+	if (!err) return;
+
 	DWORD ctx = 0;
 	ULONG line = 0;
 	LONG  charpos = 0;
@@ -1217,6 +1219,7 @@ void ScriptHost::ReportError(IActiveScriptError* err)
 	}
 
 	// HACK: Additional Info
+	if (m_debug_manager)
 	{
 		_COM_SMARTPTR_TYPEDEF(IActiveScriptErrorDebug, IID_IActiveScriptErrorDebug);
 		_COM_SMARTPTR_TYPEDEF(IDebugDocumentContext, IID_IDebugDocumentContext);
@@ -1224,16 +1227,17 @@ void ScriptHost::ReportError(IActiveScriptError* err)
 		_COM_SMARTPTR_TYPEDEF(IDebugDocument, IID_IDebugDocument);
 		
 
-		HRESULT hr = S_OK;
+		HRESULT hr;
 		IActiveScriptErrorDebugPtr  pErrorDebug;
 		IDebugDocumentContextPtr    context;
 		IDebugDocumentTextPtr       text;
 		IDebugDocumentPtr           document;
 
-		if (SUCCEEDED(hr)) hr = err->QueryInterface(IID_IActiveScriptErrorDebug, (void **)&pErrorDebug);
-		if (SUCCEEDED(hr)) hr = pErrorDebug->GetDocumentContext(&context);
-		if (SUCCEEDED(hr)) hr = context->GetDocument(&document);
-		if (SUCCEEDED(hr)) hr = document->QueryInterface(IID_IDebugDocumentText, (void **)&text);
+		hr = err->QueryInterface(IID_IActiveScriptErrorDebug, (void **)&pErrorDebug);
+		
+		if (SUCCEEDED(hr)) hr = pErrorDebug ? pErrorDebug->GetDocumentContext(&context) : E_FAIL;
+		if (SUCCEEDED(hr)) hr = context ? context->GetDocument(&document) : E_FAIL;
+		if (SUCCEEDED(hr)) hr = document ? document->QueryInterface(IID_IDebugDocumentText, (void **)&text) : E_FAIL;
 		
 		if (SUCCEEDED(hr))
 		{
