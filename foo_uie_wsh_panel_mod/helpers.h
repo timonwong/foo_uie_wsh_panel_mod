@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simple_thread.h"
+#include "thread_pool.h"
 #include "script_interface.h"
 
 #define TO_VARIANT_BOOL(v) ((v) ? (VARIANT_TRUE) : (VARIANT_FALSE))
@@ -207,7 +207,7 @@ namespace helpers
 		bool apply_filter(metadb_handle_ptr p_location,t_filestats p_stats,file_info & p_info);
 	};
 
-	class album_art_async : public simple_thread
+	class album_art_async : public simple_thread_task
 	{
 	public:
 		struct t_param
@@ -246,13 +246,8 @@ namespace helpers
 				m_rawpath = pfc::stringcvt::string_wide_from_utf8(m_handle->get_path());
 		}
 
-		virtual ~album_art_async()
-		{
-			close();
-		}
-
 	private:
-		virtual void thread_proc();
+		virtual void run();
 
 	private:
 		metadb_handle_ptr m_handle;
@@ -264,17 +259,17 @@ namespace helpers
 		HWND m_notify_hwnd;
 	};
 
-	class load_image_async : public simple_thread
+	class load_image_async : public simple_thread_task
 	{
 	public:
 		struct t_param
 		{
-			int tid;
+			unsigned cookie;
 			IGdiBitmap * bitmap;
 			_bstr_t path;
 
-			t_param(int p_tid, IGdiBitmap * p_bitmap, BSTR p_path) 
-				:  tid(p_tid), bitmap(p_bitmap), path(p_path)
+			t_param(int p_cookie, IGdiBitmap * p_bitmap, BSTR p_path) 
+				:  cookie(p_cookie), bitmap(p_bitmap), path(p_path)
 			{
 			}
 
@@ -290,10 +285,8 @@ namespace helpers
 			: m_notify_hwnd(notify_wnd), m_path(path)
 		{}
 
-		virtual ~load_image_async() { close(); }
-
 	private:
-		virtual void thread_proc();
+		virtual void run();
 
 	private:
 		HWND m_notify_hwnd;

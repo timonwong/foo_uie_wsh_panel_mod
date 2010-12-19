@@ -765,7 +765,7 @@ namespace helpers
 		return false;
 	}
 
-	void album_art_async::thread_proc()
+	void album_art_async::run()
 	{
 		pfc::string8_fast image_path;
 		FbMetadbHandle * handle = NULL;
@@ -792,7 +792,7 @@ namespace helpers
 		SendMessage(m_notify_hwnd, CALLBACK_UWM_GETALBUMARTASYNCDONE, 0, (LPARAM)&param);
 	}
 
-	void load_image_async::thread_proc()
+	void load_image_async::run()
 	{
 		IGdiBitmap * bitmap = NULL;
 		Gdiplus::Bitmap * img = new Gdiplus::Bitmap(m_path);
@@ -807,7 +807,7 @@ namespace helpers
 			bitmap = new com_object_impl_t<GdiBitmap>(img);
 		}
 
-		t_param param(get_tid(), bitmap, m_path);
+		t_param param(reinterpret_cast<unsigned>(this), bitmap, m_path);
 
 		SendMessage(m_notify_hwnd, CALLBACK_UWM_LOADIMAGEASYNCDONE, 0, (LPARAM)&param);
 	}

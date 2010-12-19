@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "simple_thread.h"
+#include "thread_pool.h"
 #include "delay_loader.h"
 #include "popup_msg.h"
 #include "panel_notifier.h"
@@ -55,8 +55,8 @@ namespace
 
 		void on_quit()
 		{
-			simple_thread_manager::instance().remove_all();
 			panel_notifier_manager::instance().send_msg_to_all(UWM_SCRIPT_TERM, 0, 0);
+			simple_thread_pool::instance().join();
 		}
 
 	private:

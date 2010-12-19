@@ -2345,7 +2345,7 @@ void wsh_panel_window::on_load_image_done(LPARAM lp)
 	args[1].vt = VT_DISPATCH;
 	args[1].pdispVal = param->bitmap;
 	args[2].vt = VT_I4;
-	args[2].lVal = param->tid;
+	args[2].lVal = param->cookie;
 	script_invoke_v(L"on_load_image_done", args, _countof(args));
 }
 

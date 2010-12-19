@@ -225,7 +225,7 @@ public:
 		{
 			if (FAILED(m_debug_application->StartDebugSession()))
 			{
-				console::error("WSH Panel Mod: StartDebugger(): Cannot start debugger session.");
+				console::error(WSPM_NAME ": StartDebugger(): Cannot start debugger session.");
 			}
 		}
 	}

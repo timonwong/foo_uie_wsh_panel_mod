@@ -289,6 +289,15 @@
 				<File
 					RelativePath=".\boxblurfilter.cpp"
 					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="3"
+							FavorSizeOrSpeed="1"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\com_array.cpp"
@@ -299,7 +308,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\simple_thread.cpp"
+					RelativePath=".\thread_pool.cpp"
 					>
 				</File>
 			</Filter>
@@ -309,10 +318,32 @@
 				<File
 					RelativePath=".\editorctrl.cpp"
 					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							InlineFunctionExpansion="0"
+							EnableIntrinsicFunctions="false"
+							FavorSizeOrSpeed="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\scintilla_prop_sets.cpp"
 					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							InlineFunctionExpansion="0"
+							EnableIntrinsicFunctions="false"
+							FavorSizeOrSpeed="2"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 		</Filter>
@@ -493,7 +524,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\simple_thread.h"
+					RelativePath=".\thread_pool.h"
 					>
 				</File>
 			</Filter>

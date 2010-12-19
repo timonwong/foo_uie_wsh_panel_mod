@@ -136,42 +136,85 @@ public:
 	}
 };
 
-class new_com_object_callback : public main_thread_callback
+class ensure_new_delete_in_main_thread
 {
-public:
-	new_com_object_callback(t_size size, void ** pptr, HANDLE event) : size_(size), pptr_(pptr), event_(event) {}
-
-	virtual void callback_run()
+private:
+	class new_com_object_callback : public main_thread_callback
 	{
-		pfc::dynamic_assert(pptr_ != NULL);
-		*pptr_ = malloc(size_);
-		SetEvent(event_);
+	public:
+		new_com_object_callback(t_size size, void ** pptr, HANDLE event) : size_(size), pptr_(pptr), event_(event) {}
+
+		virtual void callback_run()
+		{
+			pfc::dynamic_assert(pptr_ != NULL);
+			*pptr_ = malloc(size_);
+			SetEvent(event_);
+		}
+
+	private:
+		size_t size_;
+		void ** pptr_;
+		HANDLE event_;
+	};
+
+	class delete_com_object_callback : public main_thread_callback
+	{
+	public:
+		delete_com_object_callback(void * ptr, HANDLE event) : ptr_(ptr), event_(event) {}
+
+		virtual void callback_run()
+		{
+			free(ptr_);
+			SetEvent(event_);
+		}
+
+	private:
+		void * ptr_;
+		HANDLE event_;
+	};
+
+public:
+	// HACK: A dirty hack to make sure OLE Automation objects are created in the main thread.
+	void * operator new(size_t size)
+	{
+		void * ptr = NULL;
+
+		if (core_api::is_main_thread())
+		{
+			ptr = malloc(size);
+		}
+		else
+		{
+			HANDLE event = CreateEvent(NULL, TRUE, FALSE, NULL);
+			static_api_ptr_t<main_thread_callback_manager>()->add_callback(
+				new service_impl_t<new_com_object_callback>(size, &ptr, event));
+			WaitForSingleObject(event, INFINITE);
+			CloseHandle(event);
+		}
+
+		if (ptr == NULL)  throw std::bad_alloc();
+		return ptr;
 	}
 
-private:
-	size_t size_;
-	void ** pptr_;
-	HANDLE event_;
-};
-
-class delete_com_object_callback : public main_thread_callback
-{
-public:
-	delete_com_object_callback(void * ptr, HANDLE event) : ptr_(ptr), event_(event) {}
-
-	virtual void callback_run()
+	void operator delete(void * p)
 	{
-		free(ptr_);
-		SetEvent(event_);
+		if (core_api::is_main_thread())
+		{
+			free(p);
+		}
+		else
+		{
+			HANDLE event = CreateEvent(NULL, TRUE, FALSE, NULL);
+			static_api_ptr_t<main_thread_callback_manager>()->add_callback(
+				new service_impl_t<delete_com_object_callback>(p, event));
+			WaitForSingleObject(event, INFINITE);
+			CloseHandle(event);
+		}
 	}
-
-private:
-	void * ptr_;
-	HANDLE event_;
 };
 
 template <typename _Base, bool _AddRef = true>
-class com_object_impl_t : public _Base
+class com_object_impl_t : public _Base, public ensure_new_delete_in_main_thread
 {
 private:
 	volatile LONG m_dwRef;
@@ -212,44 +255,6 @@ public:
 			delete this;
 		}
 		return n;
-	}
-
-	// HACK: A dirty hack to make sure OLE Automation objects are created in the main thread.
-	void * operator new(size_t size)
-	{
-		void * ptr = NULL;
-
-		if (core_api::is_main_thread())
-		{
-			ptr = malloc(size);
-		}
-		else
-		{
-			HANDLE event = CreateEvent(NULL, TRUE, FALSE, NULL);
-			static_api_ptr_t<main_thread_callback_manager>()->add_callback(
-				new service_impl_t<new_com_object_callback>(size, &ptr, event));
-			WaitForSingleObject(event, INFINITE);
-			CloseHandle(event);
-		}
-
-		if (ptr == NULL)  throw std::bad_alloc();
-		return ptr;
-	}
-
-	void operator delete(void * p)
-	{
-		if (core_api::is_main_thread())
-		{
-			free(p);
-		}
-		else
-		{
-			HANDLE event = CreateEvent(NULL, TRUE, FALSE, NULL);
-			static_api_ptr_t<main_thread_callback_manager>()->add_callback(
-			new service_impl_t<delete_com_object_callback>(p, event));
-			WaitForSingleObject(event, INFINITE);
-			CloseHandle(event);
-		}
 	}
 
 	TEMPLATE_CONSTRUCTOR_FORWARD_FLOOD_WITH_INITIALIZER(com_object_impl_t, _Base, { Construct_(); })

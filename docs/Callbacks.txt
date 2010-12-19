@@ -95,7 +95,7 @@ function on_get_album_art_done(metadb, art_id, image, image_path) {}
 
 // [1.3.2] New:
 // Get called while thread created by gdi.LoadImageAsync() is done.
-function on_load_image_done(tid, image) {}
+function on_load_image_done(cookie, image) {}
 
 // [1.1.10] New: 
 // NOTE 1: Always call window.GetBackgroundImage() during this callback

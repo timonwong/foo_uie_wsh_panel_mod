@@ -937,18 +937,20 @@ STDMETHODIMP GdiUtils::LoadImageAsync(UINT window_id, BSTR path, UINT * p)
 	if (!path) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
-	unsigned tid = 0;
+	unsigned cookie = 0;
 
 	try
 	{
-		helpers::load_image_async * thread = new helpers::load_image_async((HWND)window_id, path);
+		helpers::load_image_async * task = new helpers::load_image_async((HWND)window_id, path);
 
-		thread->start();
-		tid = thread->get_tid();
+		if (simple_thread_pool::instance().queue(task))
+			cookie = reinterpret_cast<unsigned>(task);
+		else
+			delete task;
 	}
 	catch (std::exception &) {}
 
-	(*p) = tid;
+	(*p) = cookie;
 	return S_OK;
 }
 
@@ -2982,7 +2984,7 @@ STDMETHODIMP WSHUtils::GetAlbumArtAsync(UINT window_id, IFbMetadbHandle * handle
 	if (!handle) return E_INVALIDARG;
 	if (!p) return E_POINTER;
 
-	unsigned tid = 0;
+	unsigned cookie = 0;
 	metadb_handle * ptr = NULL;
 	handle->get__ptr((void**)&ptr);
 
@@ -2990,23 +2992,25 @@ STDMETHODIMP WSHUtils::GetAlbumArtAsync(UINT window_id, IFbMetadbHandle * handle
 	{
 		try
 		{
-			helpers::album_art_async * thread = new helpers::album_art_async((HWND)window_id,
+			helpers::album_art_async * task = new helpers::album_art_async((HWND)window_id,
 				ptr, art_id, need_stub, only_embed, no_load);
 
-			thread->start();
-			tid = thread->get_tid();
+			if (simple_thread_pool::instance().queue(task))
+				cookie = reinterpret_cast<unsigned>(task);
+			else
+				delete task;
 		}
 		catch (std::exception &)
 		{
-			tid = 0;
+			cookie = 0;
 		}
 	}
 	else
 	{
-		tid = 0;
+		cookie = 0;
 	}
 
-	(*p) = tid;
+	(*p) = cookie;
 	return S_OK;
 }
 
