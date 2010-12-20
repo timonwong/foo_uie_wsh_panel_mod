@@ -157,7 +157,7 @@ copy $(SolutionDir)extras\*.api "%APPDATA%\foobar2000\user-components\foo_uie_ws
     <ClCompile Include="boxblurfilter.cpp" />
     <ClCompile Include="com_array.cpp" />
     <ClCompile Include="helpers.cpp" />
-    <ClCompile Include="simple_thread.cpp" />
+    <ClCompile Include="thread_pool.cpp" />
     <ClCompile Include="editorctrl.cpp" />
     <ClCompile Include="scintilla_prop_sets.cpp" />
     <ClCompile Include="version.cpp" />
@@ -206,7 +206,7 @@ copy $(SolutionDir)extras\*.api "%APPDATA%\foobar2000\user-components\foo_uie_ws
     <ClInclude Include="com_array.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="popup_msg.h" />
-    <ClInclude Include="simple_thread.h" />
+    <ClInclude Include="thread_pool.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\default.js" />

@@ -1,14 +1,14 @@
 #include "stdafx.h"
 #include "thread_pool.h"
+#include "user_message.h"
 
-HANDLE simple_thread_pool::exiting_ = NULL;
 simple_thread_pool simple_thread_pool::instance_;
 
 void simple_thread_worker::threadProc()
 {
 	ULONGLONG last_tick = GetTickCount64();
 
-	while (WaitForSingleObject(simple_thread_pool::instance().exiting(), 0) == WAIT_TIMEOUT)
+	while (WaitForSingleObject(simple_thread_pool::instance().exiting_, 0) == WAIT_TIMEOUT)
 	{
 		simple_thread_task * task = simple_thread_pool::instance().acquire_task();
 
@@ -21,14 +21,22 @@ void simple_thread_worker::threadProc()
 		else
 		{
 			if (GetTickCount64() - last_tick >= 10000)
-				break;
+			{
+				insync(simple_thread_pool::instance().cs_);
+				
+				if (simple_thread_pool::instance().is_queue_empty())
+				{
+					simple_thread_pool::instance().remove_worker_(this);
+					return;
+				}
+			}
 		}
 	}
 
-	simple_thread_pool::instance().remove_worker(this);
+	simple_thread_pool::instance().remove_worker_(this);
 }
 
-bool simple_thread_pool::queue(simple_thread_task * task)
+bool simple_thread_pool::enqueue(simple_thread_task * task)
 {
 	core_api::ensure_main_thread();
 
@@ -36,7 +44,6 @@ bool simple_thread_pool::queue(simple_thread_task * task)
 		return false;
 
 	insync(cs_);
-
 	int max_count = pfc::getOptimalWorkerThreadCount();
 	track(task);
 
@@ -48,6 +55,12 @@ bool simple_thread_pool::queue(simple_thread_task * task)
 	}
 
 	return true;
+}
+
+bool simple_thread_pool::is_queue_empty()
+{
+	insync(cs_);
+	return task_list_.get_count() == 0;
 }
 
 void simple_thread_pool::track(simple_thread_task * task)
@@ -116,6 +129,7 @@ simple_thread_task * simple_thread_pool::acquire_task()
 void simple_thread_pool::untrack_(simple_thread_task * task)
 {
 	core_api::ensure_main_thread();
+	insync(cs_);
 	task_list_.remove_item(task);
 	delete task;
 }
@@ -123,6 +137,7 @@ void simple_thread_pool::untrack_(simple_thread_task * task)
 void simple_thread_pool::add_worker_(simple_thread_worker * worker)
 {
 	core_api::ensure_main_thread();
+	insync(cs_);
 	InterlockedIncrement(&num_workers_);
 	ResetEvent(empty_worker_);
 }
@@ -141,11 +156,10 @@ private:
 	simple_thread_worker * worker_;
 };
 
-void simple_thread_pool::remove_worker(simple_thread_worker * worker)
+void simple_thread_pool::remove_worker_(simple_thread_worker * worker)
 {
-	InterlockedDecrement(&num_workers_);
-
 	insync(cs_);
+	InterlockedDecrement(&num_workers_);
 
 	if (num_workers_ == 0)
 	{

@@ -943,7 +943,7 @@ STDMETHODIMP GdiUtils::LoadImageAsync(UINT window_id, BSTR path, UINT * p)
 	{
 		helpers::load_image_async * task = new helpers::load_image_async((HWND)window_id, path);
 
-		if (simple_thread_pool::instance().queue(task))
+		if (simple_thread_pool::instance().enqueue(task))
 			cookie = reinterpret_cast<unsigned>(task);
 		else
 			delete task;
@@ -2995,7 +2995,7 @@ STDMETHODIMP WSHUtils::GetAlbumArtAsync(UINT window_id, IFbMetadbHandle * handle
 			helpers::album_art_async * task = new helpers::album_art_async((HWND)window_id,
 				ptr, art_id, need_stub, only_embed, no_load);
 
-			if (simple_thread_pool::instance().queue(task))
+			if (simple_thread_pool::instance().enqueue(task))
 				cookie = reinterpret_cast<unsigned>(task);
 			else
 				delete task;

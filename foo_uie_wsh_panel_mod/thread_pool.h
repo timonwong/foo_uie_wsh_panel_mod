@@ -52,9 +52,8 @@ public:
 		CloseHandle(exiting_);
 	}
 
-	static inline HANDLE & exiting() { return exiting_; }
-
-	bool queue(simple_thread_task * task);
+	bool enqueue(simple_thread_task * task);
+	bool is_queue_empty();
 	void track(simple_thread_task * task);
 	void untrack(simple_thread_task * task);
 	// Should always called from the main thread
@@ -64,15 +63,15 @@ public:
 private:
 	void untrack_(simple_thread_task * task);
 	void add_worker_(simple_thread_worker * worker);
-	void remove_worker(simple_thread_worker * worker);
+	void remove_worker_(simple_thread_worker * worker);
 
 	typedef pfc::chain_list_v2_t<simple_thread_task *> t_task_list;
 	t_task_list task_list_;
 	critical_section cs_;
 	volatile LONG num_workers_;
 	HANDLE empty_worker_;
+	HANDLE exiting_;
 
-	static HANDLE exiting_;
 	static simple_thread_pool instance_;
 
 	friend class simple_thread_worker;
