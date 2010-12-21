@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "global_cfg.h"
 
-
 namespace guid
 {
 	// {1F71BA08-B517-46c0-A08E-860452F23E07}
@@ -15,7 +14,6 @@ namespace guid
 	// {571A60E2-6E22-4292-9557-5688C6C1733C}
 	static const GUID cfg_debug_mode = 
 	{ 0x571a60e2, 0x6e22, 0x4292, { 0x95, 0x57, 0x56, 0x88, 0xc6, 0xc1, 0x73, 0x3c } };
-
 
 	// {E0521E81-C2A4-4a3e-A5FC-A1E62B187053}
 	static const GUID cfg_cui_warning_reported = 

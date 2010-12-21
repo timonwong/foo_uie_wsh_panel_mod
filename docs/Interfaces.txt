@@ -430,6 +430,13 @@ Methods:
 	boolean MovePlaylist(from, to);
 	// [1.3.2] New:
 	boolean RenamePlaylist(idx, name);
+	// [1.4.1 Beta 6] New:
+	// Duplicate all contents from one playlist to a new playlist.
+	// NOTE: This method only duplicate contents of the playlist, not its properties (eg. autoplaylist).
+	// from: Which index of playlist to copy from.
+	// name: New playlist name, when empty, using the same name as 'from'.
+	// Returns the index of newly created playlist.
+	uint DuplicatePlaylist(from, name = "");
 	// [1.4.0] New:
 	boolean IsAutoPlaylist(idx);
 	// [1.4.0] New:
@@ -489,7 +496,7 @@ Methods:
 interface IDropTargetAction {
 Properties:
 	// [1.4.1 Beta 4] Updated:
-	// Set this value to false to disable drag and drop.
+	// Set this value to true/false to enable/disable drag and drop.
 	(read, write) bool Parsable;
 	// Default: -1 (active playlist)
 	(read, write) int Playlist;

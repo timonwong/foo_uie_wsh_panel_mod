@@ -449,6 +449,7 @@ public:
 	STDMETHODIMP RemovePlaylist(UINT idx, VARIANT_BOOL * p);
 	STDMETHODIMP MovePlaylist(UINT from, UINT to, VARIANT_BOOL * p);
 	STDMETHODIMP RenamePlaylist(UINT idx, BSTR name, VARIANT_BOOL * p);
+	STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * p);
 	STDMETHODIMP IsAutoPlaylist(UINT idx, VARIANT_BOOL * p);
 	STDMETHODIMP CreateAutoPlaylist(UINT idx, BSTR name, BSTR query, BSTR sort, UINT flags, UINT * p);
 	STDMETHODIMP ShowAutoPlaylistUI(UINT idx, VARIANT_BOOL * p);

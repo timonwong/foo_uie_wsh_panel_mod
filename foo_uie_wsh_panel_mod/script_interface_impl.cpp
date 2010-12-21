@@ -2371,6 +2371,34 @@ STDMETHODIMP FbUtils::RenamePlaylist(UINT idx, BSTR name, VARIANT_BOOL * p)
 	return S_OK;
 }
 
+STDMETHODIMP FbUtils::DuplicatePlaylist(UINT from, BSTR name, UINT * p)
+{
+	TRACK_FUNCTION();
+
+	if (!p) return E_POINTER;
+
+	static_api_ptr_t<playlist_manager_v4> manager;
+	metadb_handle_list contents;
+	pfc::string8_fast name_utf8;
+
+	if (from >= manager->get_playlist_count()) return E_INVALIDARG;
+
+	manager->playlist_get_all_items(from, contents);
+	
+	if (!name || !*name)
+		// If no name specified, create a playlist which will have the same name
+		manager->playlist_get_name(from, name_utf8);
+	else
+		name_utf8 = pfc::stringcvt::string_utf8_from_wide(name);
+
+	stream_reader_dummy dummy_reader;
+	abort_callback_dummy dummy_callback;
+
+	t_size idx = manager->create_playlist_ex(name_utf8.get_ptr(), name_utf8.get_length(), from + 1, contents, &dummy_reader, dummy_callback);
+	*p = idx;
+	return S_OK;
+}
+
 STDMETHODIMP FbUtils::IsAutoPlaylist(UINT idx, VARIANT_BOOL * p)
 {
 	TRACK_FUNCTION();

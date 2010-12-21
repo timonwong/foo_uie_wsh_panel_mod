@@ -90,9 +90,6 @@
     <ClCompile Include="helpers.cpp">
       <Filter>Source Files\Misc</Filter>
     </ClCompile>
-    <ClCompile Include="simple_thread.cpp">
-      <Filter>Source Files\Misc</Filter>
-    </ClCompile>
     <ClCompile Include="editorctrl.cpp">
       <Filter>Source Files\Scintilla</Filter>
     </ClCompile>
@@ -100,6 +97,9 @@
       <Filter>Source Files\Scintilla</Filter>
     </ClCompile>
     <ClCompile Include="version.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread_pool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -191,9 +191,6 @@
     <ClInclude Include="popup_msg.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="simple_thread.h">
-      <Filter>Header Files\Misc</Filter>
-    </ClInclude>
     <ClInclude Include="SString.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -205,6 +202,9 @@
     </ClInclude>
     <ClInclude Include="delay_loader.h">
       <Filter>Header Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="thread_pool.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

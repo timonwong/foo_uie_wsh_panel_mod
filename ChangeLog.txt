@@ -1,3 +1,7 @@
+v1.4.1 Beta 6:
+- FIX: Fix possible bugs in GetAlbumArtAsync() and LoadImageAsync().
+- ADD: Add fb.DuplicatePlaylist() method.
+
 v1.4.1 Beta 5:
 - FIX: Crashes when debug mode is off.
 
