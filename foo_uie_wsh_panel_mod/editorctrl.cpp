@@ -296,7 +296,7 @@ static bool ParseStyle(const char * p_definition, t_sci_editor_style & p_style)
 			opt = 0;
 	}
 
-	delete [] val;
+	free(val);
 	return true;
 }
 

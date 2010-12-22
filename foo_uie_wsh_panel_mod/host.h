@@ -262,7 +262,7 @@ private:
 
 	HostComm * m_host;
 	DWORD m_effect;
-	DropSourceAction * m_action;
+	DropSourceAction *m_action;
 
 	BEGIN_COM_QI_IMPL()
 		COM_QI_ENTRY_MULTI(IUnknown, IDropTarget)
@@ -271,8 +271,8 @@ private:
 
 public:
 	PanelDropTarget(HostComm * host) 
-		: m_host(host), m_effect(DROPEFFECT_NONE), m_action(new com_object_impl_t<DropSourceAction>()) {}
-	virtual ~PanelDropTarget() { if (m_action) m_action->Release(); }
+		: m_host(host), m_effect(DROPEFFECT_NONE), m_action(new com_object_impl_t<DropSourceAction, true>()) {}
+	virtual ~PanelDropTarget(){ m_action->Release(); }
 
 public:
 	// IUnknown
@@ -316,10 +316,11 @@ private:
 public:
 	wsh_panel_window() 
 		: m_drop_target(this)
-		, m_script_host(new ScriptHost(this)) 
+		, m_script_host(new ScriptHost(this))
 		, m_is_mouse_tracked(false)
 		, m_is_droptarget_registered(false)
-	{}
+	{
+	}
 
 	virtual ~wsh_panel_window()
 	{

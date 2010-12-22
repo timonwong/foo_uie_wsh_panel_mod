@@ -136,85 +136,56 @@ public:
 	}
 };
 
-class ensure_new_delete_in_main_thread
+class new_delete_tracer
 {
-private:
-	class new_com_object_callback : public main_thread_callback
-	{
-	public:
-		new_com_object_callback(t_size size, void ** pptr, HANDLE event) : size_(size), pptr_(pptr), event_(event) {}
-
-		virtual void callback_run()
-		{
-			pfc::dynamic_assert(pptr_ != NULL);
-			*pptr_ = malloc(size_);
-			SetEvent(event_);
-		}
-
-	private:
-		size_t size_;
-		void ** pptr_;
-		HANDLE event_;
-	};
-
-	class delete_com_object_callback : public main_thread_callback
-	{
-	public:
-		delete_com_object_callback(void * ptr, HANDLE event) : ptr_(ptr), event_(event) {}
-
-		virtual void callback_run()
-		{
-			free(ptr_);
-			SetEvent(event_);
-		}
-
-	private:
-		void * ptr_;
-		HANDLE event_;
-	};
-
+#ifdef DEBUG
 public:
-	// HACK: A dirty hack to make sure OLE Automation objects are created in the main thread.
 	void * operator new(size_t size)
 	{
-		void * ptr = NULL;
-
-		if (core_api::is_main_thread())
-		{
-			ptr = malloc(size);
-		}
-		else
-		{
-			HANDLE event = CreateEvent(NULL, TRUE, FALSE, NULL);
-			static_api_ptr_t<main_thread_callback_manager>()->add_callback(
-				new service_impl_t<new_com_object_callback>(size, &ptr, event));
-			WaitForSingleObject(event, INFINITE);
-			CloseHandle(event);
-		}
-
-		if (ptr == NULL)  throw std::bad_alloc();
-		return ptr;
+		void * p = ::operator new(size);
+		trace_(p);
+		return p;
 	}
 
 	void operator delete(void * p)
 	{
-		if (core_api::is_main_thread())
-		{
-			free(p);
-		}
-		else
-		{
-			HANDLE event = CreateEvent(NULL, TRUE, FALSE, NULL);
-			static_api_ptr_t<main_thread_callback_manager>()->add_callback(
-				new service_impl_t<delete_com_object_callback>(p, event));
-			WaitForSingleObject(event, INFINITE);
-			CloseHandle(event);
-		}
+		untrace_(p);
+		return ::operator delete(p);
 	}
+
+private:
+	typedef pfc::map_t<void *, unsigned> ptr_list_t;
+
+	static void trace_(void * p)
+	{
+		bool isnew;
+		unsigned & refcount = ptr_list_.find_or_add_ex(p, isnew);
+
+		if (isnew)
+			refcount = 1;
+		else
+			++refcount;
+	}
+
+	static void untrace_(void * p)
+	{
+		ptr_list_t::iterator iter = ptr_list_.find(p);
+		pfc::dynamic_assert(iter.is_valid());
+		unsigned & ref_count = iter->m_value;
+		pfc::dynamic_assert(ref_count > 0);
+		--ref_count;
+	}
+
+	static ptr_list_t ptr_list_;
+#endif
 };
 
+#ifdef DEBUG
+__declspec(selectany) new_delete_tracer::ptr_list_t new_delete_tracer::ptr_list_;
+#endif
+
 template <typename _Base, bool _AddRef = true>
-class com_object_impl_t : public _Base, public ensure_new_delete_in_main_thread
+class com_object_impl_t : public _Base, public new_delete_tracer
 {
 private:
 	volatile LONG m_dwRef;

@@ -861,8 +861,7 @@ STDMETHODIMP ScriptHost::OnScriptTerminate(const VARIANT* result, const EXCEPINF
 
 STDMETHODIMP ScriptHost::OnStateChange(SCRIPTSTATE state)
 {
-	//m_host->GetScriptState() = state;
-	return S_OK;
+	return E_NOTIMPL;
 }
 
 STDMETHODIMP ScriptHost::OnScriptError(IActiveScriptError* err)
@@ -1123,7 +1122,7 @@ HRESULT ScriptHost::InvokeV(LPOLESTR name, VARIANTARG * argv /*= NULL*/, UINT ar
 	DISPID dispid = 0;
 	DISPPARAMS param = { argv, NULL, argc, 0 };
 	IDispatchPtr disp = m_script_root;
-
+	
 	HRESULT hr = disp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
 
 	if (SUCCEEDED(hr))
@@ -2635,9 +2634,7 @@ void wsh_panel_window::on_selection_changed(WPARAM wp)
 			script_invoke_v(L"on_selection_changed", args, _countof(args));
 
 			if (handle)
-			{
 				handle->Release();
-			}
 		}
 	}
 }

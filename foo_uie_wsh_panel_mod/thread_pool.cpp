@@ -4,31 +4,75 @@
 
 simple_thread_pool simple_thread_pool::instance_;
 
+void simple_thread::start()
+{
+	close();
+	HANDLE thread;
+	thread = (HANDLE)_beginthreadex(NULL, 0, g_entry, reinterpret_cast<void*>(this), 0, NULL);
+	if (thread == NULL) throw exception_creation();
+	m_thread = thread;
+}
+
+bool simple_thread::isActive() const
+{
+	return m_thread != INVALID_HANDLE_VALUE;
+}
+
+void simple_thread::waitTillDone()
+{
+	close();
+}
+
+void simple_thread::close()
+{
+	if (isActive()) 
+	{
+		WaitForSingleObject(m_thread, INFINITE);
+		CloseHandle(m_thread); 
+		m_thread = INVALID_HANDLE_VALUE;
+	}
+}
+
+unsigned simple_thread::entry()
+{
+	try {
+		threadProc();
+	} catch(...) {}
+	return 0;
+}
+
+unsigned CALLBACK simple_thread::g_entry(void* p_instance)
+{
+	return reinterpret_cast<simple_thread*>(p_instance)->entry();
+}
+
 void simple_thread_worker::threadProc()
 {
 	ULONGLONG last_tick = GetTickCount64();
 
 	while (WaitForSingleObject(simple_thread_pool::instance().exiting_, 0) == WAIT_TIMEOUT)
 	{
-		simple_thread_task * task = simple_thread_pool::instance().acquire_task();
+		if (WaitForSingleObject(simple_thread_pool::instance().have_task_, 1000) == WAIT_OBJECT_0)
+		{
+			simple_thread_task * task = simple_thread_pool::instance().acquire_task();
 
-		if (task)
-		{
-			task->run();
-			simple_thread_pool::instance().untrack(task);
-			last_tick = GetTickCount64();
-		}
-		else
-		{
-			if (GetTickCount64() - last_tick >= 10000)
+			if (task)
 			{
-				insync(simple_thread_pool::instance().cs_);
-				
-				if (simple_thread_pool::instance().is_queue_empty())
-				{
-					simple_thread_pool::instance().remove_worker_(this);
-					return;
-				}
+				task->run();
+				simple_thread_pool::instance().untrack(task);
+				last_tick = GetTickCount64();
+				continue;
+			}
+		}
+
+		if (GetTickCount64() - last_tick >= 10000)
+		{
+			insync(simple_thread_pool::instance().cs_);
+
+			if (simple_thread_pool::instance().is_queue_empty())
+			{
+				simple_thread_pool::instance().remove_worker_(this);
+				return;
 			}
 		}
 	}
@@ -38,8 +82,6 @@ void simple_thread_worker::threadProc()
 
 bool simple_thread_pool::enqueue(simple_thread_task * task)
 {
-	core_api::ensure_main_thread();
-
 	if (WaitForSingleObject(exiting_, 0) == WAIT_OBJECT_0)
 		return false;
 
@@ -66,22 +108,21 @@ bool simple_thread_pool::is_queue_empty()
 void simple_thread_pool::track(simple_thread_task * task)
 {
 	insync(cs_);
+	t_size prev_count = task_list_.get_count();
 	task_list_.add_item(task);
+
+	if (prev_count == 0)
+		SetEvent(have_task_);
 }
 
 void simple_thread_pool::untrack(simple_thread_task * task)
 {
 	insync(cs_);
+	task_list_.remove_item(task);
+	delete task;
 
-	if (core_api::is_main_thread())
-	{
-		untrack_(task);
-	}
-	else
-	{
-		static_api_ptr_t<main_thread_callback_manager>()->add_callback(
-			new service_impl_t<safe_untrack_callback>(task));
-	}
+	if (task_list_.get_count() == 0)
+		ResetEvent(have_task_);
 }
 
 void simple_thread_pool::join()
@@ -126,17 +167,8 @@ simple_thread_task * simple_thread_pool::acquire_task()
 	return NULL;
 }
 
-void simple_thread_pool::untrack_(simple_thread_task * task)
-{
-	core_api::ensure_main_thread();
-	insync(cs_);
-	task_list_.remove_item(task);
-	delete task;
-}
-
 void simple_thread_pool::add_worker_(simple_thread_worker * worker)
 {
-	core_api::ensure_main_thread();
 	insync(cs_);
 	InterlockedIncrement(&num_workers_);
 	ResetEvent(empty_worker_);
@@ -158,9 +190,9 @@ private:
 
 void simple_thread_pool::remove_worker_(simple_thread_worker * worker)
 {
-	insync(cs_);
 	InterlockedDecrement(&num_workers_);
-
+	insync(cs_);
+	
 	if (num_workers_ == 0)
 	{
 		SetEvent(empty_worker_);
