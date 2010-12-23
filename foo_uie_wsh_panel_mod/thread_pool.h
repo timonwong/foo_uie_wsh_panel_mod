@@ -74,6 +74,7 @@ public:
 	bool is_queue_empty();
 	void track(simple_thread_task * task);
 	void untrack(simple_thread_task * task);
+	void untrack_all();
 	// Should always called from the main thread
 	void join();
 	simple_thread_task * acquire_task();

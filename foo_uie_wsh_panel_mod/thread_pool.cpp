@@ -65,7 +65,7 @@ void simple_thread_worker::threadProc()
 			}
 		}
 
-		if (GetTickCount64() - last_tick >= 10000)
+		if (GetTickCount() - last_tick >= 10000)
 		{
 			insync(simple_thread_pool::instance().cs_);
 
@@ -108,10 +108,10 @@ bool simple_thread_pool::is_queue_empty()
 void simple_thread_pool::track(simple_thread_task * task)
 {
 	insync(cs_);
-	t_size prev_count = task_list_.get_count();
+	bool empty = is_queue_empty();
 	task_list_.add_item(task);
 
-	if (prev_count == 0)
+	if (empty)
 		SetEvent(have_task_);
 }
 
@@ -121,8 +121,20 @@ void simple_thread_pool::untrack(simple_thread_task * task)
 	task_list_.remove_item(task);
 	delete task;
 
-	if (task_list_.get_count() == 0)
+	if (is_queue_empty())
 		ResetEvent(have_task_);
+}
+
+void simple_thread_pool::untrack_all()
+{
+	insync(cs_);
+	for (t_task_list::iterator iter = task_list_.first(); iter.is_valid(); ++iter)
+	{
+		task_list_.remove(iter);
+		delete *iter;
+	}
+
+	ResetEvent(have_task_);
 }
 
 void simple_thread_pool::join()
@@ -145,11 +157,8 @@ void simple_thread_pool::join()
 		}
 	}
 
-	for (t_task_list::iterator iter = task_list_.first(); iter.is_valid(); ++iter)
-	{
-		task_list_.remove(iter);
-		delete *iter;
-	}
+	untrack_all();
+
 }
 
 simple_thread_task * simple_thread_pool::acquire_task()
@@ -161,10 +170,12 @@ simple_thread_task * simple_thread_pool::acquire_task()
 	if (iter.is_valid())
 	{
 		task_list_.remove(iter);
-		return *iter;
 	}
 
-	return NULL;
+	if (is_queue_empty())
+		ResetEvent(have_task_);
+
+	return iter.is_valid() ? *iter : NULL;
 }
 
 void simple_thread_pool::add_worker_(simple_thread_worker * worker)
@@ -194,9 +205,7 @@ void simple_thread_pool::remove_worker_(simple_thread_worker * worker)
 	insync(cs_);
 	
 	if (num_workers_ == 0)
-	{
 		SetEvent(empty_worker_);
-	}
 
 	static_api_ptr_t<main_thread_callback_manager>()->add_callback(
 		new service_impl_t<simple_thread_worker_remover>(worker));
