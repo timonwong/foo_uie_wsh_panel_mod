@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <MLang.h>
 #include "script_interface_impl.h"
 #include "helpers.h"
 #include "com_array.h"
@@ -3312,6 +3313,70 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
 
 		p->vt = VT_VARIANT | VT_ARRAY;
 		p->parray = helper.get_ptr();
+	}
+	else if (wcscmp(mode, L"chardet") == 0)
+	{
+		p->vt = VT_UI4;
+		p->ulVal = 0;
+
+		_COM_SMARTPTR_TYPEDEF(IMultiLanguage2, IID_IMultiLanguage2);
+		IMultiLanguage2Ptr lang;
+		HRESULT hr;
+		
+		hr = lang.CreateInstance(CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER);
+		// mlang is not working...
+		if (FAILED(hr)) return S_OK;
+
+		const int max_encodings = 5;
+		int encodings_count = max_encodings;
+		DetectEncodingInfo encodings[max_encodings];
+		pfc::string8_fast text;
+		int text_size = 0;
+
+		try
+		{
+			file_ptr io;
+			abort_callback_dummy abort;
+
+			filesystem::g_open_read(io, pfc::stringcvt::string_utf8_from_wide(path), abort);
+			io->read_string_raw(text, abort);
+			text_size = text.get_length();
+		}
+		catch (...)
+		{
+			return S_OK;
+		}
+
+		hr = lang->DetectInputCodepage(MLDETECTCP_NONE, 0, const_cast<char *>(text.get_ptr()), 
+			&text_size, encodings, &encodings_count);
+
+		if (FAILED(hr)) return S_OK;
+
+		// Find the best match
+		int max_confidence = -1, best_idx = -1;
+
+		for (int i = 0; i < encodings_count; ++i) 
+		{
+			// UTF8
+			if (encodings[i].nCodePage == 65001) 
+			{
+				best_idx = i;
+				break;
+			}
+
+			if (encodings[i].nConfidence > max_confidence) 
+			{
+				best_idx = i;
+				max_confidence = encodings[i].nConfidence;
+			}
+		}
+
+		if (best_idx != -1) 
+		{
+			p->ulVal = encodings[best_idx].nCodePage;
+		}
+
+		return S_OK;
 	}
 	else
 	{

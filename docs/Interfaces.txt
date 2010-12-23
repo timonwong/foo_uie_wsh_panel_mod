@@ -668,5 +668,6 @@ Methods:
 	//           arr[0] <= "D:\\Somedir\\" (always include backslash at the end)
 	//           arr[1] <= "Somefile"
 	//           arr[2] <= ".txt"
+	//   "chardet": Guess charset of a file, and return the codepage of it (it may not be accurate), returns 0 if any error occured.
 	VARIANT FileTest(path, mode);
 }
