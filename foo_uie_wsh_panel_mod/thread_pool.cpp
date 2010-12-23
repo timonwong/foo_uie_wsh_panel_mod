@@ -48,7 +48,7 @@ unsigned CALLBACK simple_thread::g_entry(void* p_instance)
 
 void simple_thread_worker::threadProc()
 {
-	ULONGLONG last_tick = GetTickCount64();
+	DWORD last_tick = GetTickCount();
 
 	while (WaitForSingleObject(simple_thread_pool::instance().exiting_, 0) == WAIT_TIMEOUT)
 	{
@@ -60,7 +60,7 @@ void simple_thread_worker::threadProc()
 			{
 				task->run();
 				simple_thread_pool::instance().untrack(task);
-				last_tick = GetTickCount64();
+				last_tick = GetTickCount();
 				continue;
 			}
 		}
