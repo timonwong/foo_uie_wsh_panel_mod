@@ -801,6 +801,7 @@ ScriptHost::~ScriptHost()
 	if (m_debug_application)
 	{
 		m_debug_application->Close();
+		m_debug_application.Release();
 	}
 }
 

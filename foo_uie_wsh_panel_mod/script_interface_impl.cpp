@@ -3372,18 +3372,12 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
 		}
 
 		if (best_idx != -1) 
-		{
 			p->ulVal = encodings[best_idx].nCodePage;
-		}
 
 		return S_OK;
 	}
-	else
-	{
-		return E_INVALIDARG;
-	}
-
-	return S_OK;
+		
+	return E_INVALIDARG;
 }
 
 //STDMETHODIMP WSHUtils::MapVirtualKey(UINT code, UINT maptype, UINT * p)

@@ -5,9 +5,10 @@
 #include "script_interface_impl.h"
 #include "config.h"
 #include "user_message.h"
+#include "global_cfg.h"
 
 
-// Smart Pointers
+// Smart pointers for Active Scripting
 _COM_SMARTPTR_TYPEDEF(IActiveScriptParse, IID_IActiveScriptParse);
 _COM_SMARTPTR_TYPEDEF(IProcessDebugManager, IID_IProcessDebugManager);
 _COM_SMARTPTR_TYPEDEF(IDebugDocumentHelper, IID_IDebugDocumentHelper);
@@ -162,7 +163,7 @@ private:
 	BEGIN_COM_QI_IMPL()
 		COM_QI_ENTRY_MULTI(IUnknown, IActiveScriptSite)
 		COM_QI_ENTRY(IActiveScriptSite)
-		COM_QI_ENTRY(IActiveScriptSiteDebug)
+		COM_QI_ENTRY_COND(IActiveScriptSiteDebug, g_cfg_debug_mode)
 		COM_QI_ENTRY(IActiveScriptSiteWindow)
 		COM_QI_ENTRY(IActiveScriptSiteInterruptPoll)
 	END_COM_QI_IMPL()
