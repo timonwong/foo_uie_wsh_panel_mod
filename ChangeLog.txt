@@ -1,6 +1,11 @@
+v1.4.1
+- FIX: Fix a bug that all modes in utils.FileTest() crashes except the "chardet".
+
+v1.4.1 Beta 7:
+- ADD: New mode "chardet" to utils.FileTest().
+
 v1.4.1 Beta 6:
 - ADD: Add fb.DuplicatePlaylist() method.
-- ADD: New mode "chardet" to utils.FileTest().
 - FIX: Fix possible bugs in GetAlbumArtAsync() and LoadImageAsync().
 
 v1.4.1 Beta 5:

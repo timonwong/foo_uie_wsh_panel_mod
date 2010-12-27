@@ -17,7 +17,8 @@ function on_mouse_rbtn_down(x, y, mask) {}
 
 // [1.0.4] New:
 // mask, see Flags.txt for more details
-// return true if you want to supress system context menu
+// return true if you want to supress the default context menu.
+// NOTE: {L-Win}+{L-Shift}+{Right Click} is reserved for poping up the default context menu.
 function on_mouse_rbtn_up(x, y, mask) {}
 
 // [1.1.8] New:
