@@ -3352,27 +3352,43 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
 
 		if (FAILED(hr)) return S_OK;
 
-		// Find the best match
-		int max_confidence = -1, best_idx = -1;
+		unsigned codepage = 0;
 
-		for (int i = 0; i < encodings_count; ++i) 
+		// MLang fine tunes
+		if (encodings_count > 1)
 		{
-			// UTF8
-			if (encodings[i].nCodePage == 65001) 
+			if (encodings[0].nCodePage == 1252)
 			{
-				best_idx = i;
-				break;
+				if (encodings_count == 2 && encodings[1].nCodePage == 850)
+					codepage = 0;
+				else
+					codepage =  encodings[encodings_count - 1].nCodePage;
 			}
-
-			if (encodings[i].nConfidence > max_confidence) 
+			else if (encodings[0].nCodePage > 950)
 			{
-				best_idx = i;
-				max_confidence = encodings[i].nConfidence;
+				// Find the best match
+				int max_confidence = 0;
+
+				for (int i = 0; i < encodings_count; ++i) 
+				{
+					if (encodings[i].nConfidence > max_confidence) 
+					{
+						max_confidence = encodings[i].nConfidence;
+						codepage = encodings[i].nCodePage;
+					}
+				}
 			}
 		}
+		else
+		{
+			codepage = encodings[0].nCodePage;
+		}
+		
+		// ASCII?
+		if (codepage == 20127)
+			codepage = 0;
 
-		if (best_idx != -1) 
-			p->ulVal = encodings[best_idx].nCodePage;
+		p->ulVal = codepage;
 	}
 	else
 	{
