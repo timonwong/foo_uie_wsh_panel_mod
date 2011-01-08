@@ -3353,35 +3353,76 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
 		if (FAILED(hr)) return S_OK;
 
 		unsigned codepage = 0;
+		bool findbest = false;
 
 		// MLang fine tunes
-		if (encodings_count > 1)
+		if (encodings_count == 2 && encodings[0].nCodePage == 1252)
 		{
-			if (encodings[0].nCodePage == 1252)
+			switch (encodings[1].nCodePage)
 			{
-				if (encodings_count == 2 && encodings[1].nCodePage == 850)
-					codepage = 0;
-				else
-					codepage =  encodings[encodings_count - 1].nCodePage;
-			}
-			else if (encodings[0].nCodePage > 950)
-			{
-				// Find the best match
-				int max_confidence = 0;
+			case 850:
+			case 65001:
+				codepage = 65001;
+				break;
 
-				for (int i = 0; i < encodings_count; ++i) 
+				// DBCS
+			case 932: // shift-jis
+			case 936: // gbk
+			case 949: // korean
+			case 950: // big5
 				{
-					if (encodings[i].nConfidence > max_confidence) 
+					// '¡¯', <= special char
+					// "ve" "d" "ll" "m" 't' 're'
+					bool fallback = true;
+					t_size index;
+
+					if (index = text.find_first("\x92") != pfc_infinite)
 					{
-						max_confidence = encodings[i].nConfidence;
-						codepage = encodings[i].nCodePage;
+						if (index < text.get_length() - 1) 
+						{
+							switch (text[index + 1])
+							{
+							case 'v':
+							case 'l':
+							case 'd':
+							case 'm':
+							case 't':
+							case 'r':
+							case ' ':
+								codepage = encodings[0].nCodePage;
+								fallback = false;
+								break;
+							}
+						}
 					}
+
+					if (fallback)
+						codepage = encodings[1].nCodePage;
 				}
+				break;
+
+			default:
+				findbest = true;
 			}
 		}
 		else
 		{
-			codepage = encodings[0].nCodePage;
+			findbest = true;
+		}
+
+		if (findbest)
+		{
+			// Find the best match
+			int max_confidence = 0;
+
+			for (int i = 0; i < encodings_count; ++i) 
+			{
+				if (encodings[i].nConfidence > max_confidence) 
+				{
+					max_confidence = encodings[i].nConfidence;
+					codepage = encodings[i].nCodePage;
+				}
+			}
 		}
 		
 		// ASCII?
