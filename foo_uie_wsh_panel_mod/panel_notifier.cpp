@@ -178,7 +178,10 @@ void my_play_callback::on_playback_pause(bool state)
 
 void my_play_callback::on_playback_edited(metadb_handle_ptr track)
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_EDITED, 0, 0);
+	simple_callback_data<metadb_handle_ptr> * on_playback_edited_data = new simple_callback_data<metadb_handle_ptr>(track);
+
+	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_PLAYBACK_EDITED, 
+		on_playback_edited_data);
 }
 
 void my_play_callback::on_playback_dynamic_info(const file_info& info)
@@ -238,4 +241,9 @@ void my_playlist_callback::on_items_added(t_size p_playlist,t_size p_start, cons
 void my_playlist_callback::on_items_removed(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count)
 {
 	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_REMOVED, p_playlist, p_new_count);
+}
+
+void my_playlist_callback::on_items_selection_change(t_size p_playlist,const bit_array & p_affected,const bit_array & p_state)
+{
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_SELECTION_CHANGE, 0, 0);
 }

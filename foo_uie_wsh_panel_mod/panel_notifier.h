@@ -170,7 +170,7 @@ class my_playlist_callback : public playlist_callback_static
 public:
 	virtual unsigned get_flags() 
 	{
-		return flag_on_items_added | flag_on_items_removed | flag_on_item_focus_change | 
+		return flag_on_items_added | flag_on_items_removed | flag_on_item_focus_change | flag_on_items_selection_change |
 			flag_on_playlist_activate | flag_on_playlist_created | flag_on_playlists_reorder |
 			flag_on_playlists_removed | flag_on_playlist_renamed | flag_on_playback_order_changed ; 
 	}
@@ -181,7 +181,8 @@ public:
 	virtual void on_items_removing(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
 	// impl
 	virtual void on_items_removed(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count);
-	virtual void on_items_selection_change(t_size p_playlist,const bit_array & p_affected,const bit_array & p_state) {}
+	// impl
+	virtual void on_items_selection_change(t_size p_playlist,const bit_array & p_affected,const bit_array & p_state);
 	// impl
 	virtual void on_item_focus_change(t_size p_playlist,t_size p_from,t_size p_to);
 	virtual void on_items_modified(t_size p_playlist,const bit_array & p_mask) {}

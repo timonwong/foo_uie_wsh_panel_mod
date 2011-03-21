@@ -123,8 +123,9 @@ function on_playback_seek(time) {}
 // state = true when paused, false when resumed
 function on_playback_pause(state) {}
 
+// [1.4.3] Updated:
 // Called when currently played file gets edited
-function on_playback_edited() {}
+function on_playback_edited(metadb) {}
 
 // Dynamic info (VBR bitrate etc) change
 function on_playback_dynamic_info() {}

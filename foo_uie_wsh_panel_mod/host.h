@@ -385,7 +385,7 @@ private:
 	void on_playback_stop(play_control::t_stop_reason reason);
 	void on_playback_seek(WPARAM wp);
 	void on_playback_pause(bool state);
-	void on_playback_edited();
+	void on_playback_edited(WPARAM wp);
 	void on_playback_dynamic_info();
 	void on_playback_dynamic_info_track();
 	void on_playback_time(WPARAM wp);
@@ -394,6 +394,7 @@ private:
 	// playlist_callback
 	void on_playlist_items_added(WPARAM wp);
 	void on_playlist_items_removed(WPARAM wp, LPARAM lp);
+	void on_playlist_items_selection_change();
 	void on_item_focus_change();
 	void on_playback_order_changed(t_size p_new_index);
 	void on_playlist_switch();

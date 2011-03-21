@@ -1931,7 +1931,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case CALLBACK_UWM_ON_PLAYBACK_EDITED:
-		on_playback_edited();
+		on_playback_edited(wp);
 		return 0;
 
 	case CALLBACK_UWM_ON_PLAYBACK_DYNAMIC_INFO:
@@ -1973,6 +1973,9 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	case CALLBACK_UWM_ON_PLAYLIST_ITEMS_REMOVED:
 		on_playlist_items_removed(wp, lp);
 		return 0;
+
+	case CALLBACK_UWM_ON_PLAYLIST_ITEMS_SELECTION_CHANGE:
+		on_playlist_items_selection_change();
 	}
 
 	return uDefWindowProc(hwnd, msg, wp, lp);
@@ -2427,7 +2430,6 @@ void wsh_panel_window::on_playback_new_track(WPARAM wp)
 	TRACK_FUNCTION();
 
 	simple_callback_data_scope_releaser<simple_callback_data<metadb_handle_ptr> > data(wp);
-
 	VARIANTARG args[1];
 	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
 	
@@ -2474,11 +2476,23 @@ void wsh_panel_window::on_playback_pause(bool state)
 	script_invoke_v(L"on_playback_pause", args, _countof(args));
 }
 
-void wsh_panel_window::on_playback_edited()
+void wsh_panel_window::on_playback_edited(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
+	simple_callback_data_scope_releaser<simple_callback_data<metadb_handle_ptr> > data(wp);
+	FbMetadbHandle * handle = new com_object_impl_t<FbMetadbHandle>(data->m_item);
+	VARIANTARG args[1];
+	
+	args[0].vt = VT_DISPATCH;
+	args[0].pdispVal = handle;
+
 	script_invoke_v(L"on_playback_edited");
+	
+	if (handle)
+	{
+		handle->Release();
+	}
 }
 
 void wsh_panel_window::on_playback_dynamic_info()
@@ -2573,6 +2587,13 @@ void wsh_panel_window::on_playlist_items_removed(WPARAM wp, LPARAM lp)
 	args[1].vt = VT_UI4;
 	args[1].ulVal = wp;
 	script_invoke_v(L"on_playlist_items_removed", args, _countof(args));
+}
+
+void wsh_panel_window::on_playlist_items_selection_change()
+{
+	TRACK_FUNCTION();
+
+	script_invoke_v(L"on_playlist_items_selection_change");
 }
 
 void wsh_panel_window::on_changed_sorted(WPARAM wp)

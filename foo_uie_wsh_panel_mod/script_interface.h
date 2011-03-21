@@ -461,7 +461,7 @@ __interface IFbTooltip: IDisposable
 __interface IThemeManager: IDisposable
 {
 	STDMETHOD(SetPartAndStateID)(int partid, int stateid);
-	STDMETHOD(IsThemePartDefined)(int partid, int stateid, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(IsThemePartDefined)(int partid, [defaultvalue(0)] int stateid, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(DrawThemeBackground)(IGdiGraphics * gr, int x, int y, int w, int h, [defaultvalue(0)] int clip_x, [defaultvalue(0)] int clip_y, [defaultvalue(0)] int clip_w, [defaultvalue(0)] int clip_h);
 	// Vista+
 	//STDMETHOD(DrawThemeTextEx)(IGdiGraphics * gr, BSTR text, int x, int y, int w, int h, [defaultvalue(0)] DWORD format, [out,retval] VARIANT * p);

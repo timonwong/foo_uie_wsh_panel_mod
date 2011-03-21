@@ -519,7 +519,6 @@ class WSHUtils : public IDispatchImpl3<IWSHUtils>
 {
 protected:
 	WSHUtils() {}
-
 	virtual ~WSHUtils() {}
 
 public:
