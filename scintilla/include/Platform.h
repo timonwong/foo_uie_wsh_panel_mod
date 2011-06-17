@@ -257,8 +257,8 @@ class Palette {
 	int allocatedLen;
 #endif
 	// Private so Palette objects can not be copied
-	Palette(const Palette &) {}
-	Palette &operator=(const Palette &) { return *this; }
+	Palette(const Palette &);
+	Palette &operator=(const Palette &);
 public:
 #if PLAT_WIN
 	void *hpal;
@@ -290,8 +290,8 @@ protected:
 	int ascent;
 #endif
 	// Private so Font objects can not be copied
-	Font(const Font &) {}
-	Font &operator=(const Font &) { fid=0; return *this; }
+	Font(const Font &);
+	Font &operator=(const Font &);
 public:
 	Font();
 	virtual ~Font();
@@ -304,7 +304,7 @@ public:
 	// Alias another font - caller guarantees not to Release
 	void SetID(FontID fid_) { fid = fid_; }
 	friend class Surface;
-        friend class SurfaceImpl;
+	friend class SurfaceImpl;
 };
 
 /**
@@ -413,8 +413,8 @@ public:
 	void SetTitle(const char *s);
 	PRectangle GetMonitorRect(Point pt);
 #if PLAT_MACOSX
-	void SetWindow(void *ref) { windowRef = ref; };
-	void SetControl(void *_control) { control = _control; };
+	void SetWindow(void *ref) { windowRef = ref; }
+	void SetControl(void *_control) { control = _control; }
 #endif
 private:
 	Cursor cursorLast;

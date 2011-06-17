@@ -2,7 +2,7 @@
 /** @file Document.h
  ** Text document that handles notifications, DBCS, styling, words and end of line.
  **/
-// Copyright 1998-2003 by Neil Hodgson <neilh@scintilla.org>
+// Copyright 1998-2011 by Neil Hodgson <neilh@scintilla.org>
 // The License.txt file describes the conditions under which this software may be distributed.
 
 #ifndef DOCUMENT_H
@@ -113,6 +113,47 @@ struct StyledText {
 	size_t StyleAt(size_t i) const {
 		return multipleStyles ? styles[i] : style;
 	}
+};
+
+class HighlightDelimiter {
+public:
+	HighlightDelimiter() {
+		beginFoldBlock = -1;
+		endFoldBlock = -1;
+		beginMarginCorrectlyDrawnZone = -1;
+		endMarginCorrectlyDrawnZone = -1;
+		isEnabled = false;
+	}
+
+	bool NeedsDrawing(int line) {
+		return isEnabled && (line <= beginMarginCorrectlyDrawnZone || endMarginCorrectlyDrawnZone <= line);
+	}
+
+	bool isCurrentBlockHighlight(int line) {
+		return isEnabled && beginFoldBlock != -1 && beginFoldBlock <= line && line <= endFoldBlock;
+	}
+
+	bool isHeadBlockFold(int line) {
+		return beginFoldBlock == line && line < endFoldBlock;
+	}
+
+	bool isBodyBlockFold(int line) {
+		return beginFoldBlock != -1 && beginFoldBlock < line && line < endFoldBlock;
+	}
+
+	bool isTailBlockFold(int line) {
+		return beginFoldBlock != -1 && beginFoldBlock < line && line == endFoldBlock;
+	}
+
+	// beginFoldBlock : Begin of current fold block.
+	// endStartBlock : End of current fold block.
+	// beginMarginCorrectlyDrawnZone : Begin of zone where margin is correctly drawn.
+	// endMarginCorrectlyDrawnZone : End of zone where margin is correctly drawn.
+	int beginFoldBlock;
+	int endFoldBlock;
+	int beginMarginCorrectlyDrawnZone;
+	int endMarginCorrectlyDrawnZone;
+	bool isEnabled;
 };
 
 class CaseFolder {
@@ -228,10 +269,13 @@ public:
 	int ClampPositionIntoDocument(int pos);
 	bool IsCrLf(int pos);
 	int LenChar(int pos);
-	bool InGoodUTF8(int pos, int &start, int &end);
+	bool InGoodUTF8(int pos, int &start, int &end) const;
 	int MovePositionOutsideChar(int pos, int moveDir, bool checkLineEnd=true);
+	int NextPosition(int pos, int moveDir) const;
+	bool NextCharacter(int &pos, int moveDir);	// Returns true if pos changed
 	int SCI_METHOD CodePage() const;
 	bool SCI_METHOD IsDBCSLeadByte(char ch) const;
+	int SafeSegment(const char *text, int length, int lengthSegment);
 
 	// Gateways to modifying document
 	void ModifiedAt(int pos);
@@ -252,9 +296,9 @@ public:
 	void AddUndoAction(int token, bool mayCoalesce) { cb.AddUndoAction(token, mayCoalesce); }
 	void SetSavePoint();
 	bool IsSavePoint() { return cb.IsSavePoint(); }
-	const char *BufferPointer() { return cb.BufferPointer(); }
+	const char * SCI_METHOD BufferPointer() { return cb.BufferPointer(); }
 
-	int GetLineIndentation(int line);
+	int SCI_METHOD GetLineIndentation(int line);
 	void SetLineIndentation(int line, int indent);
 	int GetLineIndentPosition(int line) const;
 	int GetColumn(int position);
@@ -276,6 +320,9 @@ public:
 		cb.GetCharRange(buffer, position, lengthRetrieve);
 	}
 	char SCI_METHOD StyleAt(int position) const { return cb.StyleAt(position); }
+	void GetStyleRange(unsigned char *buffer, int position, int lengthRetrieve) const {
+		cb.GetStyleRange(buffer, position, lengthRetrieve);
+	}
 	int GetMark(int line);
 	int AddMark(int line, int markerNum);
 	void AddMarkSet(int line, int valueSet);
@@ -294,6 +341,7 @@ public:
 	void ClearLevels();
 	int GetLastChild(int lineParent, int level=-1);
 	int GetFoldParent(int line);
+	void GetHighlightDelimiters(HighlightDelimiter &hDelimiter, int line, int topLine, int bottomLine);
 
 	void Indent(bool forwards);
 	int ExtendWordSelect(int pos, int delta, bool onlyWordCharacters=false);
@@ -352,6 +400,7 @@ public:
 	const WatcherWithUserData *GetWatchers() const { return watchers; }
 	int GetLenWatchers() const { return lenWatchers; }
 
+	CharClassify::cc WordCharClass(unsigned char ch);
 	bool IsWordPartSeparator(char ch);
 	int WordPartLeft(int pos);
 	int WordPartRight(int pos);
@@ -363,7 +412,6 @@ public:
 	int BraceMatch(int position, int maxReStyle);
 
 private:
-	CharClassify::cc WordCharClass(unsigned char ch);
 	bool IsWordStartAt(int pos);
 	bool IsWordEndAt(int pos);
 	bool IsWordAt(int start, int end);

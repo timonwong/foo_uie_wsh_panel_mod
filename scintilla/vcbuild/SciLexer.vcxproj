@@ -85,6 +85,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\../bin/SciLexer.bsc</OutputFile>
     </Bscmake>
+    <Lib>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -120,6 +123,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\../bin/SciLexer.bsc</OutputFile>
     </Bscmake>
+    <Lib>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\lexlib\Accessor.cxx">

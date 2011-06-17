@@ -108,14 +108,14 @@ static inline bool IsASpace(unsigned int ch)
 	return (ch == ' ') || ((ch >= 0x09) && (ch <= 0x0d));
 }
 
-static bool IsBraceChar(char ch)
+static bool IsBraceChar(int ch)
 {
 	return ch == '[' || ch == ']' || ch == '(' || ch == ')' || ch == '{' || ch == '}';
 }
 
-static bool IsIdentifierChar(char ch)
+static bool IsIdentifierChar(int ch)
 {
-	return (isalnum(ch) || ch == '_');
+	return __iswcsym(ch);
 }
 
 struct StringComparePartialNC
@@ -931,7 +931,23 @@ void CScriptEditorCtrl::Init()
 	SetModEventMask(SC_MOD_INSERTTEXT | SC_MOD_DELETETEXT | SC_PERFORMED_UNDO | SC_PERFORMED_REDO);
 	UsePopUp(true);
 
-	// Keys
+    // Disable Ctrl + some char
+    const int ctrlcode[22] =  {'Q', 'W', 'E', 'R', 'I', 'O', 'P', 'S', 'D', 'F',
+        'G', 'H', 'J', 'K', 'L', 'B', 'N', 'M', 186, 187, 226
+    };
+
+    for (int i = 0; i < _countof(ctrlcode); ++i)
+    {
+        ClearCmdKey(MAKELONG(ctrlcode[i], SCMOD_CTRL));
+    }
+
+    // Disable Ctrl+Shift+some char
+    for (int i = 48; i < 122; ++i)
+    {
+        ClearCmdKey(MAKELONG(i, SCMOD_CTRL|SCMOD_SHIFT));
+    }
+
+	// Shortcut keys
 	AssignCmdKey(MAKELONG(SCK_NEXT, SCMOD_CTRL), SCI_PARADOWN);
 	AssignCmdKey(MAKELONG(SCK_PRIOR, SCMOD_CTRL), SCI_PARAUP);
 	AssignCmdKey(MAKELONG(SCK_NEXT, (SCMOD_CTRL | SCMOD_SHIFT)), SCI_PARADOWNEXTEND);
@@ -940,12 +956,6 @@ void CScriptEditorCtrl::Init()
 	AssignCmdKey(MAKELONG(SCK_END, SCMOD_NORM), SCI_LINEENDWRAP);
 	AssignCmdKey(MAKELONG(SCK_HOME, SCMOD_SHIFT), SCI_VCHOMEWRAPEXTEND);
 	AssignCmdKey(MAKELONG(SCK_END, SCMOD_SHIFT), SCI_LINEENDWRAPEXTEND);
-
-	// Clear Some CMD KEY
-	AssignCmdKey(MAKELONG('F', SCMOD_CTRL), SCI_NULL);
-	AssignCmdKey(MAKELONG('G', SCMOD_CTRL), SCI_NULL);
-	AssignCmdKey(MAKELONG('S', SCMOD_CTRL), SCI_NULL);
-	AssignCmdKey(MAKELONG('H', SCMOD_CTRL), SCI_NULL);
 
 	// Tabs and indentation
 	SetUseTabs(false); 
@@ -1394,7 +1404,7 @@ LRESULT CScriptEditorCtrl::OnUpdateUI(LPNMHDR pnmn)
 LRESULT CScriptEditorCtrl::OnCharAdded(LPNMHDR pnmh)
 {
 	SCNotification * notification = (SCNotification *)pnmh;
-	char ch = notification->ch;
+	int ch = notification->ch;
 	Sci_CharacterRange crange = GetSelection();
 	int selStart = crange.cpMin;
 	int selEnd = crange.cpMax;
@@ -1434,11 +1444,11 @@ LRESULT CScriptEditorCtrl::OnCharAdded(LPNMHDR pnmh)
 			{
 				m_nBraceCount--;
 			} 
-			else if (!isalnum(ch) && (ch != '_'))
+			else if (!IsIdentifierChar(ch))
 			{
 				AutoCCancel();
 
-				if (IsIdentifierChar(ch) || ch == '.')
+				if (ch == '.')
 					StartAutoComplete();
 			} 
 		} 
@@ -1454,7 +1464,7 @@ LRESULT CScriptEditorCtrl::OnCharAdded(LPNMHDR pnmh)
 				AutomaticIndentation(ch);
 				
 				if (IsIdentifierChar(ch) || ch == '.')
-					StartAutoComplete();
+                    StartAutoComplete();
 			}
 		}
 	}

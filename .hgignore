@@ -39,6 +39,7 @@ hgrev.h
 dist/
 ipch/
 docs/*.html
+_*/
 
 # switch to regexp syntax
 syntax: regexp
