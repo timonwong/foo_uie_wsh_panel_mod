@@ -6,14 +6,13 @@
 //-- IUnknown ---
 #define BEGIN_COM_QI_IMPL() \
 	public:\
-		STDMETHOD(QueryInterface)(REFIID riid, void** pp) { \
-			if (!pp) return E_INVALIDARG; \
-			IUnknown * temp = NULL;
+		STDMETHOD(QueryInterface)(REFIID riid, void** ppv) { \
+			if (!ppv) return E_INVALIDARG; \
 
 // C2594: ambiguous conversions
 #define COM_QI_ENTRY_MULTI(Ibase, Iimpl) \
 		if (riid == __uuidof(Ibase)) { \
-			temp = static_cast<Ibase *>(static_cast<Iimpl *>(this)); \
+			*ppv = static_cast<Ibase *>(static_cast<Iimpl *>(this)); \
 			goto qi_entry_done; \
 		}
 
@@ -24,11 +23,10 @@
 			if (cond) COM_QI_ENTRY_MULTI(Iimpl, Iimpl);
 
 #define END_COM_QI_IMPL() \
-			*pp = NULL; \
+			*ppv = NULL; \
 			return E_NOINTERFACE; \
 		qi_entry_done: \
-			if (temp) temp->AddRef(); \
-			*pp = temp; \
+			reinterpret_cast<IUnknown*>(*ppv)->AddRef(); \
 			return S_OK; \
 		} \
 	private:
@@ -139,56 +137,8 @@ public:
 	}
 };
 
-class new_delete_tracer
-{
-#ifdef DEBUG
-public:
-	void * operator new(size_t size)
-	{
-		void * p = ::operator new(size);
-		trace_(p);
-		return p;
-	}
-
-	void operator delete(void * p)
-	{
-		untrace_(p);
-		return ::operator delete(p);
-	}
-
-private:
-	typedef pfc::map_t<void *, unsigned> ptr_list_t;
-
-	static void trace_(void * p)
-	{
-		bool isnew;
-		unsigned & refcount = ptr_list_.find_or_add_ex(p, isnew);
-
-		if (isnew)
-			refcount = 1;
-		else
-			++refcount;
-	}
-
-	static void untrace_(void * p)
-	{
-		ptr_list_t::iterator iter = ptr_list_.find(p);
-		pfc::dynamic_assert(iter.is_valid());
-		unsigned & ref_count = iter->m_value;
-		pfc::dynamic_assert(ref_count > 0);
-		--ref_count;
-	}
-
-	static ptr_list_t ptr_list_;
-#endif
-};
-
-#ifdef DEBUG
-__declspec(selectany) new_delete_tracer::ptr_list_t new_delete_tracer::ptr_list_;
-#endif
-
 template <typename _Base, bool _AddRef = true>
-class com_object_impl_t : public _Base, public new_delete_tracer
+class com_object_impl_t :  public _Base
 {
 private:
 	volatile LONG m_dwRef;

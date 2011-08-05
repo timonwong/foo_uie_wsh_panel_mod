@@ -166,7 +166,7 @@ Methods:
 	boolean RenderStringPoint(g, str, font, x, y[, flags]);
 	boolean RenderStringRect(g, str, font, x, y, w, h[, flags]);
 	// [1.3.0]: New
-	// Only in pngmode, the image should be an transparent image created by gdi.CreateImage().
+	// Only in pngmode, the image should be a transparent image created by gdi.CreateImage().
 	void SetPngImage(IGdiBitmap);
 }
 
@@ -615,7 +615,7 @@ Methods:
 	IGdiBitmap GetAlbumArt(rawpath, art_id = 0, need_stub = true);
 	// [1.3.0] New;
 	// Use this instead of GetAlbumArt() to retrieve album art data (support fb2k 1.0 search patterns).
-	IGdiBitmap GetAlbumArtV2(rawpath, art_id = 0, need_stub = true);
+	IGdiBitmap GetAlbumArtV2(metadb, art_id = 0, need_stub = true);
 	// [1.1.7] New:
 	// Only read embedded album art
 	IGdiBitmap GetAlbumArtEmbedded(rawpath, art_id = 0);

@@ -137,9 +137,4 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\win32\Margin.cur">
-      <Filter>Resource Files</Filter>
-    </None>
-  </ItemGroup>
 </Project>

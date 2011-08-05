@@ -349,7 +349,7 @@ __interface IFbProfiler: IDispatch
 __interface IFbUtils: IDispatch
 {
 	[vararg] STDMETHOD(trace)([satype(VARIANT)] SAFEARRAY * p);
-	STDMETHOD(ShowPopupMessage)(BSTR msg, [defaultvalue("WSH Panel Mod")] BSTR title, [defaultvalue(0),range(0,2)] int iconid);
+	STDMETHOD(ShowPopupMessage)(BSTR msg, [defaultvalue(WSPM_NAME)] BSTR title, [defaultvalue(0),range(0,2)] int iconid);
 	STDMETHOD(CreateProfiler)([defaultvalue("")] BSTR name, [out,retval] IFbProfiler ** pp);
 	STDMETHOD(TitleFormat)(BSTR expression, [out,retval] IFbTitleFormat** pp);
 	STDMETHOD(GetNowPlaying)([out,retval] IFbMetadbHandle** pp);

@@ -171,14 +171,13 @@ STDMETHODIMP GdiBitmap::ApplyMask(IGdiBitmap * mask, VARIANT_BOOL * p)
 	if (m_ptr->LockBits(&rect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpdata_dst) != Gdiplus::Ok)
 	{
 		bitmap->UnlockBits(&bmpdata_src);
-
 		return S_OK;
 	}
 
-	register t_uint32 * src = reinterpret_cast<t_uint32 *>(bmpdata_src.Scan0);
-	register t_uint32 * dst = reinterpret_cast<t_uint32 *>(bmpdata_dst.Scan0);
+	t_uint32 * src = reinterpret_cast<t_uint32 *>(bmpdata_src.Scan0);
+	t_uint32 * dst = reinterpret_cast<t_uint32 *>(bmpdata_dst.Scan0);
 	const t_uint32 * src_end = src + rect.Width * rect.Height;
-	register t_uint32 alpha;
+	t_uint32 alpha;
 
 	while (src < src_end)
 	{

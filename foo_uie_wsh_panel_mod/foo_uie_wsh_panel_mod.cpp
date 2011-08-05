@@ -29,7 +29,7 @@ namespace
 		"Copyright (c) 2001-2003 Bjarke Viksoe\n\n\n"
 	);
 
-	VALIDATE_COMPONENT_FILENAME("foo_uie_wsh_panel_mod.dll");
+	VALIDATE_COMPONENT_FILENAME(WSPM_DLL_NAME);
 
 	// Is there anything not correctly loaded?
 	enum t_load_status_error

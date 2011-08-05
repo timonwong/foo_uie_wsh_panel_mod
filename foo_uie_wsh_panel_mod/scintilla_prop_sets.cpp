@@ -26,10 +26,7 @@ const t_prop_set_init_table prop_sets_init_table[] =
 	{0, 0},
 };
 
-// {3E56779F-2884-4f98-9A61-992F664999D0}
-static const GUID guid_prop_sets = 
-{ 0x3e56779f, 0x2884, 0x4f98, { 0x9a, 0x61, 0x99, 0x2f, 0x66, 0x49, 0x99, 0xd0 } };
-cfg_sci_prop_sets g_sci_prop_sets(guid_prop_sets, prop_sets_init_table);
+cfg_sci_prop_sets g_sci_prop_sets(g_guid_prop_sets, prop_sets_init_table);
 
 
 void cfg_sci_prop_sets::get_data_raw(stream_writer * p_stream, abort_callback & p_abort)

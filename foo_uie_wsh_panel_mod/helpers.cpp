@@ -265,7 +265,7 @@ namespace helpers
 			wrapped_item item = { SysAllocStringLen(text, calc_length), get_text_width(hdc, text, calc_length) };
 			out.add_item(item);
 
-			if (calc_length < (int)len)
+			if ((calc_length != 0) && (calc_length < (int)len))
 			{
 				estimate_line_wrap(hdc, text + calc_length, len - calc_length, width, out);
 			}

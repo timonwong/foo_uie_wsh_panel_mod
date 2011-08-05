@@ -65,4 +65,4 @@
 #undef SubclassWindow
 #endif
 
-#define WSPM_NAME "WSH Panel Mod"
+#include "component_defines.h"

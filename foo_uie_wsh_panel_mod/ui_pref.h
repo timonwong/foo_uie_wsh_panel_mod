@@ -66,11 +66,7 @@ public:
 
 	GUID get_guid()
 	{
-		// {1624E0E0-049E-4927-B4DD-2DAF7FC2415F}
-		static const GUID guid = 
-		{ 0x1624e0e0, 0x49e, 0x4927, { 0xb4, 0xdd, 0x2d, 0xaf, 0x7f, 0xc2, 0x41, 0x5f } };
-
-		return guid;
+		return g_ui_pref_window_guid;
 	}
 	
 	GUID get_parent_guid()

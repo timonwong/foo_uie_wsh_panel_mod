@@ -777,7 +777,7 @@ ScriptHost::ScriptHost(HostComm * host)
 
 		if (SUCCEEDED(hr)) hr = m_debug_manager.CreateInstance(CLSID_ProcessDebugManager, NULL, CLSCTX_INPROC_SERVER);
 		if (SUCCEEDED(hr)) hr = m_debug_manager->CreateApplication(&m_debug_application);
-		if (SUCCEEDED(hr)) hr = m_debug_application->SetName(L"WSH Panel Mod");
+        if (SUCCEEDED(hr)) hr = m_debug_application->SetName( _T(WSPM_NAME) );
 		if (SUCCEEDED(hr)) hr = m_debug_manager->AddApplication(m_debug_application, &m_app_cookie);
 
 		if (FAILED(hr))
@@ -1075,13 +1075,13 @@ void ScriptHost::Finalize()
 	if (m_script_engine && m_engine_inited)
 	{
 		// Call GC explicitly 
-		IActiveScriptGarbageCollector * gc = NULL;
-
-		if (SUCCEEDED(m_script_engine->QueryInterface(IID_IActiveScriptGarbageCollector, (void **)&gc)))
-		{
-			gc->CollectGarbage(SCRIPTGCTYPE_EXHAUSTIVE);
-			gc->Release();
-		}
+ 		IActiveScriptGarbageCollector * gc = NULL;
+ 
+ 		if (SUCCEEDED(m_script_engine->QueryInterface(IID_IActiveScriptGarbageCollector, (void **)&gc)))
+ 		{
+ 			gc->CollectGarbage(SCRIPTGCTYPE_EXHAUSTIVE);
+ 			gc->Release();
+ 		}
 
 		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
 		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
@@ -2721,11 +2721,7 @@ void wsh_panel_window::on_drag_drop(LPARAM lp)
 
 const GUID& wsh_panel_window_cui::get_extension_guid() const
 {
-	// {75A7B642-786C-4f24-9B52-17D737DEA09A}
-	static const GUID ext_guid =
-	{ 0x75a7b642, 0x786c, 0x4f24, { 0x9b, 0x52, 0x17, 0xd7, 0x37, 0xde, 0xa0, 0x9a } };
-
-	return ext_guid;
+	return g_wsh_panel_window_extension_guid;
 }
 
 void wsh_panel_window_cui::get_name(pfc::string_base& out) const
@@ -2955,11 +2951,7 @@ pfc::string8 wsh_panel_window_dui::g_get_description()
 
 GUID wsh_panel_window_dui::g_get_guid()
 {
-	// {A290D430-E431-45c5-BF76-EF1130EF1CF5}
-	static const GUID guid = 
-	{ 0xa290d430, 0xe431, 0x45c5, { 0xbf, 0x76, 0xef, 0x11, 0x30, 0xef, 0x1c, 0xf5 } };
-
-	return guid;
+	return g_wsh_panel_window_dui_guid;
 }
 
 GUID wsh_panel_window_dui::get_guid()

@@ -61,6 +61,8 @@
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:\Develop\Library\wtl\Include;..\scintilla\include;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:\Develop\Library\wtl\Include;..\scintilla\include;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">F:\Develop\Library\wtl\Include;..\scintilla\include;$(IncludePath)</IncludePath>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">foo_uie_wsh_panel_mod</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">foo_uie_wsh_panel_mod</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -86,8 +88,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetPath) "%APPDATA%\foobar2000\user-components\foo_uie_wsh_panel_mod\"
-copy $(SolutionDir)extras\*.api "%APPDATA%\foobar2000\user-components\foo_uie_wsh_panel_mod\"
+      <Command>copy $(TargetPath) "F:\foobar2000\components\"
+copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -168,6 +170,7 @@ copy $(SolutionDir)extras\*.api "%APPDATA%\foobar2000\user-components\foo_uie_ws
     <ClInclude Include="dbgtrace.h" />
     <ClInclude Include="delay_loader.h" />
     <ClInclude Include="global_cfg.h" />
+    <ClInclude Include="component_defines.h" />
     <ClInclude Include="hgrev.h" />
     <ClInclude Include="host.h" />
     <ClInclude Include="panel_notifier.h" />

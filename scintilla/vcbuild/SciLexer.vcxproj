@@ -351,9 +351,6 @@
     <ClInclude Include="..\include\Config.h" />
     <ClInclude Include="..\include\Platform.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\win32\Margin.cur" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
