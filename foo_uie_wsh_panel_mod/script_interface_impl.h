@@ -20,7 +20,7 @@ protected:
 
 	GdiObj<T, T2>(T2* p) : m_ptr(p)
 	{
-	}
+    }
 
 	virtual ~GdiObj<T, T2>() { }
 

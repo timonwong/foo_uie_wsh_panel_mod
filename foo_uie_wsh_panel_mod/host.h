@@ -233,6 +233,7 @@ public:
 	HRESULT InvokeV(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);
 	HRESULT GenerateSourceContext(const wchar_t * path, const wchar_t * code, DWORD & source_context);
 	void ReportError(IActiveScriptError* err);
+    void CallDebugManager(IActiveScriptError* err, _bstr_t &name, ULONG line, _bstr_t &sourceline);
 };
 
 class PanelDropTarget : public IDropTarget

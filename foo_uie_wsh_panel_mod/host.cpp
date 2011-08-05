@@ -1218,93 +1218,32 @@ void ScriptHost::ReportError(IActiveScriptError* err)
 		sourceline = L"<source text only available at compile time>";
 	}
 
-	// HACK: Additional Info
-	if (m_debug_manager)
-	{
-		_COM_SMARTPTR_TYPEDEF(IActiveScriptErrorDebug, IID_IActiveScriptErrorDebug);
-		_COM_SMARTPTR_TYPEDEF(IDebugDocumentContext, IID_IDebugDocumentContext);
-		_COM_SMARTPTR_TYPEDEF(IDebugDocumentText, IID_IDebugDocumentText);
-		_COM_SMARTPTR_TYPEDEF(IDebugDocument, IID_IDebugDocument);
-		
-
-		HRESULT hr;
-		IActiveScriptErrorDebugPtr  pErrorDebug;
-		IDebugDocumentContextPtr    context;
-		IDebugDocumentTextPtr       text;
-		IDebugDocumentPtr           document;
-
-		hr = err->QueryInterface(IID_IActiveScriptErrorDebug, (void **)&pErrorDebug);
-		
-		if (SUCCEEDED(hr)) hr = pErrorDebug ? pErrorDebug->GetDocumentContext(&context) : E_FAIL;
-		if (SUCCEEDED(hr)) hr = context ? context->GetDocument(&document) : E_FAIL;
-		if (SUCCEEDED(hr)) hr = document ? document->QueryInterface(IID_IDebugDocumentText, (void **)&text) : E_FAIL;
-		
-		if (SUCCEEDED(hr))
-		{
-			ULONG charPosLine = 0;
-			ULONG linePos = 0;
-			ULONG lines = 0;
-			ULONG numChars = 0;
-			ULONG charsToRead;
-			// Must be set to 0 first
-			ULONG charsRead = 0;
-
-			text->GetName(DOCUMENTNAMETYPE_TITLE, name.GetAddress());
-
-			text->GetPositionOfLine(line, &charPosLine);
-			text->GetSize(&lines, &numChars);
-
-			if (lines > line)
-			{
-				// Has next line?
-				ULONG charPosNextLine;
-
-				text->GetPositionOfLine(line + 1, &charPosNextLine);
-				charsToRead = charPosNextLine - 1 - charPosLine;
-			}
-			else
-			{
-				// Read to the end of current line.
-				charsToRead = numChars - charPosLine;
-			}
-			
-			pfc::array_t<wchar_t> code;
-			code.set_size(charsToRead + 1);
-			text->GetText(charPosLine, code.get_ptr(), NULL, &charsRead, charsToRead);
-			code[charsRead] = 0;
-			--charsRead;
-
-			while (charsRead && (code[charsRead] == '\r' || code[charsRead] == '\n'))
-			{
-				code[charsRead] = 0;
-				--charsRead;
-			}
-
-			if (*code.get_ptr())
-				sourceline = code.get_ptr();
-		}
-	}	
+	// HACK: Try to retrieve additional infomation from Debug Manger Interface
+    CallDebugManager(err, name, line, sourceline);
 
 	if (SUCCEEDED(err->GetExceptionInfo(&excep)))
 	{
 		// Do a deferred fill-in if necessary
 		if (excep.pfnDeferredFillIn)
 			(*excep.pfnDeferredFillIn)(&excep);
-
-		//StringCbPrintf(buf, sizeof(buf), _T(WSPM_NAME) _T(" (%s): %s:\n%s\nLn: %d, Col: %d\n%s\n%s\n"),
-		//	pfc::stringcvt::string_wide_from_utf8(m_host->GetScriptInfo().build_info_string()).get_ptr(), 
-		//	excep.bstrSource, excep.bstrDescription, line + 1, charpos + 1, 
-		//	static_cast<const wchar_t *>(sourceline),
-		//	static_cast<const wchar_t *>(name));
 		
 		using namespace pfc::stringcvt;
 		pfc::string_formatter formatter;
 		formatter << WSPM_NAME << " (" << m_host->GetScriptInfo().build_info_string().get_ptr() << "): ";
-		formatter << string_utf8_from_wide(excep.bstrSource) << ":\n";
-		formatter << string_utf8_from_wide(excep.bstrDescription) << "\n";
-		formatter << "Ln: " << (t_uint32)(line + 1) << ", Col: " << (t_uint32)(charpos + 1) << "\n";
-		formatter << string_utf8_from_wide(sourceline);
-		if (name.length() > 0) formatter << "\n(at): " << name;
+
+        if (excep.bstrSource && excep.bstrDescription) 
+        {
+            formatter << string_utf8_from_wide(excep.bstrSource) << ":\n";
+            formatter << string_utf8_from_wide(excep.bstrDescription) << "\n";
+            formatter << "Ln: " << (t_uint32)(line + 1) << ", Col: " << (t_uint32)(charpos + 1) << "\n";
+            formatter << string_utf8_from_wide(sourceline);
+            if (name.length() > 0) 
+                formatter << "\n(at): " << name;
+        }
+        else
+        {
+            formatter << "Unknown error code: 0x" << pfc::format_hex_lowercase((unsigned)excep.scode);
+        }
 
 		SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, (LPARAM)formatter.get_ptr());
 
@@ -1312,6 +1251,74 @@ void ScriptHost::ReportError(IActiveScriptError* err)
 		if (excep.bstrDescription) SysFreeString(excep.bstrDescription);
 		if (excep.bstrHelpFile)    SysFreeString(excep.bstrHelpFile);
 	}
+}
+
+void ScriptHost::CallDebugManager(IActiveScriptError* err, _bstr_t &name, ULONG line, _bstr_t &sourceline)
+{
+    if (m_debug_manager)
+    {
+        _COM_SMARTPTR_TYPEDEF(IActiveScriptErrorDebug, IID_IActiveScriptErrorDebug);
+        _COM_SMARTPTR_TYPEDEF(IDebugDocumentContext, IID_IDebugDocumentContext);
+        _COM_SMARTPTR_TYPEDEF(IDebugDocumentText, IID_IDebugDocumentText);
+        _COM_SMARTPTR_TYPEDEF(IDebugDocument, IID_IDebugDocument);
+
+        HRESULT hr;
+        IActiveScriptErrorDebugPtr  pErrorDebug;
+        IDebugDocumentContextPtr    context;
+        IDebugDocumentTextPtr       text;
+        IDebugDocumentPtr           document;
+
+        hr = err->QueryInterface(IID_IActiveScriptErrorDebug, (void **)&pErrorDebug);
+
+        if (SUCCEEDED(hr)) hr = pErrorDebug ? pErrorDebug->GetDocumentContext(&context) : E_FAIL;
+        if (SUCCEEDED(hr)) hr = context ? context->GetDocument(&document) : E_FAIL;
+        if (SUCCEEDED(hr)) hr = document ? document->QueryInterface(IID_IDebugDocumentText, (void **)&text) : E_FAIL;
+
+        if (SUCCEEDED(hr))
+        {
+            ULONG charPosLine = 0;
+            ULONG linePos = 0;
+            ULONG lines = 0;
+            ULONG numChars = 0;
+            ULONG charsToRead;
+            // Must be set to 0 first
+            ULONG charsRead = 0;
+
+            text->GetName(DOCUMENTNAMETYPE_TITLE, name.GetAddress());
+
+            text->GetPositionOfLine(line, &charPosLine);
+            text->GetSize(&lines, &numChars);
+
+            if (lines > line)
+            {
+                // Has next line?
+                ULONG charPosNextLine;
+
+                text->GetPositionOfLine(line + 1, &charPosNextLine);
+                charsToRead = charPosNextLine - 1 - charPosLine;
+            }
+            else
+            {
+                // Read to the end of current line.
+                charsToRead = numChars - charPosLine;
+            }
+
+            pfc::array_t<wchar_t> code;
+            code.set_size(charsToRead + 1);
+            text->GetText(charPosLine, code.get_ptr(), NULL, &charsRead, charsToRead);
+            code[charsRead] = 0;
+            --charsRead;
+
+            while (charsRead && (code[charsRead] == '\r' || code[charsRead] == '\n'))
+            {
+                code[charsRead] = 0;
+                --charsRead;
+            }
+
+            if (*code.get_ptr())
+                sourceline = code.get_ptr();
+        }
+    }
 }
 
 void PanelDropTarget::process_dropped_items::on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items)

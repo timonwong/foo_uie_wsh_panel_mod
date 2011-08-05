@@ -1,6 +1,7 @@
 #pragma once
 
-/* NOTE:
+/* 
+ * IMPORTANT NOTE:
  * For modders: You should change these Defines/Guids below, in order to 
  *   co-exist with the original release of WSH Panel Mod.
  */
