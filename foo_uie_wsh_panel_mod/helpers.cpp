@@ -223,58 +223,86 @@ namespace helpers
 		return false;
 	}
 
+    void estimate_line_wrap_recur(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out)
+    {
+        if (len == 0)
+        {
+            return;
+        }
+
+        int textWidth = get_text_width(hdc, text, len);
+        int textLength = len;
+
+        if (textWidth <= width || len == 1)
+        {
+            wrapped_item item = { SysAllocString(text), textWidth };
+            out.add_item(item);
+        }
+        else
+        {
+            textLength = (len * width) / textWidth;
+
+            if (get_text_width(hdc, text, textLength) < width)
+            {
+                while (get_text_width(hdc, text, min(len, textLength + 1)) < width) 
+                {
+                    ++textLength;
+                }
+            }
+            else
+            {
+                while (get_text_width(hdc, text, textLength) > width && textLength > 1) 
+                {
+                    --textLength;
+                }
+            }
+
+            {
+                int fallbackTextLength = max(textLength, 1);
+
+                while (textLength > 0 && !is_wrap_char(text[textLength - 1]))
+                {
+                    --textLength;
+                }
+
+                if (textLength == 0)
+                {
+                    // wrap forcibly
+                    textLength = fallbackTextLength;
+                }
+
+                wrapped_item item = { SysAllocStringLen(text, textLength), get_text_width(hdc, text, textLength) };
+                out.add_item(item);
+            }
+
+            if (textLength < len)
+            {
+                estimate_line_wrap_recur(hdc, text + textLength, len - textLength, width, out);
+            }
+        }
+    }
+
 	void estimate_line_wrap(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out)
 	{
-		int calc_width = get_text_width(hdc, text, len);
-		int calc_length = len;
+        for(;;) 
+        {
+            const wchar_t * next = wcschr(text, '\n');
+            if (next == NULL) 
+            {
+                estimate_line_wrap_recur(hdc, text, wcslen(text), width, out); 
+                break;
+            }
 
-		if ((calc_width <= width) || (len == 1))
-		{
-			wrapped_item item = { SysAllocString(text), calc_width };
-			out.add_item(item);
-		}
-		else
-		{
-			calc_length = (len * width) / calc_width;
+            const wchar_t * walk = next;
 
-			if (get_text_width(hdc, text, calc_length) <= width)
-			{
-				while (get_text_width(hdc, text, min(len, calc_length + 1)) <= width) {
-					++calc_length;
-                }
-			}
-			else
-			{
-				while (get_text_width(hdc, text, calc_length) > width && calc_length > 0) {
-					--calc_length;
-                }
-			}
+            while(walk > text && walk[-1] == '\r') 
+            {
+                --walk;
+            }
 
-			int length_rollback = calc_length;
-
-			while (calc_length > 0 && !is_wrap_char(text[calc_length - 1], text[calc_length]))
-			{
-				--calc_length;
-			}
-
-			if (calc_length > 1 && is_wrap_char_adv(text[calc_length - 1]))
-			{
-				--calc_length;
-			}
-
-			if (calc_length == 0)
-			{
-				calc_length = length_rollback;
-			}
-
-			wrapped_item item = { SysAllocStringLen(text, calc_length), get_text_width(hdc, text, calc_length) };
-			out.add_item(item);
-
-			if ((calc_length != 0) && (calc_length < (int)len))
-			{
-				estimate_line_wrap(hdc, text + calc_length, len - calc_length, width, out);
-			}
-		}
+            estimate_line_wrap_recur(hdc, text, walk - text, width, out);
+            text = next + 1;
+        }
 	}
 
 	int int_from_hex_digit(int ch)

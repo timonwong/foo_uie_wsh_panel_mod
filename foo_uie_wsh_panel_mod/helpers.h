@@ -26,52 +26,9 @@ namespace helpers
 		return size.cy;
 	}
 
-	inline int is_wrap_char(wchar_t current, wchar_t next)
+	inline int is_wrap_char(wchar_t current)
 	{
-		if (next == 0) return true;
-
-		switch (current)
-		{
-		case '\r':
-		case '\n':
-		case ' ':
-		case '\t':
-		case '-':
-		case '?':
-		case '!':
-		case '|':
-		case ')':
-		case ']':
-		case '}':
-			//
-		case '(':
-		case '[':
-		case '{':
-		case '+':
-		case '$':
-		case '%':
-		case '\\':
-			return true;
-		}
-
-		return !(iswalnum(current) && iswalnum(next));
-	}
-
-	inline bool is_wrap_char_adv(wchar_t ch)
-	{
-		switch (ch)
-		{
-		case '(':
-		case '[':
-		case '{':
-		case '+':
-		case '$':
-		case '%':
-		case '\\':
-			return true;
-		}
-
-		return false;
+        return (iswctype(current, _SPACE | _CONTROL | _PUNCT));
 	}
 
 	struct wrapped_item

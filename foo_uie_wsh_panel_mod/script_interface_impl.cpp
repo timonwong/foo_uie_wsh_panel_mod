@@ -833,7 +833,9 @@ STDMETHODIMP GdiGraphics::EstimateLineWrap(BSTR str, IGdiFont * font, int max_wi
     helpers::com_array_writer<> helper;
 
     if (!helper.create(result.get_count() * 2))
+    {
         return E_OUTOFMEMORY;
+    }
 
     for (long i = 0; i < helper.get_count() / 2; ++i)
     {
