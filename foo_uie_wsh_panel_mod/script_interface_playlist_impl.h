@@ -21,6 +21,16 @@ public:
     static STDMETHODIMP RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess);
     static STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex);
 
+    static STDMETHODIMP RemoveItemFromPlaybackQueue(UINT index);
+    static STDMETHODIMP RemoveItemsFromPlaybackQueue(VARIANT affectedItems);
+    static STDMETHODIMP AddPlaylistItemToPlaybackQueue(UINT playlistIndex, UINT playlistItemIndex);
+    static STDMETHODIMP AddItemToPlaybackQueue(IFbMetadbHandle * handle);
+    static STDMETHODIMP GetPlaybackQueueCount(UINT * outCount);
+    static STDMETHODIMP GetPlaybackQueueContents(VARIANT * outContents);
+    static STDMETHODIMP FindPlaybackQueueItemIndex(IFbMetadbHandle * handle, UINT playlistIndex, UINT playlistItemIndex, INT * outIndex);
+    static STDMETHODIMP FlushPlaybackQueue();
+    static STDMETHODIMP IsPlaybackQueueActive(VARIANT_BOOL * outIsActive);
+
     // Properties
     static STDMETHODIMP get_PlaybackOrder(UINT * outOrder);
     static STDMETHODIMP put_PlaybackOrder(UINT order);
@@ -51,6 +61,16 @@ public:
     STDMETHODIMP RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess);
     STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex);
 
+    STDMETHODIMP RemoveItemFromPlaybackQueue(UINT index);
+    STDMETHODIMP RemoveItemsFromPlaybackQueue(VARIANT affectedItems);
+    STDMETHODIMP AddPlaylistItemToPlaybackQueue(UINT playlistIndex, UINT playlistItemIndex);
+    STDMETHODIMP AddItemToPlaybackQueue(IFbMetadbHandle * handle);
+    STDMETHODIMP GetPlaybackQueueCount(UINT * outCount);
+    STDMETHODIMP GetPlaybackQueueContents(VARIANT * outContents);
+    STDMETHODIMP FindPlaybackQueueItemIndex(IFbMetadbHandle * handle, UINT playlistIndex, UINT playlistItemIndex, INT * outIndex);
+    STDMETHODIMP FlushPlaybackQueue();
+    STDMETHODIMP IsPlaybackQueueActive(VARIANT_BOOL * outIsActive);
+
     // Properties
     STDMETHODIMP get_PlaybackOrder(UINT * outOrder);
     STDMETHODIMP put_PlaybackOrder(UINT order);
@@ -62,7 +82,7 @@ public:
     STDMETHODIMP get_PlaylistItemCount(UINT playlistIndex, UINT * outCount);
 };
 
-class FbPlaybackQueueItem : IDisposableImpl4<IFbPlaybackQueueItem>
+class FbPlaybackQueueItem : public IDisposableImpl4<IFbPlaybackQueueItem>
 {
 protected:
     t_playback_queue_item m_playback_queue_item;

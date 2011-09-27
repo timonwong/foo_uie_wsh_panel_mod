@@ -311,6 +311,143 @@ STDMETHODIMP FbPlaylistMangerService::get_PlaylistItemCount(UINT playlistIndex, 
     return S_OK;
 }
 
+STDMETHODIMP FbPlaylistMangerService::RemoveItemFromPlaybackQueue(UINT index)
+{
+    TRACK_FUNCTION();
+
+    static_api_ptr_t<playlist_manager>()->queue_remove_mask(bit_array_one(index));
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::RemoveItemsFromPlaybackQueue(VARIANT affectedItems)
+{
+    TRACK_FUNCTION();
+
+    helpers::com_array_reader arrayReader;
+    int count;
+
+    // cannot convert, just fail
+    if (!arrayReader.convert(&affectedItems)) return E_INVALIDARG;
+    // no items
+    if (arrayReader.get_count() == 0) return S_OK;
+
+    bit_array_bittable affected(count);
+
+    for (int i = arrayReader.get_lbound(); i < arrayReader.get_count(); ++i)
+    {
+        _variant_t index;
+
+        arrayReader.get_item(i, index);
+        if (FAILED(VariantChangeType(&index, &index, 0, VT_I4))) return E_INVALIDARG;
+
+        affected.set(index.lVal, true);
+    }
+
+    static_api_ptr_t<playlist_manager>()->queue_remove_mask(affected);
+}
+
+STDMETHODIMP FbPlaylistMangerService::AddPlaylistItemToPlaybackQueue(UINT playlistIndex, UINT playlistItemIndex)
+{
+    TRACK_FUNCTION();
+
+    static_api_ptr_t<playlist_manager>()->queue_add_item_playlist(playlistIndex, playlistItemIndex);
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::AddItemToPlaybackQueue(IFbMetadbHandle * handle)
+{
+    TRACK_FUNCTION();
+
+    metadb_handle * ptrHandle = NULL;
+    handle->get__ptr((void **)&ptrHandle);
+    if (!ptrHandle) return E_INVALIDARG;
+
+    static_api_ptr_t<playlist_manager>()->queue_add_item(ptrHandle);
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::GetPlaybackQueueCount(UINT * outCount)
+{
+    TRACK_FUNCTION();
+
+    if (!outCount) return E_POINTER;
+
+    (*outCount) = static_api_ptr_t<playlist_manager>()->queue_get_count();
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::GetPlaybackQueueContents(VARIANT * outContents)
+{
+    TRACK_FUNCTION();
+
+    if (!outContents) return E_POINTER;
+
+    pfc::list_t<t_playback_queue_item> contents;
+    helpers::com_array_writer<> arrayWriter;
+
+    static_api_ptr_t<playlist_manager>()->queue_get_contents(contents);
+    
+    if (!arrayWriter.create(contents.get_count()))
+    {
+        return E_OUTOFMEMORY;
+    }
+
+    for (t_size i = 0; i < contents.get_count(); ++i)
+    {
+        _variant_t var;
+        var.vt = VT_DISPATCH;
+        var.pdispVal = new com_object_impl_t<FbPlaybackQueueItem>(contents[i]);
+
+        if (FAILED(arrayWriter.put(i, var)))
+        {
+            // deep destroy
+            arrayWriter.reset();
+            return E_OUTOFMEMORY;
+        }
+    }
+
+    outContents->vt = VT_ARRAY | VT_VARIANT;
+    outContents->parray = arrayWriter.get_ptr();
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::FindPlaybackQueueItemIndex(IFbMetadbHandle * handle, UINT playlistIndex, UINT playlistItemIndex, INT * outIndex)
+{
+    TRACK_FUNCTION();
+
+    if (!outIndex) return E_POINTER;
+    if (!handle) return E_INVALIDARG;
+
+    metadb_handle * ptrHandle = NULL;
+    handle->get__ptr((void **)&ptrHandle);
+    if (!ptrHandle) return E_INVALIDARG;
+
+    t_playback_queue_item item;
+    item.m_handle = ptrHandle;
+    item.m_playlist = playlistIndex;
+    item.m_item = playlistItemIndex;
+    (*outIndex) = static_api_ptr_t<playlist_manager>()->queue_find_index(item);
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::FlushPlaybackQueue()
+{
+    TRACK_FUNCTION();
+
+    static_api_ptr_t<playlist_manager>()->queue_flush();
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::IsPlaybackQueueActive(VARIANT_BOOL * outIsActive)
+{
+    TRACK_FUNCTION();
+
+    if (!outIsActive) return E_POINTER;
+
+    (*outIsActive) = static_api_ptr_t<playlist_manager>()->queue_is_active();
+    return S_OK;
+}
+
 
 STDMETHODIMP FbPlaylistManager::GetPlaylistItems(UINT playlistIndex, IFbMetadbHandleList ** outItems)
 {
@@ -415,6 +552,51 @@ STDMETHODIMP FbPlaylistManager::RenamePlaylist(UINT playlistIndex, BSTR name, VA
 STDMETHODIMP FbPlaylistManager::DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex)
 {
     return FbPlaylistMangerService::DuplicatePlaylist(from, name, outPlaylistIndex);
+}
+
+STDMETHODIMP FbPlaylistManager::RemoveItemFromPlaybackQueue(UINT index)
+{
+    return FbPlaylistMangerService::RemoveItemFromPlaybackQueue(index);
+}
+
+STDMETHODIMP FbPlaylistManager::RemoveItemsFromPlaybackQueue(VARIANT affectedItems)
+{
+    return FbPlaylistMangerService::RemoveItemsFromPlaybackQueue(affectedItems);
+}
+
+STDMETHODIMP FbPlaylistManager::AddPlaylistItemToPlaybackQueue(UINT playlistIndex, UINT playlistItemIndex)
+{
+    return FbPlaylistMangerService::AddPlaylistItemToPlaybackQueue(playlistIndex, playlistItemIndex);
+}
+
+STDMETHODIMP FbPlaylistManager::AddItemToPlaybackQueue(IFbMetadbHandle * handle)
+{
+    return FbPlaylistMangerService::AddItemToPlaybackQueue(handle);
+}
+
+STDMETHODIMP FbPlaylistManager::GetPlaybackQueueCount(UINT * outCount)
+{
+    return FbPlaylistMangerService::GetPlaybackQueueCount(outCount);
+}
+
+STDMETHODIMP FbPlaylistManager::GetPlaybackQueueContents(VARIANT * outContents)
+{
+    return FbPlaylistMangerService::GetPlaybackQueueContents(outContents);
+}
+
+STDMETHODIMP FbPlaylistManager::FindPlaybackQueueItemIndex(IFbMetadbHandle * handle, UINT playlistIndex, UINT playlistItemIndex, INT * outIndex)
+{
+    return FbPlaylistMangerService::FindPlaybackQueueItemIndex(handle, playlistIndex, playlistItemIndex, outIndex);
+}
+
+STDMETHODIMP FbPlaylistManager::FlushPlaybackQueue()
+{
+    return FbPlaylistMangerService::FlushPlaybackQueue();
+}
+
+STDMETHODIMP FbPlaylistManager::IsPlaybackQueueActive(VARIANT_BOOL * outIsActive)
+{
+    return FbPlaylistMangerService::IsPlaybackQueueActive(outIsActive);
 }
 
 

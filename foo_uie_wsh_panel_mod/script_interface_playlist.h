@@ -31,6 +31,16 @@ __interface IFbPlaylistManager : IDispatch
     STDMETHOD(RenamePlaylist)(UINT playlistIndex, BSTR name, [out,retval] VARIANT_BOOL * outSuccess);
     STDMETHOD(DuplicatePlaylist)(UINT from, BSTR name, [out,retval] UINT * outPlaylistIndex);
 
+    STDMETHOD(RemoveItemFromPlaybackQueue)(UINT index);
+    STDMETHOD(RemoveItemsFromPlaybackQueue)(VARIANT affectedItems);
+    STDMETHOD(AddPlaylistItemToPlaybackQueue)(UINT playlistIndex, UINT playlistItemIndex);
+    STDMETHOD(AddItemToPlaybackQueue)(IFbMetadbHandle * handle);
+    STDMETHOD(GetPlaybackQueueCount)([out,retval] UINT * outCount);
+    STDMETHOD(GetPlaybackQueueContents)([out,retval] VARIANT * outContents);
+    STDMETHOD(FindPlaybackQueueItemIndex)(IFbMetadbHandle * handle, UINT playlistIndex, UINT playlistItemIndex, [out,retval] INT * outIndex);
+    STDMETHOD(FlushPlaybackQueue)();
+    STDMETHOD(IsPlaybackQueueActive)([out,retval] VARIANT_BOOL * outIsActive);
+
     // Properties
     [propget] STDMETHOD(PlaybackOrder)([out,retval] UINT * outOrder);
     [propput] STDMETHOD(PlaybackOrder)(UINT order);
