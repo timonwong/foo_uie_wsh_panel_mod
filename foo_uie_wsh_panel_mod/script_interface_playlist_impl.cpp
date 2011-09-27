@@ -417,3 +417,105 @@ STDMETHODIMP FbPlaylistManager::DuplicatePlaylist(UINT from, BSTR name, UINT * o
     return FbPlaylistMangerService::DuplicatePlaylist(from, name, outPlaylistIndex);
 }
 
+
+FbPlaybackQueueItem::FbPlaybackQueueItem(const t_playback_queue_item & playbackQueueItem)
+{
+    m_playback_queue_item.m_handle = playbackQueueItem.m_handle;
+    m_playback_queue_item.m_playlist = playbackQueueItem.m_playlist;
+    m_playback_queue_item.m_item = playbackQueueItem.m_item;
+}
+
+FbPlaybackQueueItem::~FbPlaybackQueueItem()
+{
+
+}
+
+void FbPlaybackQueueItem::FinalRelease()
+{
+    m_playback_queue_item.m_handle.release();
+    m_playback_queue_item.m_playlist = 0;
+    m_playback_queue_item.m_item = 0;
+}
+
+STDMETHODIMP FbPlaybackQueueItem::Equals(IFbPlaybackQueueItem * item, VARIANT_BOOL * outEquals)
+{
+    TRACK_FUNCTION();
+
+    if (!item) return E_INVALIDARG;
+
+    t_playback_queue_item * ptrQueueItem = NULL;
+    item->get__ptr((void **)&ptrQueueItem);
+    if (!ptrQueueItem) return E_INVALIDARG;
+
+    (*outEquals) = TO_VARIANT_BOOL(m_playback_queue_item == *ptrQueueItem);
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaybackQueueItem::get__ptr(void ** pp)
+{
+    TRACK_FUNCTION();
+
+    if (!pp) return E_POINTER;
+
+    (*pp) = &m_playback_queue_item;
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaybackQueueItem::get_Handle(IFbMetadbHandle ** outHandle)
+{
+    TRACK_FUNCTION();
+
+    if (!outHandle) return E_POINTER;
+
+    (*outHandle) = new com_object_impl_t<FbMetadbHandle>(m_playback_queue_item.m_handle);
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaybackQueueItem::put_Handle(IFbMetadbHandle * handle)
+{
+    TRACK_FUNCTION();
+
+    if (!handle) return E_INVALIDARG;
+    metadb_handle * ptrHandle = NULL;
+    handle->get__ptr((void **)&ptrHandle);
+    if (!ptrHandle) return E_INVALIDARG;
+
+    m_playback_queue_item.m_handle = ptrHandle;
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaybackQueueItem::get_PlaylistIndex(UINT * outPlaylistIndex)
+{
+    TRACK_FUNCTION();
+
+    if (!outPlaylistIndex) return E_POINTER;
+
+    (*outPlaylistIndex) = m_playback_queue_item.m_playlist;
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaybackQueueItem::put_PlaylistIndex(UINT playlistIndex)
+{
+    TRACK_FUNCTION();
+
+    m_playback_queue_item.m_playlist = playlistIndex;
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaybackQueueItem::get_PlaylistItemIndex(UINT * outItemIndex)
+{
+    TRACK_FUNCTION();
+
+    if (!outItemIndex) return E_POINTER;
+
+    (*outItemIndex) = m_playback_queue_item.m_item;
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaybackQueueItem::put_PlaylistItemIndex(UINT itemIndex)
+{
+    TRACK_FUNCTION();
+
+    m_playback_queue_item.m_item = itemIndex;
+    return S_OK;
+}

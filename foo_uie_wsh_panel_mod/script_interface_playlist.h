@@ -4,6 +4,7 @@
 
 // forward declarations
 __interface IFbMetadbHandleList;
+__interface IFbPlaybackQueueItem;
 
 //---
 [
@@ -41,3 +42,25 @@ __interface IFbPlaylistManager : IDispatch
     [propget] STDMETHOD(PlaylistItemCount)(UINT playlistIndex, [out,retval] UINT * outCount);
 };
 _COM_SMARTPTR_TYPEDEF(IFbPlaylistManager, __uuidof(IFbPlaylistManager));
+
+[
+    object,
+    dual,
+    pointer_default(unique),
+    library_block,
+    uuid("e6d4354c-9a79-4062-b4d7-714b13539500")
+]
+__interface IFbPlaybackQueueItem : IDisposable
+{
+    // Methods
+    STDMETHOD(Equals)(IFbPlaybackQueueItem * item, [out,retval] VARIANT_BOOL * outEquals);
+
+    // Properties
+    [propget] STDMETHOD(_ptr)([out,retval] void ** pp);
+    [propget] STDMETHOD(Handle)([out,retval] IFbMetadbHandle ** outHandle);
+    [propput] STDMETHOD(Handle)(IFbMetadbHandle * handle);
+    [propget] STDMETHOD(PlaylistIndex)([out,retval] UINT * outPlaylistIndex);
+    [propput] STDMETHOD(PlaylistIndex)(UINT playlistIndex);
+    [propget] STDMETHOD(PlaylistItemIndex)([out,retval] UINT * outItemIndex);
+    [propput] STDMETHOD(PlaylistItemIndex)(UINT itemIndex);
+};

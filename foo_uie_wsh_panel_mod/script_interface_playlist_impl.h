@@ -61,3 +61,28 @@ public:
     STDMETHODIMP get_PlaylistCount(UINT * outCount);
     STDMETHODIMP get_PlaylistItemCount(UINT playlistIndex, UINT * outCount);
 };
+
+class FbPlaybackQueueItem : IDisposableImpl4<IFbPlaybackQueueItem>
+{
+protected:
+    t_playback_queue_item m_playback_queue_item;
+
+    FbPlaybackQueueItem(const t_playback_queue_item & playbackQueueItem);
+
+    virtual ~FbPlaybackQueueItem();
+
+    virtual void FinalRelease();
+
+public:
+    // Methods
+    STDMETHODIMP Equals(IFbPlaybackQueueItem * item, VARIANT_BOOL * outEquals);
+
+    // Properties
+    STDMETHODIMP get__ptr(void ** pp);
+    STDMETHODIMP get_Handle(IFbMetadbHandle ** outHandle);
+    STDMETHODIMP put_Handle(IFbMetadbHandle * handle);
+    STDMETHODIMP get_PlaylistIndex(UINT * outPlaylistIndex);
+    STDMETHODIMP put_PlaylistIndex(UINT playlistIndex);
+    STDMETHODIMP get_PlaylistItemIndex(UINT * outItemIndex);
+    STDMETHODIMP put_PlaylistItemIndex(UINT itemIndex);
+};
