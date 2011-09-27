@@ -677,7 +677,19 @@ Methods:
 	VARIANT FileTest(path, mode);
 }
 
-// [1.4.5] New: This interface is added in 1.5.0
+// [1.5.0] New: new interface for playback queue
+interface IFbPlaybackQueueItem {
+Methods:
+    // item: an instance of IFbPlaybackQueueItem.
+    boolean Equals(item);
+
+Properties:
+    (read, write) IFbMetadbHandle Handle;
+    (read, write) uint PlaylistIndex;
+    (read, write) uint PlaylistItemIndex;
+}
+
+// [1.4.0] New: This interface is added in 1.5.0
 interface IFbPlaylistManager {
 Methods:
     // Get all items into an instance of IFbMetadbHandleList from specified playlist
@@ -685,7 +697,10 @@ Methods:
     // state = true: select, deselect otherwise
     void SetPlaylistSelectionSingle(playlistIndex, itemIndex, state);
     // state = true: select, deselect otherwise
-    // affectedItems: 
+    // affectedItems: array of item indexes, 
+    // ex: 
+    //      affectedItems = [1, 3, 23]; 
+    //      plman.SetPlaylistSelection(0, affectedItems, false); /* clear selection on item 1, 3 and 23.
     void SetPlaylistSelection(playlistIndex, affectedItems, state);
     // Clear selection of specified playlist
     void ClearPlaylistSelection(playlistIndex);
@@ -705,6 +720,21 @@ Methods:
 	// name: New playlist name, when empty, using the same name as 'from'.
 	// Returns the index of newly created playlist.
 	uint DuplicatePlaylist(from, name = "");
+    
+    // Remove single item from playback queue
+    void RemoveItemFromPlaybackQueue(index);
+    // affectedItems: array of item indexes
+    void RemoveItemsFromPlaybackQueue(affectedItems);
+    void AddPlaylistItemToPlaybackQueue(playlistIndex, playlistItemIndex);
+    void AddItemToPlaybackQueue(IFbMetadbHandle);
+    uint GetPlaybackQueueCount();
+    // returns an array of IFbPlaybackQueueItem instances.
+    VBArray GetPlaybackQueueContents();
+    // returns -1 on failure.
+    int FindPlaybackQueueItemIndex(IFbMetadbHandle, playlistIndex, playlistItemIndex);
+    void FlushPlaybackQueue();
+    // This is actually the same as GetPlaybackQueueCount() > 0
+    boolean IsPlaybackQueueActive();
 
 Properties:
 	(read, write) uint PlaybackOrder;
