@@ -196,6 +196,9 @@ function on_selection_changed(metadb) {}
 // playlist: index to indicate that which playlist has newly added items
 function on_playlist_items_added(playlist) {}
 
+// [1.5.0 Preview] Added:
+function on_playlist_items_reordered(playlist) {}
+
 // [1.4.1] Added:
 // playlist: index to indicate that which playlist has items removed
 // new_count: new items count of the playlist.

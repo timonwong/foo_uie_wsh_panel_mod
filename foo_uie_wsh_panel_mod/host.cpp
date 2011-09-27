@@ -1967,6 +1967,10 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		on_playlist_items_added(wp);
 		return 0;
 
+    case CALLBACK_UWM_ON_PLAYLIST_ITEMS_REORDERED:
+        on_playlist_items_reordered(wp);
+        return 0;
+
 	case CALLBACK_UWM_ON_PLAYLIST_ITEMS_REMOVED:
 		on_playlist_items_removed(wp, lp);
 		return 0;
@@ -2577,6 +2581,16 @@ void wsh_panel_window::on_playlist_items_added(WPARAM wp)
 	args[0].vt = VT_UI4;
 	args[0].ulVal = wp;
 	script_invoke_v(L"on_playlist_items_added", args, _countof(args));
+}
+
+void wsh_panel_window::on_playlist_items_reordered(WPARAM wp)
+{
+    TRACK_FUNCTION();
+
+    VARIANTARG args[1];
+    args[0].vt = VT_UI4;
+    args[0].ulVal = wp;
+    script_invoke_v(L"on_playlist_items_reordered", args, _countof(args));
 }
 
 void wsh_panel_window::on_playlist_items_removed(WPARAM wp, LPARAM lp)

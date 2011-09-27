@@ -414,10 +414,22 @@ Methods:
 	// NOTE: Apply now playing content only.
 	boolean RunMainMenuCommand(command);
 	// NOTE: Apply now playing content only.
-	boolean RunContextCommand(command);
+    // [1.5.0 Preview 2]: Changed: Add new flags parameter
+    // flags:   0 - default (depends on whether SHIFT key is pressed, flag_view_reduced or flag_view_full is selected)
+    //          1 - flag_show_shortcuts
+    //          2 - flag_show_shortcuts_global
+    //          4 - flag_view_reduced
+    //          8 - flag_view_full
+	boolean RunContextCommand(command, flags = 0);
 	// [1.1.2] New:
 	// [1.4.0] Changed: Accept IFbMetadbHandleList interface for metadb handle list.
-	boolean RunContextCommandWithMetadb(command, handle_or_handles);
+    // [1.5.0 Preview 2]: Changed: Add new flags parameter
+    // flags:   0 - default (depends on whether SHIFT key is pressed, flag_view_reduced or flag_view_full is selected)
+    //          1 - flag_show_shortcuts
+    //          2 - flag_show_shortcuts_global
+    //          4 - flag_view_reduced
+    //          8 - flag_view_full
+	boolean RunContextCommandWithMetadb(command, handle_or_handles, flags = 0);
 	IContextMenuManager CreateContextMenuManager();
 	// [1.1.7] New:
 	boolean IsMetadbInMediaLibrary(metadb);

@@ -179,7 +179,7 @@ public:
 
 	// impl
 	virtual void on_items_added(t_size p_playlist,t_size p_start, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection);
-	virtual void on_items_reordered(t_size p_playlist,const t_size * p_order,t_size p_count) {}
+	virtual void on_items_reordered(t_size p_playlist,const t_size * p_order,t_size p_count);
 	virtual void on_items_removing(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
 	// impl
 	virtual void on_items_removed(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count);

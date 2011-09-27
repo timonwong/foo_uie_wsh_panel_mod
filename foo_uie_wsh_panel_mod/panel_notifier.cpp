@@ -236,6 +236,11 @@ void my_playlist_callback::on_items_added(t_size p_playlist,t_size p_start, cons
 	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_ADDED, p_playlist);
 }
 
+void my_playlist_callback::on_items_reordered(t_size p_playlist,const t_size * p_order,t_size p_count)
+{
+    panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_REORDERED, p_playlist);
+}
+
 void my_playlist_callback::on_items_removed(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count)
 {
 	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_REMOVED, p_playlist, p_new_count);

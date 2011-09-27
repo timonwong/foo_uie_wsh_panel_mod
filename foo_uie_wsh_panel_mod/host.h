@@ -389,6 +389,7 @@ private:
 
 	// playlist_callback
 	void on_playlist_items_added(WPARAM wp);
+    void on_playlist_items_reordered(WPARAM wp);
 	void on_playlist_items_removed(WPARAM wp, LPARAM lp);
 	void on_playlist_items_selection_change();
 	void on_item_focus_change();
