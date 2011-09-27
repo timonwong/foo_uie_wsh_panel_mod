@@ -16,7 +16,6 @@ BOOL CDialogPref::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 {
 	// Set Spin	
 	SendDlgItemMessage(IDC_SPIN_TIMEOUT, UDM_SETRANGE, 0, MAKELONG(180, 0));
-	SendDlgItemMessage(IDC_SPIN_TIMEOUT, UDM_SETPOS, 0, MAKELONG(g_cfg_timeout.get_value(), 0));
 
 	// Check "Safe mode"
 	uButton_SetCheck(m_hWnd, IDC_CHECK_SAFE_MODE, g_cfg_safe_mode);
@@ -146,9 +145,8 @@ void CDialogPref::OnChanged()
 
 bool CDialogPref::HasChanged()
 {
-	return (GetDlgItemInt(IDC_EDIT_TIMEOUT, NULL, FALSE) != g_cfg_timeout) || 
-		(uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE) != g_cfg_safe_mode) ||
-		(uButton_GetCheck(m_hWnd, IDC_CHECK_DEBUG_MODE) != g_cfg_debug_mode);
+    return (uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE) != g_cfg_safe_mode) ||
+        (uButton_GetCheck(m_hWnd, IDC_CHECK_DEBUG_MODE) != g_cfg_debug_mode);
 }
 
 HWND CDialogPref::get_wnd()
@@ -174,7 +172,6 @@ t_uint32 CDialogPref::get_state()
 
 void CDialogPref::apply()
 {
-	g_cfg_timeout = GetDlgItemInt(IDC_EDIT_TIMEOUT, NULL, FALSE);
 	g_cfg_safe_mode = uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE);
 	g_cfg_debug_mode = uButton_GetCheck(m_hWnd, IDC_CHECK_DEBUG_MODE);
 	OnChanged();
@@ -183,7 +180,6 @@ void CDialogPref::apply()
 void CDialogPref::reset()
 {
 	g_cfg_safe_mode = true;
-	g_cfg_timeout = 15;
 	LoadProps(true);
 	OnChanged();
 }

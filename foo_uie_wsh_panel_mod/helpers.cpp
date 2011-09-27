@@ -236,13 +236,15 @@ namespace helpers
 
 			if (get_text_width(hdc, text, calc_length) <= width)
 			{
-				while (get_text_width(hdc, text, min(len, calc_length + 1)) <= width)
+				while (get_text_width(hdc, text, min(len, calc_length + 1)) <= width) {
 					++calc_length;
+                }
 			}
 			else
 			{
-				while (get_text_width(hdc, text, calc_length) > width && calc_length > 0)
+				while (get_text_width(hdc, text, calc_length) > width && calc_length > 0) {
 					--calc_length;
+                }
 			}
 
 			int length_rollback = calc_length;

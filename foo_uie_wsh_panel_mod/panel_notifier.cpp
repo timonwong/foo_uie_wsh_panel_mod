@@ -13,6 +13,7 @@ namespace
 	static play_callback_static_factory_t<my_play_callback > g_my_play_callback;
 	static service_factory_single_t<my_playlist_callback> g_my_playlist_callback;
 	static initquit_factory_t<nonautoregister_callbacks> g_nonautoregister_callbacks;
+    static play_callback_static_factory_t<my_playback_queue_callback> g_my_playback_queue_callback;
 }
 
 void panel_notifier_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
@@ -105,7 +106,7 @@ void config_object_callback::on_watched_object_changed(const service_ptr_t<confi
 	else
 		msg = CALLBACK_UWM_PLAYBACK_FOLLOW_CURSOR;
 
-	panel_notifier_manager::instance().post_msg_to_all(msg, TO_VARIANT_BOOL(boolval), 0);
+	panel_notifier_manager::instance().post_msg_to_all(msg, TO_VARIANT_BOOL(boolval));
 }
 
 void playback_stat_callback::on_item_played(metadb_handle_ptr p_item)
@@ -137,7 +138,7 @@ void nonautoregister_callbacks::on_selection_changed(metadb_handle_list_cref p_s
 	}
 	else
 	{
-		panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_SELECTION_CHANGED, 0, 0);
+		panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_SELECTION_CHANGED);
 	}
 }
 
@@ -157,8 +158,7 @@ void my_play_callback::on_playback_new_track(metadb_handle_ptr track)
 
 void my_play_callback::on_playback_stop(play_control::t_stop_reason reason)
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_STOP, 
-		(WPARAM)reason, 0);
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_STOP, (WPARAM)reason);
 }
 
 void my_play_callback::on_playback_seek(double time)
@@ -172,8 +172,7 @@ void my_play_callback::on_playback_seek(double time)
 
 void my_play_callback::on_playback_pause(bool state)
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_PAUSE,
-		(WPARAM)state, 0);
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_PAUSE, (WPARAM)state);
 }
 
 void my_play_callback::on_playback_edited(metadb_handle_ptr track)
@@ -186,12 +185,12 @@ void my_play_callback::on_playback_edited(metadb_handle_ptr track)
 
 void my_play_callback::on_playback_dynamic_info(const file_info& info)
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_DYNAMIC_INFO, 0, 0);
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_DYNAMIC_INFO);
 }
 
 void my_play_callback::on_playback_dynamic_info_track(const file_info& info)
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_DYNAMIC_INFO_TRACK, 0, 0);
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_DYNAMIC_INFO_TRACK);
 }
 
 void my_play_callback::on_playback_time(double time)
@@ -214,28 +213,27 @@ void my_play_callback::on_volume_change(float newval)
 
 void my_playlist_callback::on_item_focus_change(t_size p_playlist,t_size p_from,t_size p_to)
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_ITEM_FOCUS_CHANGE, 0, 0);
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_ITEM_FOCUS_CHANGE);
 }
 
 void my_playlist_callback::on_playback_order_changed(t_size p_new_index)
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_ORDER_CHANGED, 
-		(WPARAM)p_new_index, 0);
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_ORDER_CHANGED, (WPARAM)p_new_index);
 }
 
 void my_playlist_callback::on_playlist_switch()
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_SWITCH, 0, 0);
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_SWITCH);
 }
 
 void my_playlist_callback::on_playlists_changed()
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLISTS_CHANGED, 0, 0);
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLISTS_CHANGED);
 }
 
 void my_playlist_callback::on_items_added(t_size p_playlist,t_size p_start, const pfc::list_base_const_t<metadb_handle_ptr> & p_data,const bit_array & p_selection)
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_ADDED, p_playlist, 0);
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_ADDED, p_playlist);
 }
 
 void my_playlist_callback::on_items_removed(t_size p_playlist,const bit_array & p_mask,t_size p_old_count,t_size p_new_count)
@@ -245,5 +243,10 @@ void my_playlist_callback::on_items_removed(t_size p_playlist,const bit_array & 
 
 void my_playlist_callback::on_items_selection_change(t_size p_playlist,const bit_array & p_affected,const bit_array & p_state)
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_SELECTION_CHANGE, 0, 0);
+	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_SELECTION_CHANGE);
+}
+
+void my_playback_queue_callback::on_changed(t_change_origin p_origin)
+{
+    panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_QUEUE_CHANGED, (WPARAM)p_origin);
 }

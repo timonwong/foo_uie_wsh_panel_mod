@@ -102,6 +102,9 @@
     <ClCompile Include="thread_pool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="script_interface_playlist_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
@@ -207,6 +210,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="component_defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="script_interface_playlist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="script_interface_playlist_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

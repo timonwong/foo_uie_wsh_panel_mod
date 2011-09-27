@@ -39,6 +39,8 @@ public:
 	void send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
 	void send_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param);
 	//void post_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param);
+    inline void post_msg_to_all(UINT p_msg) { post_msg_to_all(p_msg, 0, 0); }
+    inline void post_msg_to_all(UINT p_msg, WPARAM p_wp) { post_msg_to_all(p_msg, p_wp, 0); }
 	void post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
 	void post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_root * p_param);
 
@@ -228,4 +230,10 @@ public:
 private:
 	void on_playlist_switch();
 	void on_playlists_changed();
+};
+
+class my_playback_queue_callback : public playback_queue_callback
+{
+public:
+    void on_changed(t_change_origin p_origin);
 };

@@ -26,7 +26,7 @@ namespace helpers
 		return size.cy;
 	}
 
-	inline int is_wrap_char(TCHAR current, TCHAR next)
+	inline int is_wrap_char(wchar_t current, wchar_t next)
 	{
 		if (next == 0) return true;
 
@@ -54,10 +54,10 @@ namespace helpers
 			return true;
 		}
 
-		return !(current < 0x80 && next < 0x80);
+		return !(iswalnum(current) && iswalnum(next));
 	}
 
-	inline bool is_wrap_char_adv(TCHAR ch)
+	inline bool is_wrap_char_adv(wchar_t ch)
 	{
 		switch (ch)
 		{

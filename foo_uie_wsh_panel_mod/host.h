@@ -3,6 +3,7 @@
 #include "delay_loader.h"
 #include "script_preprocessor.h"
 #include "script_interface_impl.h"
+#include "script_interface_playlist_impl.h"
 #include "config.h"
 #include "user_message.h"
 #include "global_cfg.h"
@@ -38,7 +39,6 @@ protected:
 	t_script_info m_script_info;
 	ui_selection_holder::ptr m_selection_holder;
 	int               m_instance_type;
-	bool              m_query_continue;
 	bool              m_suppress_drawing;
 	bool              m_paint_pending;
 	
@@ -56,7 +56,6 @@ public:
 	inline POINT & GetMinSize() { return m_min_size; }
 	inline UINT & GetDlgCode() { return m_dlg_code; }
 	inline metadb_handle_ptr & GetWatchedMetadbHandle() { return m_watched_handle; }
-	inline bool & GetQueryContinue() { return m_query_continue; }
 	IGdiBitmap * GetBackgroundImage();
 	inline void PreserveSelection() { m_selection_holder = static_api_ptr_t<ui_selection_manager>()->acquire(); }
 	inline t_script_info & GetScriptInfo() { return m_script_info; }
@@ -131,26 +130,26 @@ public:
 class ScriptHost : 
 	public IActiveScriptSite,
 	public IActiveScriptSiteDebug,
-	public IActiveScriptSiteWindow,
-	public IActiveScriptSiteInterruptPoll
+	public IActiveScriptSiteWindow
 {
 private:
-	volatile DWORD   m_dwRef;
-	HostComm*        m_host;
-	IFbWindowPtr     m_window;
-	IGdiUtilsPtr     m_gdi;
-	IFbUtilsPtr      m_fb2k;
-	IWSHUtilsPtr     m_utils;
-	DWORD            m_dwStartTime;
+	volatile DWORD          m_dwRef;
+	HostComm*               m_host;
+	IFbWindowPtr            m_window;
+	IGdiUtilsPtr            m_gdi;
+	IFbUtilsPtr             m_fb2k;
+	IWSHUtilsPtr            m_utils;
+    IFbPlaylistManagerPtr   m_playlistman;
+	DWORD                   m_dwStartTime;
 
 	// Scripting
-	IActiveScriptPtr  m_script_engine;
-	IDispatchPtr      m_script_root;
+	IActiveScriptPtr        m_script_engine;
+	IDispatchPtr            m_script_root;
 
 	// Debugger
-	IProcessDebugManagerPtr    m_debug_manager;
-	IDebugApplicationPtr       m_debug_application;
-	DWORD                      m_app_cookie;
+	IProcessDebugManagerPtr m_debug_manager;
+	IDebugApplicationPtr    m_debug_application;
+	DWORD                   m_app_cookie;
 
 	// debugging helper
 	// cookie => IDebugDocumentHelper map
@@ -165,7 +164,6 @@ private:
 		COM_QI_ENTRY(IActiveScriptSite)
 		COM_QI_ENTRY_COND(IActiveScriptSiteDebug, g_cfg_debug_mode)
 		COM_QI_ENTRY(IActiveScriptSiteWindow)
-		COM_QI_ENTRY(IActiveScriptSiteInterruptPoll)
 	END_COM_QI_IMPL()
 
 public:
@@ -210,9 +208,6 @@ public:
 	// IActiveScriptSiteWindow
 	STDMETHODIMP GetWindow(HWND *phwnd);
 	STDMETHODIMP EnableModeless(BOOL fEnable);
-
-	// IActiveScriptSiteInterruptPoll
-	STDMETHODIMP QueryContinue();
 
 public:
 	HRESULT Initialize();
@@ -412,6 +407,9 @@ private:
 	void on_drag_over(LPARAM lp);
 	void on_drag_leave();
 	void on_drag_drop(LPARAM lp);
+
+    // playback queue callback
+    void on_playback_queue_changed(WPARAM wp);
 
 protected:
 	// override me

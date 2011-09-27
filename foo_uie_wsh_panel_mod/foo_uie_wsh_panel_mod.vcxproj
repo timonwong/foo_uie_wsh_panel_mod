@@ -144,6 +144,7 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClCompile Include="host.cpp" />
     <ClCompile Include="panel_notifier.cpp" />
     <ClCompile Include="script_interface_impl.cpp" />
+    <ClCompile Include="script_interface_playlist_impl.cpp" />
     <ClCompile Include="script_preprocessor.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -177,6 +178,8 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClInclude Include="resource.h" />
     <ClInclude Include="script_interface.h" />
     <ClInclude Include="script_interface_impl.h" />
+    <ClInclude Include="script_interface_playlist.h" />
+    <ClInclude Include="script_interface_playlist_impl.h" />
     <ClInclude Include="script_preprocessor.h" />
     <ClInclude Include="SString.h" />
     <ClInclude Include="stdafx.h" />

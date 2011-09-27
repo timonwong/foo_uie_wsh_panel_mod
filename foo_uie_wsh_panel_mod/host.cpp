@@ -57,7 +57,6 @@ HostComm::HostComm()
 	, m_suppress_drawing(false)
 	, m_paint_pending(false)
 	, m_accuracy(0) 
-	, m_query_continue(false)
 	, m_instance_type(KInstanceTypeCUI)
 	, m_dlg_code(0)
 	, m_script_info(get_config_guid())
@@ -766,6 +765,7 @@ ScriptHost::ScriptHost(HostComm * host)
 	, m_gdi(com_object_singleton_t<GdiUtils>::instance())
 	, m_fb2k(com_object_singleton_t<FbUtils>::instance())
 	, m_utils(com_object_singleton_t<WSHUtils>::instance())
+    , m_playlistman(com_object_singleton_t<FbPlaylistManager>::instance())
 	, m_dwStartTime(0)
 	, m_dwRef(1)
 	, m_engine_inited(false)
@@ -845,6 +845,12 @@ STDMETHODIMP ScriptHost::GetItemInfo(LPCOLESTR name, DWORD mask, IUnknown** ppun
 			(*ppunk)->AddRef();
 			return S_OK;
 		}
+        else if (wcscmp(name, L"playlistman") == 0)
+        {
+            (*ppunk) = m_playlistman;
+            (*ppunk)->AddRef();
+            return S_OK;
+        }
 	}
 
 	return TYPE_E_ELEMENTNOTFOUND;
@@ -975,23 +981,6 @@ STDMETHODIMP ScriptHost::EnableModeless(BOOL fEnable)
 	return S_OK;
 }
 
-STDMETHODIMP ScriptHost::QueryContinue()
-{
-	if (m_host->GetQueryContinue())
-	{
-		unsigned timeout = g_cfg_timeout * 1000;
-		unsigned delta = GetTickCount() - m_dwStartTime;
-
-		if (timeout != 0 && (delta > timeout))
-		{
-			SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR_TIMEOUT, 0, 0);
-			return S_FALSE;
-		}
-	}
-
-	return S_OK;
-}
-
 HRESULT ScriptHost::Initialize()
 {
 	Finalize();
@@ -1029,6 +1018,7 @@ HRESULT ScriptHost::Initialize()
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"fb", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
+    if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"playlistman", SCRIPTITEM_ISVISIBLE);
 	//if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_STARTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
@@ -1853,10 +1843,6 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		show_property_popup(m_hwnd);
 		return 0;
 
-	case UWM_TOGGLEQUERYCONTINUE:
-		GetQueryContinue() = (wp != 0);
-		return 0;
-
 	case UWM_DRAG_ENTER:
 		on_drag_enter(lp);
 		return 0;
@@ -1983,6 +1969,11 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case CALLBACK_UWM_ON_PLAYLIST_ITEMS_SELECTION_CHANGE:
 		on_playlist_items_selection_change();
+        return 0;
+
+    case CALLBACK_UWM_ON_PLAYBACK_QUEUE_CHANGED:
+        on_playback_queue_changed(wp);
+        return 0;
 	}
 
 	return uDefWindowProc(hwnd, msg, wp, lp);
@@ -2724,6 +2715,16 @@ void wsh_panel_window::on_drag_drop(LPARAM lp)
 	args[3].vt = VT_DISPATCH;
 	args[3].pdispVal = param->action;
 	script_invoke_v(L"on_drag_drop", args, _countof(args));
+}
+
+void wsh_panel_window::on_playback_queue_changed(WPARAM wp)
+{
+    TRACK_FUNCTION();
+
+    VARIANTARG args[1];
+    args[0].vt = VT_I4;
+    args[0].lVal = wp;
+    script_invoke_v(L"on_playback_queue_changed", args, _countof(args));
 }
 
 const GUID& wsh_panel_window_cui::get_extension_guid() const

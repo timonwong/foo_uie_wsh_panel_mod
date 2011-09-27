@@ -5,6 +5,7 @@
 //   gdi - IGdiUtils
 //   fb - IFbUtils
 //   utils - IWSHUtils
+//   playlistman - IFbPlaylistManager
 
 interface IGdiFont {
 Properties:
@@ -674,4 +675,28 @@ Methods:
 	//           arr[2] <= ".txt"
 	//   "chardet": Guess charset of a file, and return the codepage of it (it may not be accurate), returns 0 if any error occured.
 	VARIANT FileTest(path, mode);
+}
+
+// [1.4.5] New: This interface is added in 1.5.0
+interface IFbPlaylistManager {
+Methods:
+    // Get all items into an instance of IFbMetadbHandleList from specified playlist
+    IFbMetadbHandleList GetPlaylistItems(playlistIndex);
+    // state = true: select, deselect otherwise
+    void SetPlaylistSelectionSingle(playlistIndex, itemIndex, state);
+    // state = true: select, deselect otherwise
+    void SetPlaylistSelection(playlistIndex, affectedItems, state);
+    // Clear selection of specified playlist
+    void ClearPlaylistSelection(playlistIndex);
+    IFbMetadbHandle GetPlaylistFocusItemHandle(force);
+    void SetPlaylistFocusItem(playlistIndex, itemIndex);
+    void SetPlaylistFocusItemByHandle(playlistIndex, itemHandle);
+    
+
+Properties:
+	(read, write) uint PlaybackOrder;
+	(read, write) uint ActivePlaylist;
+    (read, write) uint PlaylingPlaylist;
+    (readonly) uint PlaylistCount;
+    (readonly) uint PlaylistItemCount;
 }

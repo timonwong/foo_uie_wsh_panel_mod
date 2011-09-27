@@ -2,6 +2,7 @@
 #include <MLang.h>
 //#include "ppl.h"
 #include "script_interface_impl.h"
+#include "script_interface_playlist_impl.h"
 #include "helpers.h"
 #include "com_array.h"
 #include "boxblurfilter.h"
@@ -841,7 +842,7 @@ STDMETHODIMP GdiGraphics::EstimateLineWrap(BSTR str, IGdiFont * font, int max_wi
         var1.vt = VT_BSTR;
         var1.bstrVal = result[i].text;
         var2.vt = VT_I4;
-        var2.intVal = result[i].width;
+        var2.lVal = result[i].width;
 
         helper.put(i * 2, var1);
         helper.put(i * 2 + 1, var2);
@@ -1743,33 +1744,7 @@ STDMETHODIMP FbUtils::GetNowPlaying(IFbMetadbHandle** pp)
 
 STDMETHODIMP FbUtils::GetFocusItem(VARIANT_BOOL force, IFbMetadbHandle** pp)
 {
-    TRACK_FUNCTION();
-
-    if (!pp) return E_POINTER;
-
-    metadb_handle_ptr metadb;
-
-    try
-    {
-        // Get focus item
-        static_api_ptr_t<playlist_manager>()->activeplaylist_get_focus_item_handle(metadb);
-
-        if (force && metadb.is_empty())
-        {
-            // if there's no focused item, just try to get the first item in the *active* playlist
-            static_api_ptr_t<playlist_manager>()->activeplaylist_get_item_handle(metadb, 0);
-        }
-
-        if (metadb.is_empty())
-        {
-            (*pp) = NULL;
-            return S_OK;
-        }
-    }
-    catch (std::exception &) {}
-
-    (*pp) = new com_object_impl_t<FbMetadbHandle>(metadb);
-    return S_OK;
+    return FbPlaylistMangerService::GetPlaylistFocusItemHandle(force, pp);
 }
 
 STDMETHODIMP FbUtils::GetSelection(IFbMetadbHandle** pp)
@@ -1793,7 +1768,6 @@ STDMETHODIMP FbUtils::GetSelection(IFbMetadbHandle** pp)
 
     return S_OK;
 }
-
 
 STDMETHODIMP FbUtils::GetSelections(UINT flags, IFbMetadbHandleList ** pp)
 {
@@ -1922,20 +1896,12 @@ STDMETHODIMP FbUtils::get_PlaybackLength(double* p)
 
 STDMETHODIMP FbUtils::get_PlaybackOrder(UINT* p)
 {
-    TRACK_FUNCTION();
-
-    if (!p) return E_POINTER;
-
-    *p = static_api_ptr_t<playlist_manager>()->playback_order_get_active();
-    return S_OK;
+    return FbPlaylistMangerService::get_PlaybackOrder(p);
 }
 
 STDMETHODIMP FbUtils::put_PlaybackOrder(UINT order)
 {
-    TRACK_FUNCTION();
-
-    static_api_ptr_t<playlist_manager>()->playback_order_set_active(order);
-    return S_OK;
+    return FbPlaylistMangerService::put_PlaybackOrder(order);
 }
 
 STDMETHODIMP FbUtils::get_StopAfterCurrent(VARIANT_BOOL * p)
@@ -2257,64 +2223,32 @@ STDMETHODIMP FbUtils::IsMetadbInMediaLibrary(IFbMetadbHandle * handle, VARIANT_B
 
 STDMETHODIMP FbUtils::get_ActivePlaylist(UINT * p)
 {
-    TRACK_FUNCTION();
-
-    if (!p) return E_POINTER;
-
-    *p = static_api_ptr_t<playlist_manager>()->get_active_playlist();
-    return S_OK;
+    return FbPlaylistMangerService::get_ActivePlaylist(p);
 }
 
 STDMETHODIMP FbUtils::put_ActivePlaylist(UINT idx)
 {
-    TRACK_FUNCTION();
-
-    static_api_ptr_t<playlist_manager> pm;
-    t_size index = (idx < pm->get_playlist_count()) ? idx : pfc::infinite_size;
-
-    pm->set_active_playlist(index);
-    return S_OK;
+    return FbPlaylistMangerService::put_ActivePlaylist(idx);
 }
 
 STDMETHODIMP FbUtils::get_PlayingPlaylist(UINT * p)
 {
-    TRACK_FUNCTION();
-
-    if (!p) return E_POINTER;
-
-    *p = static_api_ptr_t<playlist_manager>()->get_playing_playlist();
-    return S_OK;
+    return FbPlaylistMangerService::get_PlayingPlaylist(p);
 }
 
 STDMETHODIMP FbUtils::put_PlayingPlaylist(UINT idx)
 {
-    TRACK_FUNCTION();
-
-    static_api_ptr_t<playlist_manager> pm;
-    t_size index = (idx < pm->get_playlist_count()) ? idx : pfc::infinite_size;
-
-    pm->set_playing_playlist(index);
-    return S_OK;
+    return FbPlaylistMangerService::put_PlayingPlaylist(idx);
 }
 
 STDMETHODIMP FbUtils::get_PlaylistCount(UINT * p)
 {
-    TRACK_FUNCTION();
-
-    if (!p) return E_POINTER;
-
-    *p = static_api_ptr_t<playlist_manager>()->get_playlist_count();
-    return S_OK;
+    return FbPlaylistMangerService::get_PlaylistCount(p);
 }
 
 STDMETHODIMP FbUtils::get_PlaylistItemCount(UINT idx, UINT * p)
 {
-    TRACK_FUNCTION();
-
-    if (!p) return E_POINTER;
-
-    *p = static_api_ptr_t<playlist_manager>()->playlist_get_item_count(idx);
-    return S_OK;
+    return FbPlaylistMangerService::get_PlaylistItemCount(idx, p);
 }
 
 STDMETHODIMP FbUtils::GetPlaylistName(UINT idx, BSTR * p)
@@ -2581,9 +2515,7 @@ STDMETHODIMP MenuObj::TrackPopupMenu(int x, int y, UINT flags, UINT * item_id)
     flags &= ~TPM_RECURSE;
 
     ClientToScreen(m_wnd_parent, &pt);
-    SendMessage(m_wnd_parent, UWM_TOGGLEQUERYCONTINUE, 0, false);
     (*item_id) = ::TrackPopupMenu(m_hMenu, flags, pt.x, pt.y, 0, m_wnd_parent, 0);
-    SendMessage(m_wnd_parent, UWM_TOGGLEQUERYCONTINUE, 0, true);
     return S_OK;
 }
 

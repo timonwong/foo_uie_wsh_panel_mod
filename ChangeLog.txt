@@ -1,3 +1,7 @@
+v1.5.0
+- ADD: Add new "playlistman" object, which is an instance of IFbPlaylistManager, in order to manipulate foobar2000 playlist.
+- ADD: Add new callback "on_playback_queue_changed".
+
 v1.4.4
 - FIX: Fix a bug that when methods get occasionally called after Dispose(), foobar2000 will crash.
 - FIX: Fix a bug that ApplyMask() doesn't work if the destination image has alpha channel.

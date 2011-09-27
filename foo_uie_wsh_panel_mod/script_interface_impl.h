@@ -188,7 +188,7 @@ public:
 	STDMETHODIMP get_chars(int * p);
 };
 
-// Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
+// NOTE: Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
 class GdiUtils : public IDispatchImpl3<IGdiUtils>
 {
 protected:
@@ -376,7 +376,7 @@ public:
 	STDMETHODIMP get_Time(INT * p);
 };
 
-// Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
+// NOTE: Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
 class FbUtils : public IDispatchImpl3<IFbUtils>
 {
 protected:
@@ -514,7 +514,7 @@ public:
 	STDMETHODIMP get_ID(UINT * p);
 };
 
-// Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
+// NOTE: Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
 class WSHUtils : public IDispatchImpl3<IWSHUtils>
 {
 protected:
