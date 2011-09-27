@@ -2140,7 +2140,7 @@ STDMETHODIMP FbUtils::RunMainMenuCommand(BSTR command, VARIANT_BOOL * p)
     return S_OK;
 }
 
-STDMETHODIMP FbUtils::RunContextCommand(BSTR command, VARIANT_BOOL * p)
+STDMETHODIMP FbUtils::RunContextCommand(BSTR command, UINT flags, VARIANT_BOOL * p)
 {
     TRACK_FUNCTION();
 
@@ -2148,11 +2148,11 @@ STDMETHODIMP FbUtils::RunContextCommand(BSTR command, VARIANT_BOOL * p)
     if (!p) return E_POINTER;
 
     pfc::stringcvt::string_utf8_from_wide name(command);
-    *p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name, metadb_handle_list()));
+    *p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name, metadb_handle_list(), flags));
     return S_OK;
 }
 
-STDMETHODIMP FbUtils::RunContextCommandWithMetadb(BSTR command, VARIANT handle, VARIANT_BOOL * p)
+STDMETHODIMP FbUtils::RunContextCommandWithMetadb(BSTR command, VARIANT handle, UINT flags, VARIANT_BOOL * p)
 {
     TRACK_FUNCTION();
 
@@ -2184,7 +2184,7 @@ STDMETHODIMP FbUtils::RunContextCommandWithMetadb(BSTR command, VARIANT handle, 
         return E_INVALIDARG;
     }
 
-    *p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name, handle_list));
+    *p = TO_VARIANT_BOOL(helpers::execute_context_command_by_name_SEH(name, handle_list, flags));
     return S_OK;
 }
 

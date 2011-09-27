@@ -1,4 +1,9 @@
-v1.5.0
+v1.5.0 Preview 2
+- ADD: Add `flags` (default is 0) parameter to fb.RunContextCommand() and fb.RunContextCommandWithMetadb().
+- ADD: Add plman.CreatePlaybackQueueItem(), to create an empty IFbPlaybackQueueItem instance.
+- FIX: Fix a problem that plman.RemoveItemsFromPlaybackQueue() will crash.
+
+v1.5.0 Preview 1
 - ADD: Add new "plman" object, which is an instance of IFbPlaylistManager, in order to manipulate foobar2000 playlist.
 - ADD: Add new "IFbPlaybackQueueItem" interface.
 - ADD: Add new callback "on_playback_queue_changed".

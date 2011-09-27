@@ -721,6 +721,8 @@ Methods:
 	// Returns the index of newly created playlist.
 	uint DuplicatePlaylist(from, name = "");
     
+    // [1.5.0 Preview 2]: Added:
+    IFbPlaybackQueueItem CreatePlaybackQueueItem();
     // Remove single item from playback queue
     void RemoveItemFromPlaybackQueue(index);
     // affectedItems: array of item indexes

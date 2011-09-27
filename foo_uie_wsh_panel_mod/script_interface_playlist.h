@@ -4,7 +4,7 @@
 
 // forward declarations
 __interface IFbMetadbHandleList;
-__interface IFbPlaybackQueueItem;
+
 
 //---
 [
@@ -31,6 +31,7 @@ __interface IFbPlaylistManager : IDispatch
     STDMETHOD(RenamePlaylist)(UINT playlistIndex, BSTR name, [out,retval] VARIANT_BOOL * outSuccess);
     STDMETHOD(DuplicatePlaylist)(UINT from, BSTR name, [out,retval] UINT * outPlaylistIndex);
 
+    STDMETHOD(CreatePlaybackQueueItem)([out,retval] __interface IFbPlaybackQueueItem ** outPlaybackQueueItem);
     STDMETHOD(RemoveItemFromPlaybackQueue)(UINT index);
     STDMETHOD(RemoveItemsFromPlaybackQueue)(VARIANT affectedItems);
     STDMETHOD(AddPlaylistItemToPlaybackQueue)(UINT playlistIndex, UINT playlistItemIndex);
@@ -63,7 +64,7 @@ _COM_SMARTPTR_TYPEDEF(IFbPlaylistManager, __uuidof(IFbPlaylistManager));
 __interface IFbPlaybackQueueItem : IDisposable
 {
     // Methods
-    STDMETHOD(Equals)(IFbPlaybackQueueItem * item, [out,retval] VARIANT_BOOL * outEquals);
+    STDMETHOD(Equals)(__interface IFbPlaybackQueueItem * item, [out,retval] VARIANT_BOOL * outEquals);
 
     // Properties
     [propget] STDMETHOD(_ptr)([out,retval] void ** pp);

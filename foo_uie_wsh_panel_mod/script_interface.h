@@ -396,8 +396,8 @@ __interface IFbUtils: IDispatch
 	STDMETHOD(LoadPlaylist)();
 	STDMETHOD(SavePlaylist)();
 	STDMETHOD(RunMainMenuCommand)(BSTR command, [out,retval] VARIANT_BOOL * p);
-	STDMETHOD(RunContextCommand)(BSTR command, [out,retval] VARIANT_BOOL * p);
-	STDMETHOD(RunContextCommandWithMetadb)(BSTR command, VARIANT handle, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(RunContextCommand)(BSTR command, [defaultvalue(0)] UINT flags, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(RunContextCommandWithMetadb)(BSTR command, VARIANT handle, [defaultvalue(0)] UINT flags, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(CreateContextMenuManager)([out,retval] IContextMenuManager ** pp);
 	STDMETHOD(CreateMainMenuManager)([out,retval] IMainMenuManager ** pp);
 	STDMETHOD(IsMetadbInMediaLibrary)(IFbMetadbHandle * handle, [out,retval] VARIANT_BOOL * p);

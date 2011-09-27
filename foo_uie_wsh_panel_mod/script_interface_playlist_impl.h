@@ -21,6 +21,7 @@ public:
     static STDMETHODIMP RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess);
     static STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex);
 
+    static STDMETHODIMP CreatePlaybackQueueItem(IFbPlaybackQueueItem ** outPlaybackQueueItem);
     static STDMETHODIMP RemoveItemFromPlaybackQueue(UINT index);
     static STDMETHODIMP RemoveItemsFromPlaybackQueue(VARIANT affectedItems);
     static STDMETHODIMP AddPlaylistItemToPlaybackQueue(UINT playlistIndex, UINT playlistItemIndex);
@@ -61,6 +62,7 @@ public:
     STDMETHODIMP RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess);
     STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex);
 
+    STDMETHODIMP CreatePlaybackQueueItem(IFbPlaybackQueueItem ** outPlaybackQueueItem);
     STDMETHODIMP RemoveItemFromPlaybackQueue(UINT index);
     STDMETHODIMP RemoveItemsFromPlaybackQueue(VARIANT affectedItems);
     STDMETHODIMP AddPlaylistItemToPlaybackQueue(UINT playlistIndex, UINT playlistItemIndex);
@@ -87,6 +89,7 @@ class FbPlaybackQueueItem : public IDisposableImpl4<IFbPlaybackQueueItem>
 protected:
     t_playback_queue_item m_playback_queue_item;
 
+    FbPlaybackQueueItem() {}
     FbPlaybackQueueItem(const t_playback_queue_item & playbackQueueItem);
 
     virtual ~FbPlaybackQueueItem();

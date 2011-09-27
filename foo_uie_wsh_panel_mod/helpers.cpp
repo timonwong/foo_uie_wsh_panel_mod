@@ -66,29 +66,32 @@ namespace helpers
 		return false;
 	}
 
-	extern bool execute_context_command_by_name(const char * p_name, metadb_handle_list_cref p_handles)
-	{
+    extern bool execute_context_command_by_name(const char * p_name, metadb_handle_list_cref p_handles, unsigned flags)
+    {
 		contextmenu_node * node = NULL;
 
 		service_ptr_t<contextmenu_manager> cm;
 		pfc::string8_fast dummy("");
-
 		contextmenu_manager::g_create(cm);
 
 		if (p_handles.get_count() > 0)
 		{
-			cm->init_context(p_handles, 0);
+			cm->init_context(p_handles, flags);
 		}
 		else
 		{
-			cm->init_context_now_playing(0);
+			cm->init_context_now_playing(flags);
 		}
 
 		if (!find_context_command_recur(p_name, dummy, cm->get_root(), node))
+        {
 			return false;
+        }
 
 		if (node)
+        {
 			node->execute();
+        }
 
 		return false;
 	}

@@ -311,6 +311,16 @@ STDMETHODIMP FbPlaylistMangerService::get_PlaylistItemCount(UINT playlistIndex, 
     return S_OK;
 }
 
+STDMETHODIMP FbPlaylistMangerService::CreatePlaybackQueueItem(IFbPlaybackQueueItem ** outPlaybackQueueItem)
+{
+    TRACK_FUNCTION();
+
+    if (!outPlaybackQueueItem) return E_POINTER;
+
+    (*outPlaybackQueueItem) = new com_object_impl_t<FbPlaybackQueueItem>();
+    return S_OK;
+}
+
 STDMETHODIMP FbPlaylistMangerService::RemoveItemFromPlaybackQueue(UINT index)
 {
     TRACK_FUNCTION();
@@ -324,13 +334,15 @@ STDMETHODIMP FbPlaylistMangerService::RemoveItemsFromPlaybackQueue(VARIANT affec
     TRACK_FUNCTION();
 
     helpers::com_array_reader arrayReader;
+    static_api_ptr_t<playlist_manager> plman;
     int count;
-
+   
     // cannot convert, just fail
     if (!arrayReader.convert(&affectedItems)) return E_INVALIDARG;
     // no items
     if (arrayReader.get_count() == 0) return S_OK;
 
+    count = plman->queue_get_count();
     bit_array_bittable affected(count);
 
     for (int i = arrayReader.get_lbound(); i < arrayReader.get_count(); ++i)
@@ -343,7 +355,8 @@ STDMETHODIMP FbPlaylistMangerService::RemoveItemsFromPlaybackQueue(VARIANT affec
         affected.set(index.lVal, true);
     }
 
-    static_api_ptr_t<playlist_manager>()->queue_remove_mask(affected);
+    plman->queue_remove_mask(affected);
+    return S_OK;
 }
 
 STDMETHODIMP FbPlaylistMangerService::AddPlaylistItemToPlaybackQueue(UINT playlistIndex, UINT playlistItemIndex)
@@ -552,6 +565,11 @@ STDMETHODIMP FbPlaylistManager::RenamePlaylist(UINT playlistIndex, BSTR name, VA
 STDMETHODIMP FbPlaylistManager::DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex)
 {
     return FbPlaylistMangerService::DuplicatePlaylist(from, name, outPlaylistIndex);
+}
+
+STDMETHODIMP FbPlaylistManager::CreatePlaybackQueueItem(IFbPlaybackQueueItem ** outPlaybackQueueItem)
+{
+    return FbPlaylistMangerService::CreatePlaybackQueueItem(outPlaybackQueueItem);
 }
 
 STDMETHODIMP FbPlaylistManager::RemoveItemFromPlaybackQueue(UINT index)

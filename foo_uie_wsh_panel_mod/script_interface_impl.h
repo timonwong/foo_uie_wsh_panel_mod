@@ -432,8 +432,8 @@ public:
 	STDMETHODIMP LoadPlaylist();
 	STDMETHODIMP SavePlaylist();
 	STDMETHODIMP RunMainMenuCommand(BSTR command, VARIANT_BOOL * p);
-	STDMETHODIMP RunContextCommand(BSTR command, VARIANT_BOOL * p);
-	STDMETHODIMP RunContextCommandWithMetadb(BSTR command, VARIANT handle, VARIANT_BOOL * p);
+    STDMETHODIMP RunContextCommand(BSTR command, UINT flags, VARIANT_BOOL * p);
+    STDMETHODIMP RunContextCommandWithMetadb(BSTR command, VARIANT handle, UINT flags, VARIANT_BOOL * p);
 	STDMETHODIMP CreateContextMenuManager(IContextMenuManager ** pp);
 	STDMETHODIMP CreateMainMenuManager(IMainMenuManager ** pp);
 	STDMETHODIMP IsMetadbInMediaLibrary(IFbMetadbHandle * handle, VARIANT_BOOL * p);

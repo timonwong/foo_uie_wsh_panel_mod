@@ -7,7 +7,7 @@
 
 namespace helpers
 {
-	extern bool execute_context_command_by_name(const char * p_name, metadb_handle_list_cref p_handles);
+    extern bool execute_context_command_by_name(const char * p_name, metadb_handle_list_cref p_handles, unsigned flags);
 	extern bool execute_mainmenu_command_by_name(const char * p_name);
 
 	inline int get_text_width(HDC hdc, LPCTSTR text, int len)
@@ -82,13 +82,13 @@ namespace helpers
 
 	extern void estimate_line_wrap(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out);
 
-	__declspec(noinline) static bool execute_context_command_by_name_SEH(const char * p_name, metadb_handle_list_cref p_handles)
+    __declspec(noinline) static bool execute_context_command_by_name_SEH(const char * p_name, metadb_handle_list_cref p_handles, unsigned flags)
 	{
 		bool ret = false;
 
 		__try 
 		{
-			ret = execute_context_command_by_name(p_name, p_handles);
+			ret = execute_context_command_by_name(p_name, p_handles, flags);
 		}
 		__except (EXCEPTION_EXECUTE_HANDLER)
 		{
