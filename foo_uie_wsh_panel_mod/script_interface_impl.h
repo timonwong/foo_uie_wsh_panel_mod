@@ -650,6 +650,7 @@ public:
 	{
 		kActionModeNone = 0,
 		kActionModePlaylist,
+        kActionModeFilenames,
 	};
 
 protected:

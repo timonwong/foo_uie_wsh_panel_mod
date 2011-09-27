@@ -243,10 +243,10 @@ public:
 	};
 
 private:
-	class process_dropped_items : public process_locations_notify 
+	class process_dropped_items_to_playlist : public process_locations_notify 
 	{
 	public:
-		process_dropped_items(int playlist_idx, bool to_select) 
+		process_dropped_items_to_playlist(int playlist_idx, bool to_select) 
 			: m_playlist_idx(playlist_idx), m_to_select(to_select) {}
 
 		void on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items);

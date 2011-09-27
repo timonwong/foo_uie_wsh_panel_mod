@@ -1,5 +1,5 @@
 v1.5.0
-- ADD: Add new "playlistman" object, which is an instance of IFbPlaylistManager, in order to manipulate foobar2000 playlist.
+- ADD: Add new "plman" object, which is an instance of IFbPlaylistManager, in order to manipulate foobar2000 playlist.
 - ADD: Add new callback "on_playback_queue_changed".
 
 v1.4.4

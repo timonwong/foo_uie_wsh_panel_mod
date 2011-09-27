@@ -845,7 +845,7 @@ STDMETHODIMP ScriptHost::GetItemInfo(LPCOLESTR name, DWORD mask, IUnknown** ppun
 			(*ppunk)->AddRef();
 			return S_OK;
 		}
-        else if (wcscmp(name, L"playlistman") == 0)
+        else if (wcscmp(name, L"plman") == 0)
         {
             (*ppunk) = m_playlistman;
             (*ppunk)->AddRef();
@@ -1018,7 +1018,7 @@ HRESULT ScriptHost::Initialize()
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"fb", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
-    if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"playlistman", SCRIPTITEM_ISVISIBLE);
+    if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"plman", SCRIPTITEM_ISVISIBLE);
 	//if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_STARTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
@@ -1311,7 +1311,7 @@ void ScriptHost::CallDebugManager(IActiveScriptError* err, _bstr_t &name, ULONG 
     }
 }
 
-void PanelDropTarget::process_dropped_items::on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items)
+void PanelDropTarget::process_dropped_items_to_playlist::on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items)
 {
 	bit_array_true selection_them;
 	bit_array_false selection_none;
@@ -1338,12 +1338,13 @@ STDMETHODIMP PanelDropTarget::DragEnter(IDataObject *pDataObj, DWORD grfKeyState
 	if (!pdwEffect) return E_POINTER;
 
 	m_action->Reset();
-	// Parsable?
-	m_action->Parsable() = static_api_ptr_t<playlist_incoming_item_filter>()->process_dropped_files_check_ex(pDataObj, &m_effect);
 
 	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
 	MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
 	SendMessage(m_host->GetHWND(), UWM_DRAG_ENTER, 0, (LPARAM)&param);
+
+    // Parsable?
+    m_action->Parsable() = m_action->Parsable() || static_api_ptr_t<playlist_incoming_item_filter>()->process_dropped_files_check_ex(pDataObj, &m_effect);
 
 	if (!m_action->Parsable())
 		*pdwEffect = DROPEFFECT_NONE;
@@ -1392,8 +1393,11 @@ STDMETHODIMP PanelDropTarget::Drop(IDataObject *pDataObj, DWORD grfKeyState, POI
 		case DropSourceAction::kActionModePlaylist:
 			static_api_ptr_t<playlist_incoming_item_filter_v2>()->process_dropped_files_async(pDataObj, 
 				playlist_incoming_item_filter_v2::op_flag_delay_ui,
-				core_api::get_main_window(), new service_impl_t<process_dropped_items>(playlist, to_select));
+				core_api::get_main_window(), new service_impl_t<process_dropped_items_to_playlist>(playlist, to_select));
 			break;
+
+        case DropSourceAction::kActionModeFilenames:
+            break;
 
 		default:
 			break;

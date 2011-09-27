@@ -118,6 +118,119 @@ STDMETHODIMP FbPlaylistMangerService::SetPlaylistFocusItemByHandle(UINT playlist
     return S_OK;
 }
 
+STDMETHODIMP FbPlaylistMangerService::GetPlaylistName(UINT playlistIndex, BSTR * outName)
+{
+    TRACK_FUNCTION();
+
+    if (!outName) return E_POINTER;
+
+    pfc::string8_fast temp;
+
+    static_api_ptr_t<playlist_manager>()->playlist_get_name(playlistIndex, temp);
+    *outName = SysAllocString(pfc::stringcvt::string_wide_from_utf8(temp));
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::CreatePlaylist(UINT playlistIndex, BSTR name, UINT * outPlaylistIndex)
+{
+    TRACK_FUNCTION();
+
+    if (!name) return E_INVALIDARG;
+    if (!outPlaylistIndex) return E_POINTER;
+
+    if (*name)
+    {
+        pfc::stringcvt::string_utf8_from_wide uname(name);
+
+        *outPlaylistIndex = static_api_ptr_t<playlist_manager>()->create_playlist(uname, uname.length(), playlistIndex);
+    }
+    else
+    {
+        *outPlaylistIndex = static_api_ptr_t<playlist_manager>()->create_playlist_autoname(playlistIndex);
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::RemovePlaylist(UINT playlistIndex, VARIANT_BOOL * outSuccess)
+{
+    TRACK_FUNCTION();
+
+    if (!outSuccess) return E_POINTER;
+
+    *outSuccess = TO_VARIANT_BOOL(static_api_ptr_t<playlist_manager>()->remove_playlist(playlistIndex));
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::MovePlaylist(UINT from, UINT to, VARIANT_BOOL * outSuccess)
+{
+    TRACK_FUNCTION();
+
+    if (!outSuccess) return E_POINTER;
+
+    static_api_ptr_t<playlist_manager> pm;
+    order_helper order(pm->get_playlist_count());
+
+    if ((from >= order.get_count()) || (to >= order.get_count()))
+    {
+        *outSuccess = VARIANT_FALSE;
+        return S_OK;
+    }
+
+    int inc = (from < to) ? 1 : -1;
+
+    for (t_size i = from; i != to; i += inc)
+    {
+        order[i] = order[i + inc];
+    }
+
+    order[to] = from;
+
+    *outSuccess = TO_VARIANT_BOOL(pm->reorder(order.get_ptr(), order.get_count()));
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess)
+{
+    TRACK_FUNCTION();
+
+    if (!name) return E_INVALIDARG;
+    if (!outSuccess) return E_POINTER;
+
+    pfc::stringcvt::string_utf8_from_wide uname(name);
+
+    *outSuccess = TO_VARIANT_BOOL(static_api_ptr_t<playlist_manager>()->playlist_rename(playlistIndex, uname, uname.length()));
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerService::DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex)
+{
+    TRACK_FUNCTION();
+
+    if (!outPlaylistIndex) return E_POINTER;
+
+    static_api_ptr_t<playlist_manager_v4> manager;
+    metadb_handle_list contents;
+    pfc::string8_fast name_utf8;
+
+    if (from >= manager->get_playlist_count()) return E_INVALIDARG;
+
+    manager->playlist_get_all_items(from, contents);
+
+    if (!name || !*name)
+        // If no name specified, create a playlist which will have the same name
+        manager->playlist_get_name(from, name_utf8);
+    else
+        name_utf8 = pfc::stringcvt::string_utf8_from_wide(name);
+
+    stream_reader_dummy dummy_reader;
+    abort_callback_dummy dummy_callback;
+
+    t_size idx = manager->create_playlist_ex(name_utf8.get_ptr(), name_utf8.get_length(), from + 1, contents, &dummy_reader, dummy_callback);
+    *outPlaylistIndex = idx;
+    return S_OK;
+}
+
 STDMETHODIMP FbPlaylistMangerService::get_PlaybackOrder(UINT * outOrder)
 {
     TRACK_FUNCTION();
@@ -272,5 +385,35 @@ STDMETHODIMP FbPlaylistManager::SetPlaylistFocusItem(UINT playlistIndex, UINT it
 STDMETHODIMP FbPlaylistManager::SetPlaylistFocusItemByHandle(UINT playlistIndex, IFbMetadbHandle * item)
 {
     return FbPlaylistMangerService::SetPlaylistFocusItemByHandle(playlistIndex, item);
+}
+
+STDMETHODIMP FbPlaylistManager::GetPlaylistName(UINT playlistIndex, BSTR * outName)
+{
+    return FbPlaylistMangerService::GetPlaylistName(playlistIndex, outName);
+}
+
+STDMETHODIMP FbPlaylistManager::CreatePlaylist(UINT playlistIndex, BSTR name, UINT * outPlaylistIndex)
+{
+    return FbPlaylistMangerService::CreatePlaylist(playlistIndex, name, outPlaylistIndex);
+}
+
+STDMETHODIMP FbPlaylistManager::RemovePlaylist(UINT playlistIndex, VARIANT_BOOL * outSuccess)
+{
+    return FbPlaylistMangerService::RemovePlaylist(playlistIndex, outSuccess);
+}
+
+STDMETHODIMP FbPlaylistManager::MovePlaylist(UINT from, UINT to, VARIANT_BOOL * outSuccess)
+{
+    return FbPlaylistMangerService::MovePlaylist(from, to, outSuccess);
+}
+
+STDMETHODIMP FbPlaylistManager::RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess)
+{
+    return FbPlaylistMangerService::RenamePlaylist(playlistIndex, name, outSuccess);
+}
+
+STDMETHODIMP FbPlaylistManager::DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex)
+{
+    return FbPlaylistMangerService::DuplicatePlaylist(from, name, outPlaylistIndex);
 }
 

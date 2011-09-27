@@ -23,6 +23,12 @@ __interface IFbPlaylistManager : IDispatch
     STDMETHOD(GetPlaylistFocusItemHandle)(VARIANT_BOOL force, [out,retval] IFbMetadbHandle ** outItem);
     STDMETHOD(SetPlaylistFocusItem)(UINT playlistIndex, UINT itemIndex);
     STDMETHOD(SetPlaylistFocusItemByHandle)(UINT playlistIndex, IFbMetadbHandle * item);
+    STDMETHOD(GetPlaylistName)(UINT playlistIndex, [out,retval] BSTR * outName);
+    STDMETHOD(CreatePlaylist)(UINT playlistIndex, BSTR name, [out,retval] UINT * outPlaylistIndex);
+    STDMETHOD(RemovePlaylist)(UINT playlistIndex, [out,retval] VARIANT_BOOL * outSuccess);
+    STDMETHOD(MovePlaylist)(UINT from, UINT to, [out,retval] VARIANT_BOOL * outSuccess);
+    STDMETHOD(RenamePlaylist)(UINT playlistIndex, BSTR name, [out,retval] VARIANT_BOOL * outSuccess);
+    STDMETHOD(DuplicatePlaylist)(UINT from, BSTR name, [out,retval] UINT * outPlaylistIndex);
 
     // Properties
     [propget] STDMETHOD(PlaybackOrder)([out,retval] UINT * outOrder);

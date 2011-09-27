@@ -112,15 +112,15 @@ utils.GetSystemMetrics(index)
 utils.Glob(pattern[, exc_mask, inc_mask])
 utils.FileTest(path, mode)
 
-playlistman.PlaybackOrder
-playlistman.ActivePlaylist
-playlistman.PlaylingPlaylist
-playlistman.PlaylistCount
-playlistman.PlaylistItemCount
-playlistman.GetPlaylistItems(playlistIndex)
-playlistman.SetPlaylistSelectionSingle(playlistIndex, itemIndex, state)
-playlistman.SetPlaylistSelection(playlistIndex, affectedItems, state)
-playlistman.ClearPlaylistSelection(playlistIndex)
+plman.PlaybackOrder
+plman.ActivePlaylist
+plman.PlaylingPlaylist
+plman.PlaylistCount
+plman.PlaylistItemCount
+plman.GetPlaylistItems(playlistIndex)
+plman.SetPlaylistSelectionSingle(playlistIndex, itemIndex, state)
+plman.SetPlaylistSelection(playlistIndex, affectedItems, state)
+plman.ClearPlaylistSelection(playlistIndex)
 
 # Callback function prototypes
 on_mouse_lbtn_down(x, y, mask)

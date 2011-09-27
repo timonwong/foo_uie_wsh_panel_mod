@@ -5,7 +5,7 @@
 //   gdi - IGdiUtils
 //   fb - IFbUtils
 //   utils - IWSHUtils
-//   playlistman - IFbPlaylistManager
+//   plman - IFbPlaylistManager
 
 interface IGdiFont {
 Properties:
@@ -685,13 +685,26 @@ Methods:
     // state = true: select, deselect otherwise
     void SetPlaylistSelectionSingle(playlistIndex, itemIndex, state);
     // state = true: select, deselect otherwise
+    // affectedItems: 
     void SetPlaylistSelection(playlistIndex, affectedItems, state);
     // Clear selection of specified playlist
     void ClearPlaylistSelection(playlistIndex);
     IFbMetadbHandle GetPlaylistFocusItemHandle(force);
     void SetPlaylistFocusItem(playlistIndex, itemIndex);
     void SetPlaylistFocusItemByHandle(playlistIndex, itemHandle);
-    
+	String GetPlaylistName(idx);
+	// if name is "", then Create a playlist autonamed with "New Playlist <number>".
+	// return the index of the created playlist.
+	uint CreatePlaylist(idx, name);
+	boolean RemovePlaylist(idx);
+	boolean MovePlaylist(from, to);
+	boolean RenamePlaylist(idx, name);
+	// Duplicate all contents from one playlist to a new playlist.
+	// NOTE: This method only duplicate contents of the playlist, not its properties (eg. autoplaylist).
+	// from: Which index of playlist to copy from.
+	// name: New playlist name, when empty, using the same name as 'from'.
+	// Returns the index of newly created playlist.
+	uint DuplicatePlaylist(from, name = "");
 
 Properties:
 	(read, write) uint PlaybackOrder;

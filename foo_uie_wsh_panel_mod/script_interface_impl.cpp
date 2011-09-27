@@ -2253,115 +2253,32 @@ STDMETHODIMP FbUtils::get_PlaylistItemCount(UINT idx, UINT * p)
 
 STDMETHODIMP FbUtils::GetPlaylistName(UINT idx, BSTR * p)
 {
-    TRACK_FUNCTION();
-
-    if (!p) return E_POINTER;
-
-    pfc::string8_fast temp;
-
-    static_api_ptr_t<playlist_manager>()->playlist_get_name(idx, temp);
-    *p = SysAllocString(pfc::stringcvt::string_wide_from_utf8(temp));
-    return S_OK;
+    return FbPlaylistMangerService::GetPlaylistName(idx, p);
 }
 
 STDMETHODIMP FbUtils::CreatePlaylist(UINT idx, BSTR name, UINT * p)
 {
-    TRACK_FUNCTION();
-
-    if (!name) return E_INVALIDARG;
-    if (!p) return E_POINTER;
-
-    if (*name)
-    {
-        pfc::stringcvt::string_utf8_from_wide uname(name);
-
-        *p = static_api_ptr_t<playlist_manager>()->create_playlist(uname, uname.length(), idx);
-    }
-    else
-    {
-        *p = static_api_ptr_t<playlist_manager>()->create_playlist_autoname(idx);
-    }
-
-    return S_OK;
+    return FbPlaylistMangerService::CreatePlaylist(idx, name, p);
 }
 
 STDMETHODIMP FbUtils::RemovePlaylist(UINT idx, VARIANT_BOOL * p)
 {
-    TRACK_FUNCTION();
-
-    if (!p) return E_POINTER;
-
-    *p = TO_VARIANT_BOOL(static_api_ptr_t<playlist_manager>()->remove_playlist(idx));
-    return S_OK;
+    return FbPlaylistMangerService::RemovePlaylist(idx, p);
 }
 
 STDMETHODIMP FbUtils::MovePlaylist(UINT from, UINT to, VARIANT_BOOL * p)
 {
-    TRACK_FUNCTION();
-
-    if (!p) return E_POINTER;
-
-    static_api_ptr_t<playlist_manager> pm;
-    order_helper order(pm->get_playlist_count());
-
-    if ((from >= order.get_count()) || (to >= order.get_count()))
-    {
-        *p = VARIANT_FALSE;
-        return S_OK;
-    }
-
-    int inc = (from < to) ? 1 : -1;
-
-    for (t_size i = from; i != to; i += inc)
-    {
-        order[i] = order[i + inc];
-    }
-
-    order[to] = from;
-
-    *p = TO_VARIANT_BOOL(pm->reorder(order.get_ptr(), order.get_count()));
-    return S_OK;
+    return FbPlaylistMangerService::MovePlaylist(from, to, p);
 }
 
 STDMETHODIMP FbUtils::RenamePlaylist(UINT idx, BSTR name, VARIANT_BOOL * p)
 {
-    TRACK_FUNCTION();
-
-    if (!name) return E_INVALIDARG;
-    if (!p) return E_POINTER;
-
-    pfc::stringcvt::string_utf8_from_wide uname(name);
-
-    *p = TO_VARIANT_BOOL(static_api_ptr_t<playlist_manager>()->playlist_rename(idx, uname, uname.length()));
-    return S_OK;
+    return FbPlaylistMangerService::RenamePlaylist(idx, name, p);
 }
 
 STDMETHODIMP FbUtils::DuplicatePlaylist(UINT from, BSTR name, UINT * p)
 {
-    TRACK_FUNCTION();
-
-    if (!p) return E_POINTER;
-
-    static_api_ptr_t<playlist_manager_v4> manager;
-    metadb_handle_list contents;
-    pfc::string8_fast name_utf8;
-
-    if (from >= manager->get_playlist_count()) return E_INVALIDARG;
-
-    manager->playlist_get_all_items(from, contents);
-
-    if (!name || !*name)
-        // If no name specified, create a playlist which will have the same name
-        manager->playlist_get_name(from, name_utf8);
-    else
-        name_utf8 = pfc::stringcvt::string_utf8_from_wide(name);
-
-    stream_reader_dummy dummy_reader;
-    abort_callback_dummy dummy_callback;
-
-    t_size idx = manager->create_playlist_ex(name_utf8.get_ptr(), name_utf8.get_length(), from + 1, contents, &dummy_reader, dummy_callback);
-    *p = idx;
-    return S_OK;
+    return FbPlaylistMangerService::DuplicatePlaylist(from, name, p);
 }
 
 STDMETHODIMP FbUtils::IsAutoPlaylist(UINT idx, VARIANT_BOOL * p)

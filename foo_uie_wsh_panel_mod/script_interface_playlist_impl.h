@@ -14,6 +14,12 @@ public:
     static STDMETHODIMP GetPlaylistFocusItemHandle(VARIANT_BOOL force, IFbMetadbHandle ** outItem);
     static STDMETHODIMP SetPlaylistFocusItem(UINT playlistIndex, UINT itemIndex);
     static STDMETHODIMP SetPlaylistFocusItemByHandle(UINT playlistIndex, IFbMetadbHandle * item);
+    static STDMETHODIMP GetPlaylistName(UINT playlistIndex, BSTR * outName);
+    static STDMETHODIMP CreatePlaylist(UINT playlistIndex, BSTR name, UINT * outPlaylistIndex);
+    static STDMETHODIMP RemovePlaylist(UINT playlistIndex, VARIANT_BOOL * outSuccess);
+    static STDMETHODIMP MovePlaylist(UINT from, UINT to, VARIANT_BOOL * outSuccess);
+    static STDMETHODIMP RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess);
+    static STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex);
 
     // Properties
     static STDMETHODIMP get_PlaybackOrder(UINT * outOrder);
@@ -38,6 +44,12 @@ public:
     STDMETHODIMP GetPlaylistFocusItemHandle(VARIANT_BOOL force, IFbMetadbHandle ** outItem);
     STDMETHODIMP SetPlaylistFocusItem(UINT playlistIndex, UINT itemIndex);
     STDMETHODIMP SetPlaylistFocusItemByHandle(UINT playlistIndex, IFbMetadbHandle * item);
+    STDMETHODIMP GetPlaylistName(UINT playlistIndex, BSTR * outName);
+    STDMETHODIMP CreatePlaylist(UINT playlistIndex, BSTR name, UINT * outPlaylistIndex);
+    STDMETHODIMP RemovePlaylist(UINT playlistIndex, VARIANT_BOOL * outSuccess);
+    STDMETHODIMP MovePlaylist(UINT from, UINT to, VARIANT_BOOL * outSuccess);
+    STDMETHODIMP RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess);
+    STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex);
 
     // Properties
     STDMETHODIMP get_PlaybackOrder(UINT * outOrder);
