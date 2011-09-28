@@ -1,4 +1,5 @@
 v1.5.0 Preview 2
+- CHG: This component now requires foobar2000 1.1+.
 - ADD: Add "flags" (default is 0) parameter to fb.RunContextCommand() and fb.RunContextCommandWithMetadb().
 - ADD: Add plman.CreatePlaybackQueueItem(), to create an empty IFbPlaybackQueueItem instance.
 - ADD: Add new on_playlist_items_reordered() callback.

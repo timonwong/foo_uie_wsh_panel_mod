@@ -21,14 +21,19 @@ namespace helpers
 	inline int get_text_height(HDC hdc, const wchar_t * text, int len)
 	{
 		SIZE size;
-
 		GetTextExtentPoint32(hdc, text, len, &size);
 		return size.cy;
 	}
 
-	inline int is_wrap_char(wchar_t current)
+	inline int is_wrap_char(wchar_t current, wchar_t next)
 	{
-        return (iswctype(current, _SPACE | _CONTROL | _PUNCT));
+        if (next == '\0')
+            return true;
+
+        if (iswspace(current)) 
+            return true;
+
+        return iswalnum(current) == 0 || iswalnum(next) == 0;
 	}
 
 	struct wrapped_item
@@ -37,7 +42,7 @@ namespace helpers
 		int width;
 	};
 
-	extern void estimate_line_wrap(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out);
+    extern void estimate_line_wrap(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out);
 
     __declspec(noinline) static bool execute_context_command_by_name_SEH(const char * p_name, metadb_handle_list_cref p_handles, unsigned flags)
 	{

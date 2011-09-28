@@ -223,19 +223,24 @@ namespace helpers
 		return false;
 	}
 
-    void estimate_line_wrap_recur(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out)
+    void estimate_line_wrap_recur(HDC hdc, const wchar_t * text, int len, int width, bool firstLine, pfc::list_t<wrapped_item> & out)
     {
-        if (len == 0)
+        // Eat spaces
+        if (!firstLine)
         {
-            return;
+            while (len > 0 && iswspace(*text))
+            {
+                --len;
+                ++text;
+            }
         }
 
-        int textWidth = get_text_width(hdc, text, len);
         int textLength = len;
+        int textWidth = get_text_width(hdc, text, len);
 
-        if (textWidth <= width || len == 1)
+        if (textWidth <= width || len <= 1)
         {
-            wrapped_item item = { SysAllocString(text), textWidth };
+            wrapped_item item = { SysAllocStringLen(text, len), textWidth };
             out.add_item(item);
         }
         else
@@ -260,36 +265,40 @@ namespace helpers
             {
                 int fallbackTextLength = max(textLength, 1);
 
-                while (textLength > 0 && !is_wrap_char(text[textLength - 1]))
+                while (textLength > 0 && !is_wrap_char(text[textLength - 1], text[textLength]))
                 {
                     --textLength;
                 }
 
                 if (textLength == 0)
                 {
-                    // wrap forcibly
                     textLength = fallbackTextLength;
                 }
 
-                wrapped_item item = { SysAllocStringLen(text, textLength), get_text_width(hdc, text, textLength) };
+                wrapped_item item = 
+                { 
+                    SysAllocStringLen(text, textLength), 
+                    get_text_width(hdc, text, textLength) 
+                };
+
                 out.add_item(item);
             }
 
             if (textLength < len)
             {
-                estimate_line_wrap_recur(hdc, text + textLength, len - textLength, width, out);
+                estimate_line_wrap_recur(hdc, text + textLength, len - textLength, width, false, out);
             }
         }
     }
 
-	void estimate_line_wrap(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out)
-	{
+    extern void estimate_line_wrap(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out)
+    {
         for(;;) 
         {
             const wchar_t * next = wcschr(text, '\n');
             if (next == NULL) 
             {
-                estimate_line_wrap_recur(hdc, text, wcslen(text), width, out); 
+                estimate_line_wrap_recur(hdc, text, wcslen(text), width, true, out); 
                 break;
             }
 
@@ -300,7 +309,7 @@ namespace helpers
                 --walk;
             }
 
-            estimate_line_wrap_recur(hdc, text, walk - text, width, out);
+            estimate_line_wrap_recur(hdc, text, walk - text, width, true, out);
             text = next + 1;
         }
 	}
