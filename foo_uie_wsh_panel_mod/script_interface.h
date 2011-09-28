@@ -43,6 +43,9 @@ __interface IGdiFont: IGdiObj
 {
 	[propget] STDMETHOD(HFont)([out,retval] UINT* p);
 	[propget] STDMETHOD(Height)([out,retval] UINT* p);
+    [propget] STDMETHOD(Name)([defaultvalue(LANG_NEUTRAL)] LANGID langId, [out,retval] BSTR * outName);
+    [propget] STDMETHOD(Size)([out,retval] float * outSize);
+    [propget] STDMETHOD(Style)([out,retval] INT * outStyle);
 };
 
 [

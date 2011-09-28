@@ -42,6 +42,24 @@ int TryGetMetadbHandleFromVariant(const VARIANT & obj, IDispatch ** ppuk)
 }
 
 
+GdiFont::GdiFont(Gdiplus::Font* p, HFONT hFont, bool managed /*= true*/) : GdiObj<IGdiFont, Gdiplus::Font>(p), 
+    m_hFont(hFont), m_managed(managed)
+{
+
+}
+
+void GdiFont::FinalRelease()
+{
+    if (m_hFont && m_managed)
+    {
+        DeleteFont(m_hFont);
+        m_hFont = NULL;
+    }
+
+    // call parent
+    GdiObj<IGdiFont, Gdiplus::Font>::FinalRelease();
+}
+
 STDMETHODIMP GdiFont::get_HFont(UINT* p)
 {
     TRACK_FUNCTION();
@@ -64,6 +82,41 @@ STDMETHODIMP GdiFont::get_Height(UINT* p)
     *p = (UINT)m_ptr->GetHeight(&g);
     return S_OK;
 }
+
+STDMETHODIMP GdiFont::get_Name(LANGID langId, BSTR * outName)
+{
+    TRACK_FUNCTION();
+
+    if (!outName || !m_ptr) return E_POINTER;
+
+    Gdiplus::FontFamily fontFamily;
+    WCHAR name[LF_FACESIZE] = {0};
+    m_ptr->GetFamily(&fontFamily);
+    fontFamily.GetFamilyName(name, langId);
+    (*outName) = SysAllocString(name);
+    return S_OK;
+}
+
+STDMETHODIMP GdiFont::get_Size(float * outSize)
+{
+    TRACK_FUNCTION();
+
+    if (!outSize || !m_ptr) return E_POINTER;
+
+    (*outSize) = m_ptr->GetSize();
+    return S_OK;
+}
+
+STDMETHODIMP GdiFont::get_Style(INT * outStyle)
+{
+    TRACK_FUNCTION();
+
+    if (!outStyle || !m_ptr) return E_POINTER;
+
+    (*outStyle) = m_ptr->GetStyle();
+    return S_OK;
+}
+
 
 STDMETHODIMP GdiBitmap::get_Width(UINT* p)
 {

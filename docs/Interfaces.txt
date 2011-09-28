@@ -10,6 +10,12 @@
 interface IGdiFont {
 Properties:
 	(readonly) int Height;
+    // [1.5.0 Preview 2] New:
+    (readonly) String Name(langid = 0);
+    // [1.5.0 Preview 2] New:
+    (readonly) float Size;
+    // [1.5.0 Preview 2] New:
+    (readonly) int Style;
 Methods:
 	// [1.1.10] New:
 	void Dispose();
@@ -166,7 +172,7 @@ Methods:
 	//  work properly, because it's lack of width and height information.
 	boolean RenderStringPoint(g, str, font, x, y[, flags]);
 	boolean RenderStringRect(g, str, font, x, y, w, h[, flags]);
-	// [1.3.0]: New
+	// [1.3.0] New
 	// Only in pngmode, the image should be a transparent image created by gdi.CreateImage().
 	void SetPngImage(IGdiBitmap);
 }
@@ -414,7 +420,7 @@ Methods:
 	// NOTE: Apply now playing content only.
 	boolean RunMainMenuCommand(command);
 	// NOTE: Apply now playing content only.
-    // [1.5.0 Preview 2]: Changed: Add new flags parameter
+    // [1.5.0 Preview 2] Changed: Add new flags parameter
     // flags:   0 - default (depends on whether SHIFT key is pressed, flag_view_reduced or flag_view_full is selected)
     //          1 - flag_show_shortcuts
     //          2 - flag_show_shortcuts_global
@@ -423,7 +429,7 @@ Methods:
 	boolean RunContextCommand(command, flags = 0);
 	// [1.1.2] New:
 	// [1.4.0] Changed: Accept IFbMetadbHandleList interface for metadb handle list.
-    // [1.5.0 Preview 2]: Changed: Add new flags parameter
+    // [1.5.0 Preview 2] Changed: Add new flags parameter
     // flags:   0 - default (depends on whether SHIFT key is pressed, flag_view_reduced or flag_view_full is selected)
     //          1 - flag_show_shortcuts
     //          2 - flag_show_shortcuts_global
@@ -733,7 +739,7 @@ Methods:
 	// Returns the index of newly created playlist.
 	uint DuplicatePlaylist(from, name = "");
     
-    // [1.5.0 Preview 2]: Added:
+    // [1.5.0 Preview 2] Added:
     IFbPlaybackQueueItem CreatePlaybackQueueItem();
     // Remove single item from playback queue
     void RemoveItemFromPlaybackQueue(index);

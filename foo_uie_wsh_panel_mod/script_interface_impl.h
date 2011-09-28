@@ -54,26 +54,18 @@ protected:
 	HFONT m_hFont;
 	bool  m_managed;
 
-	GdiFont(Gdiplus::Font* p, HFONT hFont, bool managed = true): GdiObj<IGdiFont, Gdiplus::Font>(p), 
-		m_hFont(hFont), m_managed(managed) {}
+	GdiFont(Gdiplus::Font* p, HFONT hFont, bool managed = true);
 
 	virtual ~GdiFont() {}
 
-	virtual void FinalRelease()
-	{
-		if (m_hFont && m_managed)
-		{
-			DeleteFont(m_hFont);
-			m_hFont = NULL;
-		}
-
-		// call parent
-		GdiObj<IGdiFont, Gdiplus::Font>::FinalRelease();
-	}
+	virtual void FinalRelease();
 
 public:
 	STDMETHODIMP get_HFont(UINT* p);
 	STDMETHODIMP get_Height(UINT* p);
+    STDMETHODIMP get_Name(LANGID langId, BSTR * outName);
+    STDMETHODIMP get_Size(float * outSize);
+    STDMETHODIMP get_Style(INT * outStyle);
 };
 
 class GdiBitmap : public GdiObj<IGdiBitmap, Gdiplus::Bitmap>

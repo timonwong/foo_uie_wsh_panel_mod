@@ -127,6 +127,17 @@ plman.RemovePlaylist(idx)
 plman.MovePlaylist(from, to)
 plman.RenamePlaylist(idx, name)
 plman.DuplicatePlaylist(from, name)
+plman.CreatePlaybackQueueItem()
+plman.RemoveItemFromPlaybackQueue(index)
+plman.RemoveItemsFromPlaybackQueue(affectedItems);
+plman.AddPlaylistItemToPlaybackQueue(playlistIndex, playlistItemIndex);
+plman.AddItemToPlaybackQueue(IFbMetadbHandle);
+plman.GetPlaybackQueueCount();
+plman.GetPlaybackQueueContents();
+plman.FindPlaybackQueueItemIndex(handle, playlistIndex, playlistItemIndex);
+plman.FlushPlaybackQueue();
+plman.IsPlaybackQueueActive();
+
 
 # Callback function prototypes
 on_mouse_lbtn_down(x, y, mask)
