@@ -30,6 +30,7 @@ __interface IFbPlaylistManager : IDispatch
     STDMETHOD(MovePlaylist)(UINT from, UINT to, [out,retval] VARIANT_BOOL * outSuccess);
     STDMETHOD(RenamePlaylist)(UINT playlistIndex, BSTR name, [out,retval] VARIANT_BOOL * outSuccess);
     STDMETHOD(DuplicatePlaylist)(UINT from, BSTR name, [out,retval] UINT * outPlaylistIndex);
+    STDMETHOD(EnsurePlaylistItemVisible)(UINT playlistIndex, UINT itemIndex);
 
     STDMETHOD(CreatePlaybackQueueItem)([out,retval] __interface IFbPlaybackQueueItem ** outPlaybackQueueItem);
     STDMETHOD(RemoveItemFromPlaybackQueue)(UINT index);

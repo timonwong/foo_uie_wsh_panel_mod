@@ -20,6 +20,7 @@ public:
     static STDMETHODIMP MovePlaylist(UINT from, UINT to, VARIANT_BOOL * outSuccess);
     static STDMETHODIMP RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess);
     static STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex);
+    static STDMETHODIMP EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex);
 
     static STDMETHODIMP CreatePlaybackQueueItem(IFbPlaybackQueueItem ** outPlaybackQueueItem);
     static STDMETHODIMP RemoveItemFromPlaybackQueue(UINT index);
@@ -61,6 +62,7 @@ public:
     STDMETHODIMP MovePlaylist(UINT from, UINT to, VARIANT_BOOL * outSuccess);
     STDMETHODIMP RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess);
     STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex);
+    STDMETHODIMP EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex);
 
     STDMETHODIMP CreatePlaybackQueueItem(IFbPlaybackQueueItem ** outPlaybackQueueItem);
     STDMETHODIMP RemoveItemFromPlaybackQueue(UINT index);

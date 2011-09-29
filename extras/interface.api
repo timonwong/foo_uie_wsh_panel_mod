@@ -127,6 +127,7 @@ plman.RemovePlaylist(idx)
 plman.MovePlaylist(from, to)
 plman.RenamePlaylist(idx, name)
 plman.DuplicatePlaylist(from, name)
+plman.EnsurePlaylistItemVisible(playlistIndex, itemIndex);
 plman.CreatePlaybackQueueItem()
 plman.RemoveItemFromPlaybackQueue(index)
 plman.RemoveItemsFromPlaybackQueue(affectedItems);

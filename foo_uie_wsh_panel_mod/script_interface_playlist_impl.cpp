@@ -461,6 +461,14 @@ STDMETHODIMP FbPlaylistMangerService::IsPlaybackQueueActive(VARIANT_BOOL * outIs
     return S_OK;
 }
 
+STDMETHODIMP FbPlaylistMangerService::EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex)
+{
+    TRACK_FUNCTION();
+
+    static_api_ptr_t<playlist_manager>()->playlist_ensure_visible(playlistIndex, itemIndex);
+    return S_OK;
+}
+
 
 STDMETHODIMP FbPlaylistManager::GetPlaylistItems(UINT playlistIndex, IFbMetadbHandleList ** outItems)
 {
@@ -615,6 +623,11 @@ STDMETHODIMP FbPlaylistManager::FlushPlaybackQueue()
 STDMETHODIMP FbPlaylistManager::IsPlaybackQueueActive(VARIANT_BOOL * outIsActive)
 {
     return FbPlaylistMangerService::IsPlaybackQueueActive(outIsActive);
+}
+
+STDMETHODIMP FbPlaylistManager::EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex)
+{
+    return FbPlaylistMangerService::EnsurePlaylistItemVisible(playlistIndex, itemIndex);
 }
 
 

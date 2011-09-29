@@ -172,7 +172,7 @@ class my_playlist_callback : public playlist_callback_static
 public:
 	virtual unsigned get_flags() 
 	{
-		return flag_on_items_added | flag_on_items_removed | flag_on_item_focus_change | flag_on_items_selection_change |
+		return flag_on_items_added | flag_on_items_reordered | flag_on_items_removed | flag_on_item_focus_change | flag_on_items_selection_change |
 			flag_on_playlist_activate | flag_on_playlist_created | flag_on_playlists_reorder |
 			flag_on_playlists_removed | flag_on_playlist_renamed | flag_on_playback_order_changed ; 
 	}

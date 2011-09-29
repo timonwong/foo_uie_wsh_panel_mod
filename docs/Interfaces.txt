@@ -758,6 +758,8 @@ Methods:
 	// name: New playlist name, when empty, using the same name as 'from'.
 	// Returns the index of newly created playlist.
 	uint DuplicatePlaylist(from, name = "");
+    // [1.5.0 Preview 3] Added:
+    void EnsurePlaylistItemVisible(playlistIndex, itemIndex);
     
     // [1.5.0 Preview 2] Added:
     IFbPlaybackQueueItem CreatePlaybackQueueItem();
