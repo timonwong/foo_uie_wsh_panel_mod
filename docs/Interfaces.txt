@@ -59,8 +59,7 @@ Methods:
 	void FillSolidRect(x, y, w, h, color);
 	// [1.3.4] Updated:
 	// focus: Specify where the center color will be at its highest intensity, from 0.0 to 1.0
-	//   the default is 1.0.
-	void FillGradRect(x, y, w, h, angle, color1, color2, focus);
+	void FillGradRect(x, y, w, h, angle, color1, color2, focus = 1.0);
 	// [1.1.5] New:
 	void FillRoundRect(x, y, w, h, arc_width, arc_height, color);
 	// [1.1.5] New:
@@ -148,6 +147,7 @@ Methods:
 	uint LoadImageAsync(window_id, path);
 }
 
+
 // [1.2.1] New interface
 interface IStyleTextRender {
 Methods:
@@ -177,6 +177,7 @@ Methods:
 	void SetPngImage(IGdiBitmap);
 }
 
+
 // [1.1.0] Updated:
 interface IFbFileInfo {
 Properties:
@@ -205,6 +206,7 @@ Methods:
 	void Dispose();
 }
 
+
 // [1.1.0] New
 interface IFbMetadbHandle {
 Properties:
@@ -216,7 +218,7 @@ Properties:
 	
 Methods:
 	IFbFileInfo GetFileInfo();
-	// not recommended
+	// [Depreciated] do not use, use UpdateFileInfoSimple instead.
 	void UpdateFileInfo(IFbFileInfo);
 	// It's recommended to use this method if you want to update tags
 	// if value is a empty string, field will be removed
@@ -226,11 +228,12 @@ Methods:
 	void UpdateFileInfoSimple(field1, value1 [, filed2, value2 [,...] ] [, multivalue_fields]);
 	// [1.3.2] New
 	// Compare two IFbMetadbHandle instances, pointer only.
-	//   If you want to compare them physically, use property RawPath, and compare these two RawPaths.
+	//   If you want to compare them physically, use the "RawPath" property, and compare these two values.
 	boolean Compare(IFbMetadbHandle);
 	// [1.1.10] New:
 	void Dispose();
 }
+
 
 // [1.4.0] New:
 // [1.4.0 Beta 2] Updated:
@@ -250,7 +253,7 @@ Methods:
 	void Sort();
 	// If sorted, use BSearch instead
 	uint Find(handle);
-	// Only works when sorted, always faster than Find()
+	// Only works when sorted, faster than Find()
 	uint BSearch(handle);
 	// Must be sorted
 	void MakeIntersection(handles);
@@ -264,15 +267,16 @@ Methods:
 interface IFbTitleFormat {
 Methods:
 	// [1.1.2] Updated:
-	// By default, return a valid value if there is current playing track.
-	// force: while true, Eval() will always return a valid value even there is no current playing track, useful for
-	//  non-track specified title formatting strings.
+	// By default, returns a valid value if there is track playing.
+	// force: while true, Eval() will always return a valid value even there is no playing track, useful for
+	//   title formatting without track-related fields like "%title%", "%artist%", etc.
 	String Eval(force = false);
 	// [1.1.0] New:
 	String EvalWithMetadb(IFbMetadbHandle);
 	// [1.1.10] New:
 	void Dispose();
 }
+
 
 interface IMenuObj {
 Properties:
@@ -302,6 +306,7 @@ Methods:
 	void Dispose();
 }
 
+
 interface IContextMenuManager {
 Methods:
 	// [1.1.8] New:
@@ -315,16 +320,18 @@ Methods:
 	void Dispose();
 }
 
+
 // [1.2.1] New
 interface IMainMenuManager {
 Methods:
 	// NOTE: Only root menu name
 	void Init(root_name);
-	// NOTE: the last param is count, not max_id
+	// NOTE: the last param is count, not max_id, this is different from what IContextMenuManager does.
 	void BuildMenu(IMenuObj, base_id, count);
 	boolean ExecuteByID(id);
 	void Dispose();
 }
+
 
 interface IFbProfiler {
 Properties:
@@ -346,6 +353,14 @@ Properties:
 	(readonly) double PlaybackLength;
 	(readonly) boolean IsPaused;
 	(read, write) double PlaybackTime;
+	// Known playback orders:
+    //      Default: 0,
+    //      RepeatPlaylist: 1,
+    //      RepeatTrack: 2,
+    //      Random: 3,
+    //      ShuffleTracks: 4,
+    //      ShuffleAlbums: 5,
+    //      ShuffleFolders: 6
 	(read, write) uint PlaybackOrder;
 	// [1.0.2] New:
 	(read, write) boolean StopAfterCurrent;
@@ -375,17 +390,17 @@ Methods:
 	IFbMetadbHandle GetNowPlaying();
 	// [1.1.0] Updated:
 	// [1.3.0] Updated:
-	// force: if force is set to false, GetFocusItem() will only look for the focused item, otherwise, 
-	//   if the focused item not found, find the first item of the active playlist.
+	// force: if this parameter is set to false, GetFocusItem() will only look for the focus item, otherwise, 
+	//   if the focus item not found, find the first item of the active playlist.
 	IFbMetadbHandle GetFocusItem(force = true);
 	// [1.3.2] New:
 	// Get Now playing item or selection, as you prefer, in "Display->Selection viewers" of foobar2000 preferences
 	// NOTE: Selection contains but not limited to the playlist.
-	// NOTE: Return value may be null.
+	// NOTE: The return value may be null.
 	IFbMetadbHandle GetSelection();
 	// [1.4.0] New:
 	// Works actually like GetSelection(), but returns a list of metadb handles.
-	// Always return a valid IFbMetadbHandleList instance instead of null.
+	// Always returns a valid IFbMetadbHandleList instance instead of null.
 	// flags: 1 - no now playing
 	IFbMetadbHandleList GetSelections(flags = 0);
 	// [1.3.2] New:
@@ -417,22 +432,18 @@ Methods:
 	void ClearPlaylist();
 	void LoadPlaylist();
 	void SavePlaylist();
-	// NOTE: Apply now playing content only.
+	// NOTE: Now playing content only.
 	boolean RunMainMenuCommand(command);
-	// NOTE: Apply now playing content only.
-    // [1.5.0 Preview 2] Changed: Add new flags parameter
+	// NOTE: Now playing content only.
+    // [1.5.0 Preview 2] Changed: Add new "flags" parameter
     // flags:   0 - default (depends on whether SHIFT key is pressed, flag_view_reduced or flag_view_full is selected)
-    //          1 - flag_show_shortcuts
-    //          2 - flag_show_shortcuts_global
     //          4 - flag_view_reduced
     //          8 - flag_view_full
 	boolean RunContextCommand(command, flags = 0);
 	// [1.1.2] New:
 	// [1.4.0] Changed: Accept IFbMetadbHandleList interface for metadb handle list.
-    // [1.5.0 Preview 2] Changed: Add new flags parameter
+    // [1.5.0 Preview 2] Changed: Add new "flags" parameter
     // flags:   0 - default (depends on whether SHIFT key is pressed, flag_view_reduced or flag_view_full is selected)
-    //          1 - flag_show_shortcuts
-    //          2 - flag_show_shortcuts_global
     //          4 - flag_view_reduced
     //          8 - flag_view_full
 	boolean RunContextCommandWithMetadb(command, handle_or_handles, flags = 0);
@@ -461,12 +472,13 @@ Methods:
 	// [1.4.0] New:
 	boolean IsAutoPlaylist(idx);
 	// [1.4.0] New:
-	// sort: sort string
+	// sort: sort string expression.
 	// flags: 1 - always sort.
 	boolean CreateAutoPlaylist(idx, name, query, sort = "", flags = 0);
 	// [1.4.0] New:
 	boolean ShowAutoPlaylistUI(idx);
 }
+
 
 interface ITimerObj {
 Properties:
@@ -483,8 +495,7 @@ Properties:
 	(read, write) Text; // Set tooltip text
 
 Methods:
-	// NOTE: Don't try to update tooltip text when tooltip is activated.
-	// It will flicker in Windows Vista/7.
+	// NOTE: Don't try to update tooltip text when tooltip is activated, because it will flick in Windows Vista/7.
 	void Activate();
 	void Deactivate();
 	// [1.1.6] New:
@@ -530,6 +541,7 @@ Methods:
 	void ToPlaylist();
 }
 
+
 interface IFbWindow {
 Properties:
 	// [1.1.10] New:
@@ -559,8 +571,11 @@ Methods:
 	void Repaint(force = false);
 	void RepaintRect(x, y, w, h, force = false);
 	IMenuObj CreatePopupMenu();
-	ITimerObj CreateTimerTimeout(timeout); // One shot
-	ITimerObj CreateTimerInterval(delay); // Period
+	// Create an one shot timer, this timer will occur only once.
+	ITimerObj CreateTimerTimeout(timeout);
+	// Create an periodic timer, this timer will occur periodicly.
+	ITimerObj CreateTimerInterval(delay);
+	// [Depreciated] Instead of KillTimer, you should use ITimerObj.Dispose()
 	void KillTimer(ITimerObj);
 	// [1.1.1] New: Notify other wsh panels with specified info thru callback function on_notify_data(name, info).
 	// [1.3.0] Update:
@@ -568,12 +583,14 @@ Methods:
 	//     JScript and VBScript). However, VBArrays, strings, booleans, integers and floats, are safe to use.
 	void NotifyOthers(name, info);
 	// [1.1.3] New: These two methods below are in cooperation with callback on_metadb_changed().
-        // [1.4.0] Changed:
-        // NOTE: Make sure you have read Preprocessors.txt if you are using "feature" directive.
+    // [1.4.0] Changed:
+    // NOTE: Make sure you have read Preprocessors.txt if you are using "feature" directive.
+    // [Depreciated] see on_metadb_changed() in Callbacks.txt
 	void WatchMetadb(IFbMetadbHandle);
 	// [1.1.3] New:
-        // [1.4.0] Changed:
-        // NOTE: Make sure you have read Preprocessors.txt if you are using "feature" directive.
+    // [1.4.0] Changed:
+    // NOTE: Make sure you have read Preprocessors.txt if you are using "feature" directive.
+    // [Depreciated] see on_metadb_changed() in Callbacks.txt
 	void UnWatchMetadb();
 	// [1.1.5] New: Create a tooltip object
 	IFbTooltip CreateTooltip();
@@ -616,6 +633,7 @@ Methods:
 	IThemeManager CreateThemeManager(classlist);
 }
 
+
 // [1.1.0] New:
 interface IWSHUtils {
 Methods:
@@ -656,7 +674,7 @@ Methods:
 	// For virtual key codes: http://msdn.microsoft.com/en-us/library/ms927178.aspx
 	boolean IsKeyPressed(vkey);
 	// [1.1.8] New:
-	// Using Microsoft MS-DOS wildcards match type.
+	// Using Microsoft MS-DOS wildcards match type. ex ("*.txt", "abc?.tx?")
 	boolean PathWildcardMatch(pattern, str);
 	// [1.2.0] New:
 	// [1.4.0] Updated:
@@ -686,14 +704,15 @@ Methods:
 	//   "e": If path exists, return true
 	//   "s": Retrieve file size, in bytes
 	//   "d": If path is a directory, return true
-	//   "split": retuan a VBArray, array[0] is the directory, arr[1] is the file basename, arr[2] is the file extension.
+	//   "split": return a VBArray, array[0] is the directory, arr[1] is the file basename, arr[2] is the file extension.
 	//          e.g: var arr = FileTest("D:\\Somdir\\Somefile.txt", "split").toArray();
 	//           arr[0] <= "D:\\Somedir\\" (always include backslash at the end)
 	//           arr[1] <= "Somefile"
 	//           arr[2] <= ".txt"
-	//   "chardet": Guess charset of a file, and return the codepage of it (it may not be accurate), returns 0 if any error occured.
+	//   "chardet": Guess the charset of a file, and return the codepage of it (it may not be accurate), returns 0 if error occured.
 	VARIANT FileTest(path, mode);
 }
+
 
 // [1.5.0] New: new interface for playback queue
 interface IFbPlaybackQueueItem {
@@ -706,6 +725,7 @@ Properties:
     (read, write) uint PlaylistIndex;
     (read, write) uint PlaylistItemIndex;
 }
+
 
 // [1.4.0] New: This interface is added in 1.5.0
 interface IFbPlaylistManager {
@@ -757,6 +777,14 @@ Methods:
     boolean IsPlaybackQueueActive();
 
 Properties:
+    // Known playback orders:
+    //      Default: 0,
+    //      RepeatPlaylist: 1,
+    //      RepeatTrack: 2,
+    //      Random: 3,
+    //      ShuffleTracks: 4,
+    //      ShuffleAlbums: 5,
+    //      ShuffleFolders: 6
 	(read, write) uint PlaybackOrder;
 	(read, write) uint ActivePlaylist;
     (read, write) uint PlaylingPlaylist;

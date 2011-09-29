@@ -68,7 +68,7 @@ function on_focus(is_focused) {}
 function on_size() {}
 
 // Called when window is ready to draw
-// gr - Refer to IGdiGraphics
+// gr - Refer to IGdiGraphics, note that gr will be invalid out of this callback scope.
 function on_paint(gr) {}
 
 // [1.1.1] New: Called when "stop after current" state is changed
@@ -117,7 +117,7 @@ function on_playback_new_track(metadb) {}
 // reason: (integer, begin with 0): user, eof, starting_another
 function on_playback_stop(reason) {}
 
-// time - float value, in sec
+// time - float value, in seconds.
 function on_playback_seek(time) {}
 
 // state = true when paused, false when resumed
@@ -141,7 +141,14 @@ function on_playback_time(time) {}
 function on_volume_change(val) {}
 
 // NEW: Called when playback order is changed
-// new_order_index: (integer, start with 0): "Default", "Repeat (Playlist)", "Repeat (Track)", "Random", "Shuffle (tracks)", "Shuffle (albums)", "Shuffle (folders)"
+// new_order_index:
+//      0 - "Default"
+//      1 - "Repeat (Playlist)"
+//      2 - "Repeat (Track)"
+//      3 - "Random"
+//      4 - "Shuffle (tracks)"
+//      5 - "Shuffle (albums)"
+//      6 - "Shuffle (folders)"
 function on_playback_order_changed(new_order_index) {}
 
 function on_timer(timer_id) {}
@@ -154,14 +161,16 @@ function on_item_focus_change() {}
 // [1.4.0] Changed:
 // Called when metadb contents change. (Or, one of display hook component requests display update).
 // Cooperated with window.WatchMetadb() and window.UnWatchMetadb()
-// metadb: The same metadb as in window.WatchMetadb(metadb)
+// metadb_or_metadbs: 
+//          prior to "v1.4.0"   - The same metadb as in window.WatchMetadb(metadb)
+//          "v1.4.0"            - Metadb handles
 // fromhook: boolean, set to true when actual file contents haven't changed but one of metadb_display_field_provider 
 //   implementations requested an update so output of metadb_handle::format_title() etc has changed.
 // NOTE: See Preprocessors.txt if you are using @feature directive.
 // NOTE: metadb will be metadb handle list (already sorted) when preprocessor directive "feature":
 //   1. "v1.4" and later is set;
 //   2. "watch-metadb" is set.
-function on_metadb_changed(metadb, fromhook) {}
+function on_metadb_changed(metadb_or_metadbs, fromhook) {}
 
 // [1.3.0] New:
 // DUI and CUI
@@ -179,6 +188,7 @@ function on_font_changed() {}
 function on_playlist_switch() {}
 
 // [1.3.0] New:
+// Note: this callback is not guarantee to be called during unloading
 function on_script_unload() {}
 
 // [1.3.2] New:
@@ -197,12 +207,20 @@ function on_selection_changed(metadb) {}
 function on_playlist_items_added(playlist) {}
 
 // [1.5.0 Preview] Added:
+// Note this callback is different from on_playlists_changed(), which is applied to playlists, whenever
+//   this applied to playlist items instead.
 function on_playlist_items_reordered(playlist) {}
 
 // [1.4.1] Added:
 // playlist: index to indicate that which playlist has items removed
 // new_count: new items count of the playlist.
 function on_playlist_items_removed(playlist, new_count) {}
+
+// [1.5.0] Added:
+// origin:  0 - changed_user_added
+//          1 - changed_user_removed
+//          2 - changed_playback_advance
+function on_playback_queue_changed(origin) {}
 
 /* 
  * Note:
@@ -229,9 +247,3 @@ function on_drag_leave() {}
 // x, y and mask have the same meaning as in on_mouse_*() callbacks.
 // action: an object of IDropTargetAction interface.
 function on_drag_drop(action, x, y, mask) {}
-
-// [1.5.0] Added:
-// origin:  0 - changed_user_added
-//          1 - changed_user_removed
-//          2 - changed_playback_advance
-function on_playback_queue_changed(origin) {}
