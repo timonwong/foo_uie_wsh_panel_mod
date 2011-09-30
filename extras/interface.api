@@ -121,23 +121,28 @@ plman.GetPlaylistItems(playlistIndex)
 plman.SetPlaylistSelectionSingle(playlistIndex, itemIndex, state)
 plman.SetPlaylistSelection(playlistIndex, affectedItems, state)
 plman.ClearPlaylistSelection(playlistIndex)
+plman.GetPlaylistFocusItemHandle()
+plman.SetPlaylistFocusItem(playlistIndex, itemIndex)
+plman.SetPlaylistFocusItemByHandle(playlistIndex, itemHandle)
 plman.GetPlaylistName(idx)
 plman.CreatePlaylist(idx, name)
 plman.RemovePlaylist(idx)
 plman.MovePlaylist(from, to)
 plman.RenamePlaylist(idx, name)
 plman.DuplicatePlaylist(from, name)
-plman.EnsurePlaylistItemVisible(playlistIndex, itemIndex);
+plman.EnsurePlaylistItemVisible(playlistIndex, itemIndex)
+plman.GetPlayingItemLocation()
+plman.ExecutePlaylistDefaultAction(playlistIndex, playlistItemIndex)
 plman.CreatePlaybackQueueItem()
 plman.RemoveItemFromPlaybackQueue(index)
-plman.RemoveItemsFromPlaybackQueue(affectedItems);
-plman.AddPlaylistItemToPlaybackQueue(playlistIndex, playlistItemIndex);
-plman.AddItemToPlaybackQueue(IFbMetadbHandle);
-plman.GetPlaybackQueueCount();
-plman.GetPlaybackQueueContents();
-plman.FindPlaybackQueueItemIndex(handle, playlistIndex, playlistItemIndex);
-plman.FlushPlaybackQueue();
-plman.IsPlaybackQueueActive();
+plman.RemoveItemsFromPlaybackQueue(affectedItems)
+plman.AddPlaylistItemToPlaybackQueue(playlistIndex, playlistItemIndex)
+plman.AddItemToPlaybackQueue(IFbMetadbHandle)
+plman.GetPlaybackQueueCount()
+plman.GetPlaybackQueueContents()
+plman.FindPlaybackQueueItemIndex(handle, playlistIndex, playlistItemIndex)
+plman.FlushPlaybackQueue()
+plman.IsPlaybackQueueActive()
 
 
 # Callback function prototypes

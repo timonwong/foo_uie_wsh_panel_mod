@@ -1799,7 +1799,7 @@ STDMETHODIMP FbUtils::GetNowPlaying(IFbMetadbHandle** pp)
 
 STDMETHODIMP FbUtils::GetFocusItem(VARIANT_BOOL force, IFbMetadbHandle** pp)
 {
-    return FbPlaylistMangerService::GetPlaylistFocusItemHandle(force, pp);
+    return FbPlaylistMangerTemplate::GetPlaylistFocusItemHandle(force, pp);
 }
 
 STDMETHODIMP FbUtils::GetSelection(IFbMetadbHandle** pp)
@@ -1951,12 +1951,12 @@ STDMETHODIMP FbUtils::get_PlaybackLength(double* p)
 
 STDMETHODIMP FbUtils::get_PlaybackOrder(UINT* p)
 {
-    return FbPlaylistMangerService::get_PlaybackOrder(p);
+    return FbPlaylistMangerTemplate::get_PlaybackOrder(p);
 }
 
 STDMETHODIMP FbUtils::put_PlaybackOrder(UINT order)
 {
-    return FbPlaylistMangerService::put_PlaybackOrder(order);
+    return FbPlaylistMangerTemplate::put_PlaybackOrder(order);
 }
 
 STDMETHODIMP FbUtils::get_StopAfterCurrent(VARIANT_BOOL * p)
@@ -2278,62 +2278,62 @@ STDMETHODIMP FbUtils::IsMetadbInMediaLibrary(IFbMetadbHandle * handle, VARIANT_B
 
 STDMETHODIMP FbUtils::get_ActivePlaylist(UINT * p)
 {
-    return FbPlaylistMangerService::get_ActivePlaylist(p);
+    return FbPlaylistMangerTemplate::get_ActivePlaylist(p);
 }
 
 STDMETHODIMP FbUtils::put_ActivePlaylist(UINT idx)
 {
-    return FbPlaylistMangerService::put_ActivePlaylist(idx);
+    return FbPlaylistMangerTemplate::put_ActivePlaylist(idx);
 }
 
 STDMETHODIMP FbUtils::get_PlayingPlaylist(UINT * p)
 {
-    return FbPlaylistMangerService::get_PlayingPlaylist(p);
+    return FbPlaylistMangerTemplate::get_PlayingPlaylist(p);
 }
 
 STDMETHODIMP FbUtils::put_PlayingPlaylist(UINT idx)
 {
-    return FbPlaylistMangerService::put_PlayingPlaylist(idx);
+    return FbPlaylistMangerTemplate::put_PlayingPlaylist(idx);
 }
 
 STDMETHODIMP FbUtils::get_PlaylistCount(UINT * p)
 {
-    return FbPlaylistMangerService::get_PlaylistCount(p);
+    return FbPlaylistMangerTemplate::get_PlaylistCount(p);
 }
 
 STDMETHODIMP FbUtils::get_PlaylistItemCount(UINT idx, UINT * p)
 {
-    return FbPlaylistMangerService::get_PlaylistItemCount(idx, p);
+    return FbPlaylistMangerTemplate::get_PlaylistItemCount(idx, p);
 }
 
 STDMETHODIMP FbUtils::GetPlaylistName(UINT idx, BSTR * p)
 {
-    return FbPlaylistMangerService::GetPlaylistName(idx, p);
+    return FbPlaylistMangerTemplate::GetPlaylistName(idx, p);
 }
 
 STDMETHODIMP FbUtils::CreatePlaylist(UINT idx, BSTR name, UINT * p)
 {
-    return FbPlaylistMangerService::CreatePlaylist(idx, name, p);
+    return FbPlaylistMangerTemplate::CreatePlaylist(idx, name, p);
 }
 
 STDMETHODIMP FbUtils::RemovePlaylist(UINT idx, VARIANT_BOOL * p)
 {
-    return FbPlaylistMangerService::RemovePlaylist(idx, p);
+    return FbPlaylistMangerTemplate::RemovePlaylist(idx, p);
 }
 
 STDMETHODIMP FbUtils::MovePlaylist(UINT from, UINT to, VARIANT_BOOL * p)
 {
-    return FbPlaylistMangerService::MovePlaylist(from, to, p);
+    return FbPlaylistMangerTemplate::MovePlaylist(from, to, p);
 }
 
 STDMETHODIMP FbUtils::RenamePlaylist(UINT idx, BSTR name, VARIANT_BOOL * p)
 {
-    return FbPlaylistMangerService::RenamePlaylist(idx, name, p);
+    return FbPlaylistMangerTemplate::RenamePlaylist(idx, name, p);
 }
 
 STDMETHODIMP FbUtils::DuplicatePlaylist(UINT from, BSTR name, UINT * p)
 {
-    return FbPlaylistMangerService::DuplicatePlaylist(from, name, p);
+    return FbPlaylistMangerTemplate::DuplicatePlaylist(from, name, p);
 }
 
 STDMETHODIMP FbUtils::IsAutoPlaylist(UINT idx, VARIANT_BOOL * p)

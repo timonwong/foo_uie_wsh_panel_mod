@@ -3,7 +3,7 @@
 #include "script_interface_playlist.h"
 #include "com_tools.h"
 
-class FbPlaylistMangerService
+class FbPlaylistMangerTemplate
 {
 public:
     // Methods
@@ -21,6 +21,8 @@ public:
     static STDMETHODIMP RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess);
     static STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex);
     static STDMETHODIMP EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex);
+    static STDMETHODIMP GetPlayingItemLocation(IFbPlayingItemLocation ** outPlayingLocation);
+    static STDMETHODIMP ExecutePlaylistDefaultAction(UINT playlistIndex, UINT playlistItemIndex, VARIANT_BOOL * outSuccess);
 
     static STDMETHODIMP CreatePlaybackQueueItem(IFbPlaybackQueueItem ** outPlaybackQueueItem);
     static STDMETHODIMP RemoveItemFromPlaybackQueue(UINT index);
@@ -63,6 +65,8 @@ public:
     STDMETHODIMP RenamePlaylist(UINT playlistIndex, BSTR name, VARIANT_BOOL * outSuccess);
     STDMETHODIMP DuplicatePlaylist(UINT from, BSTR name, UINT * outPlaylistIndex);
     STDMETHODIMP EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex);
+    STDMETHODIMP GetPlayingItemLocation(IFbPlayingItemLocation ** outPlayingLocation);
+    STDMETHODIMP ExecutePlaylistDefaultAction(UINT playlistIndex, UINT playlistItemIndex, VARIANT_BOOL * outSuccess);
 
     STDMETHODIMP CreatePlaybackQueueItem(IFbPlaybackQueueItem ** outPlaybackQueueItem);
     STDMETHODIMP RemoveItemFromPlaybackQueue(UINT index);
@@ -93,9 +97,7 @@ protected:
 
     FbPlaybackQueueItem() {}
     FbPlaybackQueueItem(const t_playback_queue_item & playbackQueueItem);
-
     virtual ~FbPlaybackQueueItem();
-
     virtual void FinalRelease();
 
 public:
@@ -110,4 +112,22 @@ public:
     STDMETHODIMP put_PlaylistIndex(UINT playlistIndex);
     STDMETHODIMP get_PlaylistItemIndex(UINT * outItemIndex);
     STDMETHODIMP put_PlaylistItemIndex(UINT itemIndex);
+};
+
+class FbPlayingItemLocation : public IDispatchImpl3<IFbPlayingItemLocation>
+{
+protected:
+    bool m_isValid;
+    t_size m_playlistIndex;
+    t_size m_itemIndex;
+
+    FbPlayingItemLocation(bool isValid, t_size playlistIndex, t_size itemInex)
+        : m_isValid(isValid), m_playlistIndex(playlistIndex), m_itemIndex(itemInex)
+    {
+    }
+
+public:
+    STDMETHODIMP get_IsValid(VARIANT_BOOL * outIsValid);
+    STDMETHODIMP get_PlaylistIndex(UINT * outPlaylistIndex);
+    STDMETHODIMP get_PlaylistItemIndex(UINT * outPlaylistItemIndex);
 };

@@ -2,9 +2,6 @@
 
 #include <ObjBase.h>
 
-// forward declarations
-__interface IFbMetadbHandleList;
-
 
 //---
 [
@@ -17,7 +14,7 @@ __interface IFbMetadbHandleList;
 __interface IFbPlaylistManager : IDispatch
 {
     // Methods
-    STDMETHOD(GetPlaylistItems)(UINT playlistIndex, [out,retval] IFbMetadbHandleList ** outItems);
+    STDMETHOD(GetPlaylistItems)(UINT playlistIndex, [out,retval] __interface IFbMetadbHandleList ** outItems);
     STDMETHOD(SetPlaylistSelectionSingle)(UINT playlistIndex, UINT itemIndex, VARIANT_BOOL state);
     STDMETHOD(SetPlaylistSelection)(UINT playlistIndex, VARIANT affectedItems, VARIANT_BOOL state);
     STDMETHOD(ClearPlaylistSelection)(UINT playlistIndex);
@@ -31,6 +28,8 @@ __interface IFbPlaylistManager : IDispatch
     STDMETHOD(RenamePlaylist)(UINT playlistIndex, BSTR name, [out,retval] VARIANT_BOOL * outSuccess);
     STDMETHOD(DuplicatePlaylist)(UINT from, BSTR name, [out,retval] UINT * outPlaylistIndex);
     STDMETHOD(EnsurePlaylistItemVisible)(UINT playlistIndex, UINT itemIndex);
+    STDMETHOD(GetPlayingItemLocation)([out,retval] __interface IFbPlayingItemLocation ** outPlayingLocation);
+    STDMETHOD(ExecutePlaylistDefaultAction)(UINT playlistIndex, UINT playlistItemIndex, [out,retval] VARIANT_BOOL * outSuccess);
 
     STDMETHOD(CreatePlaybackQueueItem)([out,retval] __interface IFbPlaybackQueueItem ** outPlaybackQueueItem);
     STDMETHOD(RemoveItemFromPlaybackQueue)(UINT index);
@@ -75,4 +74,18 @@ __interface IFbPlaybackQueueItem : IDisposable
     [propput] STDMETHOD(PlaylistIndex)(UINT playlistIndex);
     [propget] STDMETHOD(PlaylistItemIndex)([out,retval] UINT * outItemIndex);
     [propput] STDMETHOD(PlaylistItemIndex)(UINT itemIndex);
+};
+
+[
+    object,
+    dual,
+    pointer_default(unique),
+    library_block,
+    uuid("0f54464f-0b86-4419-83c0-b6f612d85fb0")
+]
+__interface IFbPlayingItemLocation : IDispatch
+{
+    [propget] STDMETHOD(IsValid)([out,retval] VARIANT_BOOL * outIsValid);
+    [propget] STDMETHOD(PlaylistIndex)([out,retval] UINT * outPlaylistIndex);
+    [propget] STDMETHOD(PlaylistItemIndex)([out,retval] UINT * outPlaylistItemIndex);
 };

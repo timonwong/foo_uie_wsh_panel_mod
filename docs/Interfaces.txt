@@ -719,11 +719,20 @@ interface IFbPlaybackQueueItem {
 Methods:
     // item: an instance of IFbPlaybackQueueItem.
     boolean Equals(item);
+    void Dispose();
 
 Properties:
     (read, write) IFbMetadbHandle Handle;
     (read, write) uint PlaylistIndex;
     (read, write) uint PlaylistItemIndex;
+}
+
+// [1.5.0 Preview 3] New:
+interface IFbPlayingItemLocation {
+Properties:
+    (readonly) boolean IsValid;
+    (readonly) uint PlaylistIndex;
+    (readonly) uint PlaylistItemIndex;
 }
 
 
@@ -758,10 +767,19 @@ Methods:
 	// name: New playlist name, when empty, using the same name as 'from'.
 	// Returns the index of newly created playlist.
 	uint DuplicatePlaylist(from, name = "");
-    // [1.5.0 Preview 3] Added:
+    // [1.5.0 Preview 3] New:
     void EnsurePlaylistItemVisible(playlistIndex, itemIndex);
+    // [1.5.0 Preview 3] New:
+    // Retrieves playlist position of currently playing item.
+    // On failure (not playing or currently played item has been removed from the playlist it was on when starting),
+    //   the property "IsValid" of IFbPlayingItemLocation interface will be set to false.
+    IFbPlayingItemLocation GetPlayingItemLocation();
+    // [1.5.0 Preview 3] New:
+    // Executes default doubleclick/enter action for specified item on specified playlist (starts playing 
+    //   the item unless overridden by a lock to do something else).
+    boolean ExecutePlaylistDefaultAction(playlistIndex, playlistItemIndex);
     
-    // [1.5.0 Preview 2] Added:
+    // [1.5.0 Preview 2] New:
     IFbPlaybackQueueItem CreatePlaybackQueueItem();
     // Remove single item from playback queue
     void RemoveItemFromPlaybackQueue(index);

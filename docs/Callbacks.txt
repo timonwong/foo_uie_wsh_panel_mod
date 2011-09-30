@@ -46,6 +46,11 @@ function on_mouse_leave() {}
 
 function on_mouse_wheel(step) {}
 
+/* 
+ * NOTE: All keyboard related callbacks require "Grab focus" enabled in panel Properties.
+ *       To capture arrow keys, set window.DlgCode
+ */
+
 // Keyboard key down
 // vkey: Virtual Key Code, Refer to: http://msdn.microsoft.com/en-us/library/ms927178.aspx
 function on_key_down(vkey) {}

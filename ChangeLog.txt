@@ -1,7 +1,8 @@
 v1.5.0 Preview 3
 - FIX: Fix a problem that "on_playlist_items_reordered" doesn't work at all.
 - ADD: Add "EnsurePlaylistItemVisible" method to IFbPlaylistManager interface.
-
+- ADD: Add "GetPlayingItemLocation" method to IFbPlaylistManager interface and corresponding IFbPlayingItemLocation interface.
+- ADD: Add "ExecutePlaylistDefaultAction" method to IFbPlaylistManager interface.
 
 v1.5.0 Preview 2
 - CHG: This component now requires foobar2000 1.1+.
