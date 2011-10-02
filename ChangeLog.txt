@@ -1,3 +1,9 @@
+v1.5.0 Preview 4
+- ADD: Add "GetPlaylistFocusItemIndex" method to plman object.
+- ADD: Add "GetPlaylistSelectedItems" method to plman object.
+- ADD: Add "IsPlaylistItemSelected" method to plman object.
+- ADD: Add "OrderByFormat", "OrderByPath" and "OrderByRelativePath" method to IFbMetadbHandleList interface.
+
 v1.5.0 Preview 3
 - FIX: Fix a problem that "on_playlist_items_reordered" doesn't work at all.
 - ADD: Add "EnsurePlaylistItemVisible" method to IFbPlaylistManager interface.

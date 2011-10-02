@@ -289,6 +289,9 @@ public:
 	STDMETHODIMP MakeIntersection(IFbMetadbHandleList * handles);
 	STDMETHODIMP MakeUnion(IFbMetadbHandleList * handles);
 	STDMETHODIMP MakeDifference(IFbMetadbHandleList * handles);
+    STDMETHODIMP OrderByFormat(__interface IFbTitleFormat * script, int direction);
+    STDMETHODIMP OrderByPath();
+    STDMETHODIMP OrderByRelativePath();
 };
 
 class FbTitleFormat : public IDisposableImpl4<IFbTitleFormat>
@@ -310,6 +313,7 @@ protected:
 	}
 
 public:
+    STDMETHODIMP get__ptr(void ** pp);
 	STDMETHODIMP Eval(VARIANT_BOOL force, BSTR * pp);
 	STDMETHODIMP EvalWithMetadb(IFbMetadbHandle * handle, BSTR * pp);
 };

@@ -1664,6 +1664,42 @@ STDMETHODIMP FbMetadbHandleList::MakeDifference(IFbMetadbHandleList * handles)
     return S_OK;
 }
 
+STDMETHODIMP FbMetadbHandleList::OrderByFormat(__interface IFbTitleFormat * script, int direction)
+{
+    TRACK_FUNCTION();
+
+    if (!script) return E_INVALIDARG;
+    titleformat_object * obj;
+    script->get__ptr((void **)&obj);
+    m_handles.sort_by_format(obj, NULL, direction);
+    return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::OrderByPath()
+{
+    TRACK_FUNCTION();
+
+    m_handles.sort_by_path();
+    return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::OrderByRelativePath()
+{
+    TRACK_FUNCTION();
+
+    m_handles.sort_by_relative_path();
+    return S_OK;
+}
+
+
+STDMETHODIMP FbTitleFormat::get__ptr(void ** pp)
+{
+    TRACK_FUNCTION();
+
+    *pp = m_obj.get_ptr();
+    return S_OK;
+}
+
 STDMETHODIMP FbTitleFormat::Eval(VARIANT_BOOL force, BSTR* pp)
 {
     TRACK_FUNCTION();
@@ -1710,6 +1746,7 @@ STDMETHODIMP FbTitleFormat::EvalWithMetadb(IFbMetadbHandle * handle, BSTR * pp)
     (*pp) = SysAllocString(pfc::stringcvt::string_wide_from_utf8_fast(text));
     return S_OK;
 }
+
 
 STDMETHODIMP FbUtils::trace(SAFEARRAY * p)
 {

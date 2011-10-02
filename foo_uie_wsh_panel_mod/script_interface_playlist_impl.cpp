@@ -5,6 +5,19 @@
 #include "com_array.h"
 
 
+
+STDMETHODIMP FbPlaylistMangerTemplate::GetPlaylistSelectedItems(UINT playlistIndex, __interface IFbMetadbHandleList ** outItems)
+{
+    TRACK_FUNCTION();
+
+    if (!outItems) return E_POINTER;
+
+    metadb_handle_list items;
+    static_api_ptr_t<playlist_manager>()->playlist_get_selected_items(playlistIndex, items);
+    (*outItems) = new com_object_impl_t<FbMetadbHandleList>(items);
+    return S_OK;
+}
+
 STDMETHODIMP FbPlaylistMangerTemplate::GetPlaylistItems(UINT playlistIndex, IFbMetadbHandleList ** outItems)
 {
     TRACK_FUNCTION();
@@ -14,7 +27,6 @@ STDMETHODIMP FbPlaylistMangerTemplate::GetPlaylistItems(UINT playlistIndex, IFbM
     metadb_handle_list items;
     static_api_ptr_t<playlist_manager>()->playlist_get_all_items(playlistIndex, items);
     (*outItems) = new com_object_impl_t<FbMetadbHandleList>(items);
-
     return S_OK;
 }
 
@@ -63,6 +75,15 @@ STDMETHODIMP FbPlaylistMangerTemplate::ClearPlaylistSelection(UINT playlistIndex
     TRACK_FUNCTION();
 
     static_api_ptr_t<playlist_manager>()->playlist_clear_selection(playlistIndex);
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerTemplate::GetFocusItemIndex(UINT playlistIndex, UINT * outPlaylistItemIndex)
+{
+    TRACK_FUNCTION();
+
+    if (!outPlaylistItemIndex) return E_POINTER;
+    static_api_ptr_t<playlist_manager>()->playlist_get_focus_item(playlistIndex);
     return S_OK;
 }
 
@@ -493,6 +514,22 @@ STDMETHODIMP FbPlaylistMangerTemplate::ExecutePlaylistDefaultAction(UINT playlis
     return S_OK;
 }
 
+STDMETHODIMP FbPlaylistMangerTemplate::IsPlaylistItemSelected(UINT playlistIndex, UINT playlistItemIndex, UINT * outSeleted)
+{
+    TRACK_FUNCTION();
+
+    if (!outSeleted) return E_POINTER;
+
+    (*outSeleted) = TO_VARIANT_BOOL(
+        static_api_ptr_t<playlist_manager>()->playlist_is_item_selected(playlistIndex, playlistItemIndex));
+    return S_OK;
+}
+
+
+STDMETHODIMP FbPlaylistManager::GetPlaylistSelectedItems(UINT playlistIndex, __interface IFbMetadbHandleList ** outItems)
+{
+    return FbPlaylistMangerTemplate::GetPlaylistSelectedItems(playlistIndex, outItems);
+}
 
 STDMETHODIMP FbPlaylistManager::GetPlaylistItems(UINT playlistIndex, IFbMetadbHandleList ** outItems)
 {
@@ -552,6 +589,11 @@ STDMETHODIMP FbPlaylistManager::SetPlaylistSelection(UINT playlistIndex, VARIANT
 STDMETHODIMP FbPlaylistManager::ClearPlaylistSelection(UINT playlistIndex)
 {
     return FbPlaylistMangerTemplate::ClearPlaylistSelection(playlistIndex);
+}
+
+STDMETHODIMP FbPlaylistManager::GetFocusItemIndex(UINT playlistIndex, UINT * outPlaylistItemIndex)
+{
+    return FbPlaylistMangerTemplate::GetFocusItemIndex(playlistIndex, outPlaylistItemIndex);
 }
 
 STDMETHODIMP FbPlaylistManager::GetPlaylistFocusItemHandle(VARIANT_BOOL force, IFbMetadbHandle ** outItem)
@@ -662,6 +704,11 @@ STDMETHODIMP FbPlaylistManager::GetPlayingItemLocation(IFbPlayingItemLocation **
 STDMETHODIMP FbPlaylistManager::ExecutePlaylistDefaultAction(UINT playlistIndex, UINT playlistItemIndex, VARIANT_BOOL * outSuccess)
 {
     return FbPlaylistMangerTemplate::ExecutePlaylistDefaultAction(playlistIndex, playlistItemIndex, outSuccess);
+}
+
+STDMETHODIMP FbPlaylistManager::IsPlaylistItemSelected(UINT playlistIndex, UINT playlistItemIndex, UINT * outSeleted)
+{
+    return FbPlaylistMangerTemplate::IsPlaylistItemSelected(playlistIndex, playlistItemIndex, outSeleted);
 }
 
 

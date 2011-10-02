@@ -7,10 +7,12 @@ class FbPlaylistMangerTemplate
 {
 public:
     // Methods
+    static STDMETHODIMP GetPlaylistSelectedItems(UINT playlistIndex, __interface IFbMetadbHandleList ** outItems);
     static STDMETHODIMP GetPlaylistItems(UINT playlistIndex, IFbMetadbHandleList ** outItems);
     static STDMETHODIMP SetPlaylistSelectionSingle(UINT playlistIndex, UINT itemIndex, VARIANT_BOOL state);
     static STDMETHODIMP SetPlaylistSelection(UINT playlistIndex, VARIANT affectedItems, VARIANT_BOOL state);
     static STDMETHODIMP ClearPlaylistSelection(UINT playlistIndex);
+    static STDMETHODIMP GetFocusItemIndex(UINT playlistIndex, UINT * outPlaylistItemIndex);
     static STDMETHODIMP GetPlaylistFocusItemHandle(VARIANT_BOOL force, IFbMetadbHandle ** outItem);
     static STDMETHODIMP SetPlaylistFocusItem(UINT playlistIndex, UINT itemIndex);
     static STDMETHODIMP SetPlaylistFocusItemByHandle(UINT playlistIndex, IFbMetadbHandle * item);
@@ -23,6 +25,7 @@ public:
     static STDMETHODIMP EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex);
     static STDMETHODIMP GetPlayingItemLocation(IFbPlayingItemLocation ** outPlayingLocation);
     static STDMETHODIMP ExecutePlaylistDefaultAction(UINT playlistIndex, UINT playlistItemIndex, VARIANT_BOOL * outSuccess);
+    static STDMETHODIMP IsPlaylistItemSelected(UINT playlistIndex, UINT playlistItemIndex, UINT * outSeleted);
 
     static STDMETHODIMP CreatePlaybackQueueItem(IFbPlaybackQueueItem ** outPlaybackQueueItem);
     static STDMETHODIMP RemoveItemFromPlaybackQueue(UINT index);
@@ -51,10 +54,12 @@ class FbPlaylistManager : public IDispatchImpl3<IFbPlaylistManager>
 {
 public:
     // Methods
+    STDMETHODIMP GetPlaylistSelectedItems(UINT playlistIndex, __interface IFbMetadbHandleList ** outItems);
     STDMETHODIMP GetPlaylistItems(UINT playlistIndex, IFbMetadbHandleList ** outItems);
     STDMETHODIMP SetPlaylistSelectionSingle(UINT playlistIndex, UINT itemIndex, VARIANT_BOOL state);
     STDMETHODIMP SetPlaylistSelection(UINT playlistIndex, VARIANT affectedItems, VARIANT_BOOL state);
     STDMETHODIMP ClearPlaylistSelection(UINT playlistIndex);
+    STDMETHODIMP GetFocusItemIndex(UINT playlistIndex, UINT * outPlaylistItemIndex);
     STDMETHODIMP GetPlaylistFocusItemHandle(VARIANT_BOOL force, IFbMetadbHandle ** outItem);
     STDMETHODIMP SetPlaylistFocusItem(UINT playlistIndex, UINT itemIndex);
     STDMETHODIMP SetPlaylistFocusItemByHandle(UINT playlistIndex, IFbMetadbHandle * item);
@@ -67,6 +72,7 @@ public:
     STDMETHODIMP EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex);
     STDMETHODIMP GetPlayingItemLocation(IFbPlayingItemLocation ** outPlayingLocation);
     STDMETHODIMP ExecutePlaylistDefaultAction(UINT playlistIndex, UINT playlistItemIndex, VARIANT_BOOL * outSuccess);
+    STDMETHODIMP IsPlaylistItemSelected(UINT playlistIndex, UINT playlistItemIndex, UINT * outSeleted);
 
     STDMETHODIMP CreatePlaybackQueueItem(IFbPlaybackQueueItem ** outPlaybackQueueItem);
     STDMETHODIMP RemoveItemFromPlaybackQueue(UINT index);

@@ -262,6 +262,14 @@ Methods:
 	// Must be sorted
 	void MakeDifference(handles);
 	void Dispose();
+	// [1.5.0 Preview 4]: New:
+	// titleformatObject: an instance of IFbTitleFormat.
+	// direction: integer, ascending while >0.
+	void OrderByOrderByFormat(titleformatObject, direction);
+	// [1.5.0 Preview 4]: New:
+	void OrderByPath();
+	// [1.5.0 Preview 4]: New:
+	void OrderByRelativePath();
 }
 
 interface IFbTitleFormat {
@@ -736,9 +744,12 @@ Properties:
 }
 
 
-// [1.4.0] New: This interface is added in 1.5.0
+// [1.5.0] New: This interface is added in 1.5.0
 interface IFbPlaylistManager {
 Methods:
+    // [1.5.0 Preview 4]: New:
+    // Note that it's different from fb.GetSelection()
+    IFbMetadbHandleList GetPlaylistSelectedItems(playlistIndex);
     // Get all items into an instance of IFbMetadbHandleList from specified playlist
     IFbMetadbHandleList GetPlaylistItems(playlistIndex);
     // state = true: select, deselect otherwise
@@ -751,6 +762,8 @@ Methods:
     void SetPlaylistSelection(playlistIndex, affectedItems, state);
     // Clear selection of specified playlist
     void ClearPlaylistSelection(playlistIndex);
+    // [1.5.0 Preview 4]: New:
+    uint GetPlaylistFocusItemIndex(playlistIndex);
     IFbMetadbHandle GetPlaylistFocusItemHandle(force);
     void SetPlaylistFocusItem(playlistIndex, itemIndex);
     void SetPlaylistFocusItemByHandle(playlistIndex, itemHandle);
@@ -778,6 +791,8 @@ Methods:
     // Executes default doubleclick/enter action for specified item on specified playlist (starts playing 
     //   the item unless overridden by a lock to do something else).
     boolean ExecutePlaylistDefaultAction(playlistIndex, playlistItemIndex);
+    // [1.5.0 Preview 4] New:
+    boolean IsPlaylistItemSelected(playlistIndex, itemIndex);
     
     // [1.5.0 Preview 2] New:
     IFbPlaybackQueueItem CreatePlaybackQueueItem();

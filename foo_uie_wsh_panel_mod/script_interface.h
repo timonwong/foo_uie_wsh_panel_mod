@@ -261,6 +261,9 @@ __interface IFbMetadbHandleList: IDisposable
 	STDMETHOD(MakeIntersection)(IFbMetadbHandleList * handles);
 	STDMETHOD(MakeUnion)(IFbMetadbHandleList * handles);
 	STDMETHOD(MakeDifference)(IFbMetadbHandleList * handles);
+    STDMETHOD(OrderByFormat)(__interface IFbTitleFormat * script, int direction);
+    STDMETHOD(OrderByPath)();
+    STDMETHOD(OrderByRelativePath)();
 };
 
 [
@@ -272,6 +275,7 @@ __interface IFbMetadbHandleList: IDisposable
 ]
 __interface IFbTitleFormat: IDisposable
 {
+    [propget] STDMETHOD(_ptr)([out,retval] void ** pp);
 	STDMETHOD(Eval)([defaultvalue(0)] VARIANT_BOOL force, [out,retval] BSTR* pp);
 	STDMETHOD(EvalWithMetadb)(IFbMetadbHandle * handle, [out,retval] BSTR * pp);
 };

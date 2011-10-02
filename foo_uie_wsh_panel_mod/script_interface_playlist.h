@@ -14,10 +14,12 @@
 __interface IFbPlaylistManager : IDispatch
 {
     // Methods
+    STDMETHOD(GetPlaylistSelectedItems)(UINT playlistIndex, [out,retval] __interface IFbMetadbHandleList ** outItems);
     STDMETHOD(GetPlaylistItems)(UINT playlistIndex, [out,retval] __interface IFbMetadbHandleList ** outItems);
     STDMETHOD(SetPlaylistSelectionSingle)(UINT playlistIndex, UINT itemIndex, VARIANT_BOOL state);
     STDMETHOD(SetPlaylistSelection)(UINT playlistIndex, VARIANT affectedItems, VARIANT_BOOL state);
     STDMETHOD(ClearPlaylistSelection)(UINT playlistIndex);
+    STDMETHOD(GetFocusItemIndex)(UINT playlistIndex, [out,retval] UINT * outPlaylistItemIndex);
     STDMETHOD(GetPlaylistFocusItemHandle)(VARIANT_BOOL force, [out,retval] IFbMetadbHandle ** outItem);
     STDMETHOD(SetPlaylistFocusItem)(UINT playlistIndex, UINT itemIndex);
     STDMETHOD(SetPlaylistFocusItemByHandle)(UINT playlistIndex, IFbMetadbHandle * item);
@@ -30,6 +32,7 @@ __interface IFbPlaylistManager : IDispatch
     STDMETHOD(EnsurePlaylistItemVisible)(UINT playlistIndex, UINT itemIndex);
     STDMETHOD(GetPlayingItemLocation)([out,retval] __interface IFbPlayingItemLocation ** outPlayingLocation);
     STDMETHOD(ExecutePlaylistDefaultAction)(UINT playlistIndex, UINT playlistItemIndex, [out,retval] VARIANT_BOOL * outSuccess);
+    STDMETHOD(IsPlaylistItemSelected)(UINT playlistIndex, UINT playlistItemIndex, [out,retval] UINT * outSeleted);
 
     STDMETHOD(CreatePlaybackQueueItem)([out,retval] __interface IFbPlaybackQueueItem ** outPlaybackQueueItem);
     STDMETHOD(RemoveItemFromPlaybackQueue)(UINT index);

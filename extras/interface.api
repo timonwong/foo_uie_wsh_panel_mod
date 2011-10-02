@@ -117,10 +117,12 @@ plman.ActivePlaylist
 plman.PlaylingPlaylist
 plman.PlaylistCount
 plman.PlaylistItemCount
+plman.GetPlaylistSelectedItems(playlistIndex)
 plman.GetPlaylistItems(playlistIndex)
 plman.SetPlaylistSelectionSingle(playlistIndex, itemIndex, state)
 plman.SetPlaylistSelection(playlistIndex, affectedItems, state)
 plman.ClearPlaylistSelection(playlistIndex)
+plman.GetPlaylistFocusItemIndex(playlistIndex)
 plman.GetPlaylistFocusItemHandle()
 plman.SetPlaylistFocusItem(playlistIndex, itemIndex)
 plman.SetPlaylistFocusItemByHandle(playlistIndex, itemHandle)
@@ -143,6 +145,7 @@ plman.GetPlaybackQueueContents()
 plman.FindPlaybackQueueItemIndex(handle, playlistIndex, playlistItemIndex)
 plman.FlushPlaybackQueue()
 plman.IsPlaybackQueueActive()
+plman.IsPlaylistItemSelected(playlistIndex, itemIndex)
 
 
 # Callback function prototypes

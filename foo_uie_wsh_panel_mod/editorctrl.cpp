@@ -1083,7 +1083,7 @@ void CScriptEditorCtrl::SetJScript()
 							   " interface long native new null package private protected public return"
 							   " short static super switch synchronized this throw throws transient true"
 							   " try typeof var void while with enum byvalue cast future generic inner"
-							   " operator outer rest var Array Math RegExp window fb gdi utils";
+							   " operator outer rest var Array Math RegExp window fb gdi utils plman";
 
 	RestoreDefaultStyle();
 
@@ -1107,7 +1107,7 @@ void CScriptEditorCtrl::SetVBScript()
 								" loop lset me mid midb mod new next not nothing null object on option optional or paramarray"
 								" preserve print private property public raiseevent randomize redim rem resume return rset"
 								" seek select set single static step stop string sub text then time to true type typeof"
-								" unload until variant wend while with withevents xor window fb gdi utils";
+								" unload until variant wend while with withevents xor window fb gdi utils plman";
 
 	RestoreDefaultStyle();
 
