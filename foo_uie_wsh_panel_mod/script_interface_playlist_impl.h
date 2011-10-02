@@ -12,7 +12,7 @@ public:
     static STDMETHODIMP SetPlaylistSelectionSingle(UINT playlistIndex, UINT itemIndex, VARIANT_BOOL state);
     static STDMETHODIMP SetPlaylistSelection(UINT playlistIndex, VARIANT affectedItems, VARIANT_BOOL state);
     static STDMETHODIMP ClearPlaylistSelection(UINT playlistIndex);
-    static STDMETHODIMP GetFocusItemIndex(UINT playlistIndex, UINT * outPlaylistItemIndex);
+    static STDMETHODIMP GetPlaylistFocusItemIndex(UINT playlistIndex, UINT * outPlaylistItemIndex);
     static STDMETHODIMP GetPlaylistFocusItemHandle(VARIANT_BOOL force, IFbMetadbHandle ** outItem);
     static STDMETHODIMP SetPlaylistFocusItem(UINT playlistIndex, UINT itemIndex);
     static STDMETHODIMP SetPlaylistFocusItemByHandle(UINT playlistIndex, IFbMetadbHandle * item);
@@ -59,7 +59,7 @@ public:
     STDMETHODIMP SetPlaylistSelectionSingle(UINT playlistIndex, UINT itemIndex, VARIANT_BOOL state);
     STDMETHODIMP SetPlaylistSelection(UINT playlistIndex, VARIANT affectedItems, VARIANT_BOOL state);
     STDMETHODIMP ClearPlaylistSelection(UINT playlistIndex);
-    STDMETHODIMP GetFocusItemIndex(UINT playlistIndex, UINT * outPlaylistItemIndex);
+    STDMETHODIMP GetPlaylistFocusItemIndex(UINT playlistIndex, UINT * outPlaylistItemIndex);
     STDMETHODIMP GetPlaylistFocusItemHandle(VARIANT_BOOL force, IFbMetadbHandle ** outItem);
     STDMETHODIMP SetPlaylistFocusItem(UINT playlistIndex, UINT itemIndex);
     STDMETHODIMP SetPlaylistFocusItemByHandle(UINT playlistIndex, IFbMetadbHandle * item);

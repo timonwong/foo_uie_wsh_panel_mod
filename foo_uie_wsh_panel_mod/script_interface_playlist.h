@@ -19,7 +19,7 @@ __interface IFbPlaylistManager : IDispatch
     STDMETHOD(SetPlaylistSelectionSingle)(UINT playlistIndex, UINT itemIndex, VARIANT_BOOL state);
     STDMETHOD(SetPlaylistSelection)(UINT playlistIndex, VARIANT affectedItems, VARIANT_BOOL state);
     STDMETHOD(ClearPlaylistSelection)(UINT playlistIndex);
-    STDMETHOD(GetFocusItemIndex)(UINT playlistIndex, [out,retval] UINT * outPlaylistItemIndex);
+    STDMETHOD(GetPlaylistFocusItemIndex)(UINT playlistIndex, [out,retval] UINT * outPlaylistItemIndex);
     STDMETHOD(GetPlaylistFocusItemHandle)(VARIANT_BOOL force, [out,retval] IFbMetadbHandle ** outItem);
     STDMETHOD(SetPlaylistFocusItem)(UINT playlistIndex, UINT itemIndex);
     STDMETHOD(SetPlaylistFocusItemByHandle)(UINT playlistIndex, IFbMetadbHandle * item);
