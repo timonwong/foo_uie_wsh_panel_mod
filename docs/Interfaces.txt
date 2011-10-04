@@ -747,6 +747,11 @@ Properties:
 // [1.5.0] New: This interface is added in 1.5.0
 interface IFbPlaylistManager {
 Methods:
+    // [1.5.0 Preview 5]: New:
+    // Inserts new items into specified playlist, at specified position.
+    uint InsertPlaylistItems(playlistIndex, base, handles, select = false);
+    // [1.5.0 Preview 5]: New:
+    uint InsertPlaylistItemsFilter(playlistIndex, base, handles, select = false);
     // [1.5.0 Preview 4]: New:
     // Note that it's different from fb.GetSelection()
     IFbMetadbHandleList GetPlaylistSelectedItems(playlistIndex);

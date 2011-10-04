@@ -1482,8 +1482,6 @@ STDMETHODIMP FbMetadbHandleList::Find(IFbMetadbHandle * handle, UINT * p)
 
     metadb_handle * ptr = NULL;
     handle->get__ptr((void **)&ptr);
-    if (!ptr) return E_INVALIDARG;
-
     *p = m_handles.find_item(ptr);
     return S_OK;
 }
@@ -1497,8 +1495,6 @@ STDMETHODIMP FbMetadbHandleList::BSearch(IFbMetadbHandle * handle, UINT * p)
 
     metadb_handle * ptr = NULL;
     handle->get__ptr((void **)&ptr);
-    if (!ptr) return E_INVALIDARG;
-
     *p = m_handles.bsearch_by_pointer(ptr);
     return S_OK;
 }
@@ -1512,8 +1508,6 @@ STDMETHODIMP FbMetadbHandleList::Add(IFbMetadbHandle * handle, UINT * p)
 
     metadb_handle * ptr = NULL;
     handle->get__ptr((void **)&ptr);
-    if (!ptr) return E_INVALIDARG;
-
     *p = m_handles.add_item(ptr);
     return S_OK;
 }
@@ -1535,8 +1529,6 @@ STDMETHODIMP FbMetadbHandleList::Remove(IFbMetadbHandle * handle)
 
     metadb_handle * ptr = NULL;
     handle->get__ptr((void **)&ptr);
-    if (!ptr) return E_INVALIDARG;
-
     m_handles.remove_item(ptr);
     return S_OK;
 }
@@ -1669,8 +1661,9 @@ STDMETHODIMP FbMetadbHandleList::OrderByFormat(__interface IFbTitleFormat * scri
     TRACK_FUNCTION();
 
     if (!script) return E_INVALIDARG;
-    titleformat_object * obj;
+    titleformat_object * obj = NULL;
     script->get__ptr((void **)&obj);
+    if (!obj) return E_INVALIDARG;
     m_handles.sort_by_format(obj, NULL, direction);
     return S_OK;
 }
@@ -1738,7 +1731,6 @@ STDMETHODIMP FbTitleFormat::EvalWithMetadb(IFbMetadbHandle * handle, BSTR * pp)
 
     metadb_handle * ptr = NULL;
     handle->get__ptr((void**)&ptr);
-    if (!ptr) return E_INVALIDARG;
 
     pfc::string8_fast text;
 
@@ -2963,7 +2955,6 @@ STDMETHODIMP WSHUtils::GetAlbumArtV2(IFbMetadbHandle * handle, int art_id, VARIA
 
     metadb_handle * ptr = NULL;
     handle->get__ptr((void**)&ptr);
-
     return helpers::get_album_art_v2(ptr, pp, art_id, need_stub);
 }
 
@@ -3628,7 +3619,7 @@ STDMETHODIMP StyleTextRender::SetShadowBackgroundImage(IGdiBitmap * img)
 
     Gdiplus::Bitmap * pBitmap = NULL;
     img->get__ptr((void**)&pBitmap);
-
+    if (!pBitmap) return E_INVALIDARG;
     m_pOutLineText->SetShadowBkgd(pBitmap);
     return S_OK;
 }
@@ -3711,10 +3702,9 @@ STDMETHODIMP StyleTextRender::SetPngImage(IGdiBitmap * img)
 
     Gdiplus::Bitmap * pBitmap = NULL;
     img->get__ptr((void**)&pBitmap);
-
+    if (!pBitmap) return E_INVALIDARG;
     TextDesign::PngOutlineText * pPngOutlineText = reinterpret_cast<TextDesign::PngOutlineText *>(m_pOutLineText);
     pPngOutlineText->SetPngImage(pBitmap);
-
     return S_OK;
 }
 

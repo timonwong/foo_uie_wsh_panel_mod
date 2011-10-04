@@ -5,7 +5,7 @@
 // TODO: Change Version Number Every Time
 #define WSPM_VERSION_NUMBER "1.5.0"
 #define WSPM_WILL_NOT_EXPIRE
-#define WSPM_VERSION_TEST "Preview 4"
+#define WSPM_VERSION_TEST "Preview 5"
 
 #ifdef WSPM_VERSION_TEST
 #	define WSPM_TESTING 1

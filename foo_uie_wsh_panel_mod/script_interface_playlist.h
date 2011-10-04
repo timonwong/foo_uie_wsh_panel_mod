@@ -2,7 +2,6 @@
 
 #include <ObjBase.h>
 
-
 //---
 [
     object,
@@ -14,6 +13,8 @@
 __interface IFbPlaylistManager : IDispatch
 {
     // Methods
+    STDMETHOD(InsertPlaylistItems)(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, [defaultvalue(0)] VARIANT_BOOL select, [out,retval] UINT ** outSize);
+    STDMETHOD(InsertPlaylistItemsFilter)(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, [defaultvalue(0)] VARIANT_BOOL select, [out,retval] UINT ** outSize);
     STDMETHOD(GetPlaylistSelectedItems)(UINT playlistIndex, [out,retval] __interface IFbMetadbHandleList ** outItems);
     STDMETHOD(GetPlaylistItems)(UINT playlistIndex, [out,retval] __interface IFbMetadbHandleList ** outItems);
     STDMETHOD(SetPlaylistSelectionSingle)(UINT playlistIndex, UINT itemIndex, VARIANT_BOOL state);

@@ -7,6 +7,8 @@ class FbPlaylistMangerTemplate
 {
 public:
     // Methods
+    static STDMETHODIMP InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, VARIANT_BOOL select, UINT ** outSize);
+    static STDMETHODIMP InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, VARIANT_BOOL select, UINT ** outSize);
     static STDMETHODIMP GetPlaylistSelectedItems(UINT playlistIndex, __interface IFbMetadbHandleList ** outItems);
     static STDMETHODIMP GetPlaylistItems(UINT playlistIndex, IFbMetadbHandleList ** outItems);
     static STDMETHODIMP SetPlaylistSelectionSingle(UINT playlistIndex, UINT itemIndex, VARIANT_BOOL state);
@@ -54,6 +56,8 @@ class FbPlaylistManager : public IDispatchImpl3<IFbPlaylistManager>
 {
 public:
     // Methods
+    STDMETHODIMP InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, VARIANT_BOOL select, UINT ** outSize);
+    STDMETHODIMP InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, VARIANT_BOOL select, UINT ** outSize);
     STDMETHODIMP GetPlaylistSelectedItems(UINT playlistIndex, __interface IFbMetadbHandleList ** outItems);
     STDMETHODIMP GetPlaylistItems(UINT playlistIndex, IFbMetadbHandleList ** outItems);
     STDMETHODIMP SetPlaylistSelectionSingle(UINT playlistIndex, UINT itemIndex, VARIANT_BOOL state);
