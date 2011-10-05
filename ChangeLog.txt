@@ -1,5 +1,7 @@
 v1.5.0 Preview 5
 - ADD: Add "InsertPlaylistItems" and "InsertPlaylistItemsFilter" to plman object.
+- ADD: Add "MovePlaylistSelection" and "RemovePlaylistSelection" to plman object.
+- ADD: Add "SetActivePlaylistContext" method to plman object.
 - FIX: Fix a problem that "plman.GetPlaylistFocusItemIndex" doesn't exist.
 
 v1.5.0 Preview 4

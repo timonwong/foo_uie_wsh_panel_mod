@@ -752,6 +752,10 @@ Methods:
     uint InsertPlaylistItems(playlistIndex, base, handles, select = false);
     // [1.5.0 Preview 5]: New:
     uint InsertPlaylistItemsFilter(playlistIndex, base, handles, select = false);
+    // [1.5.0 Preview 5]: New:
+    void MovePlaylistSelection(playlistIndex, delta);
+    // [1.5.0 Preview 5]: New:
+    void RemovePlaylistSelection(playlistIndex, crop = false);
     // [1.5.0 Preview 4]: New:
     // Note that it's different from fb.GetSelection()
     IFbMetadbHandleList GetPlaylistSelectedItems(playlistIndex);
@@ -798,6 +802,9 @@ Methods:
     boolean ExecutePlaylistDefaultAction(playlistIndex, playlistItemIndex);
     // [1.5.0 Preview 4] New:
     boolean IsPlaylistItemSelected(playlistIndex, itemIndex);
+    // [1.5.0 Preview 5] New:
+    // WORKAROUND: In DUI, you cannot run playlist commands of edit menu because they are invalid.
+    void SetActivePlaylistContext();
     
     // [1.5.0 Preview 2] New:
     IFbPlaybackQueueItem CreatePlaybackQueueItem();

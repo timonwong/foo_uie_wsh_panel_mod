@@ -119,6 +119,8 @@ plman.PlaylistCount
 plman.PlaylistItemCount
 plman.InsertPlaylistItems(playlistIndex, base, handles[, select])
 plman.InsertPlaylistItemsFilter(playlistIndex, base, handles[, select])
+plman.MovePlaylistSelection(playlistIndex, delta)
+plman.RemovePlaylistSelection(playlistIndex[, crop])
 plman.GetPlaylistSelectedItems(playlistIndex)
 plman.GetPlaylistItems(playlistIndex)
 plman.SetPlaylistSelectionSingle(playlistIndex, itemIndex, state)

@@ -555,6 +555,30 @@ STDMETHODIMP FbPlaylistMangerTemplate::IsPlaylistItemSelected(UINT playlistIndex
     return S_OK;
 }
 
+STDMETHODIMP FbPlaylistMangerTemplate::MovePlaylistSelection(UINT playlistIndex, int delta)
+{
+    TRACK_FUNCTION();
+
+    static_api_ptr_t<playlist_manager>()->playlist_move_selection(playlistIndex, delta);
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerTemplate::RemovePlaylistSelection(UINT playlistIndex, VARIANT_BOOL crop)
+{
+    TRACK_FUNCTION();
+
+    static_api_ptr_t<playlist_manager>()->playlist_remove_selection(playlistIndex, crop == VARIANT_TRUE);
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerTemplate::SetActivePlaylistContext()
+{
+    TRACK_FUNCTION();
+
+    static_api_ptr_t<ui_edit_context_manager>()->set_context_active_playlist();
+    return S_OK;
+}
+
 
 STDMETHODIMP FbPlaylistManager::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, VARIANT_BOOL select, UINT ** outSize)
 {
@@ -753,6 +777,21 @@ STDMETHODIMP FbPlaylistManager::ExecutePlaylistDefaultAction(UINT playlistIndex,
 STDMETHODIMP FbPlaylistManager::IsPlaylistItemSelected(UINT playlistIndex, UINT playlistItemIndex, UINT * outSeleted)
 {
     return FbPlaylistMangerTemplate::IsPlaylistItemSelected(playlistIndex, playlistItemIndex, outSeleted);
+}
+
+STDMETHODIMP FbPlaylistManager::MovePlaylistSelection(UINT playlistIndex, int delta)
+{
+    return FbPlaylistMangerTemplate::MovePlaylistSelection(playlistIndex, delta);
+}
+
+STDMETHODIMP FbPlaylistManager::RemovePlaylistSelection(UINT playlistIndex, VARIANT_BOOL crop)
+{
+    return FbPlaylistMangerTemplate::RemovePlaylistSelection(playlistIndex, crop);
+}
+
+STDMETHODIMP FbPlaylistManager::SetActivePlaylistContext()
+{
+    return FbPlaylistMangerTemplate::SetActivePlaylistContext();
 }
 
 

@@ -223,18 +223,8 @@ namespace helpers
 		return false;
 	}
 
-    void estimate_line_wrap_recur(HDC hdc, const wchar_t * text, int len, int width, bool firstLine, pfc::list_t<wrapped_item> & out)
+    void estimate_line_wrap_recur(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out)
     {
-        // Eat spaces
-        if (!firstLine)
-        {
-            while (len > 0 && iswspace(*text))
-            {
-                --len;
-                ++text;
-            }
-        }
-
         int textLength = len;
         int textWidth = get_text_width(hdc, text, len);
 
@@ -286,7 +276,7 @@ namespace helpers
 
             if (textLength < len)
             {
-                estimate_line_wrap_recur(hdc, text + textLength, len - textLength, width, false, out);
+                estimate_line_wrap_recur(hdc, text + textLength, len - textLength, width, out);
             }
         }
     }
@@ -298,7 +288,7 @@ namespace helpers
             const wchar_t * next = wcschr(text, '\n');
             if (next == NULL) 
             {
-                estimate_line_wrap_recur(hdc, text, wcslen(text), width, true, out); 
+                estimate_line_wrap_recur(hdc, text, wcslen(text), width, out); 
                 break;
             }
 
@@ -309,7 +299,7 @@ namespace helpers
                 --walk;
             }
 
-            estimate_line_wrap_recur(hdc, text, walk - text, width, true, out);
+            estimate_line_wrap_recur(hdc, text, walk - text, width, out);
             text = next + 1;
         }
 	}

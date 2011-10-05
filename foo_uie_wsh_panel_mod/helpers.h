@@ -33,7 +33,15 @@ namespace helpers
         if (iswspace(current)) 
             return true;
 
-        return iswalnum(current) == 0 || iswalnum(next) == 0;
+        int currentAlphaNum = iswalnum(current);
+
+        if (currentAlphaNum)
+        {
+            if (iswpunct(next))
+                return false;
+        }
+
+        return currentAlphaNum == 0 || iswalnum(next) == 0;
 	}
 
 	struct wrapped_item
