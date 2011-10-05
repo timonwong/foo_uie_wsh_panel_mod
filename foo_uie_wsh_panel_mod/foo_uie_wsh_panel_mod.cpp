@@ -15,7 +15,7 @@ namespace
 	DECLARE_COMPONENT_VERSION(
 		WSPM_NAME,
 		WSPM_VERSION,
-		"Windows Scripting Host Panel Modded\n"
+		"Windows Scripting Host Panel Modded v" WSPM_VERSION "\n"
 		"Modded by T.P. Wang\n\n"
 		"Build: "  __TIME__ ", " __DATE__ "\n"
 		"Columns UI API Version: " UI_EXTENSION_VERSION "\n\n\n\n"
@@ -29,7 +29,7 @@ namespace
 		"Copyright (c) 2001-2003 Bjarke Viksoe\n\n\n"
 	);
 
-	VALIDATE_COMPONENT_FILENAME(WSPM_DLL_NAME);
+	//VALIDATE_COMPONENT_FILENAME(WSPM_DLL_NAME);
 
 	// Is there anything not correctly loaded?
 	enum t_load_status_error
