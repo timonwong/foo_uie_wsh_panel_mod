@@ -1,3 +1,7 @@
+v1.5.0 Preview 6
+- CHG: "Item" property of "IFbMetadbHandleList" interface is writable now.
+- ADD: Add four new methods("Insert", "InsertRange", "AddRange" and "RemoveRange") to "IFbMetadbHandleList" interface.
+
 v1.5.0 Preview 5
 - ADD: Add "InsertPlaylistItems" and "InsertPlaylistItemsFilter" to plman object.
 - ADD: Add "MovePlaylistSelection" and "RemovePlaylistSelection" to plman object.

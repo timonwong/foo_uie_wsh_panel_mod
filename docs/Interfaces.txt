@@ -241,13 +241,22 @@ interface IFbMetadbHandleList
 {
 Properties:
 	(readonly) uint Count;
-	(readonly) IFbMetadbHandle Item(idx);
+    // [1.5.0 Preview 6]: Changed, now writable.
+	(read, write) IFbMetadbHandle Item(idx);
 	
 Methods:
 	IFbMetadbHandleList Clone();
+    // [1.5.0 Preview 6]: New:
+    uint Insert(index, handle);
+    // [1.5.0 Preview 6]: New:
+    uint InsertRange(index, handles);
 	uint Add(handle);
+    // [1.5.0 Preview 6]: New:
+    void AddRange(handles);
 	void RemoveById(UINT idx);
 	void Remove(handle);
+    // [1.5.0 Preview 6]: New:
+    void RemoveRange(from, num);
 	void RemoveAll();
 	// Sort and remove duplicates
 	void Sort();
