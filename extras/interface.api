@@ -114,7 +114,7 @@ utils.FileTest(path, mode)
 
 plman.PlaybackOrder
 plman.ActivePlaylist
-plman.PlaylingPlaylist
+plman.PlayingPlaylist
 plman.PlaylistCount
 plman.PlaylistItemCount
 plman.InsertPlaylistItems(playlistIndex, base, handles[, select])

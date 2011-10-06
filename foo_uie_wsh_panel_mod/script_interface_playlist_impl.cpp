@@ -64,7 +64,6 @@ STDMETHODIMP FbPlaylistMangerTemplate::SetPlaylistSelectionSingle(UINT playlistI
 {
     TRACK_FUNCTION();
 
-    console::formatter() << "Active" << static_api_ptr_t<ui_edit_context_manager>()->set_context_active_playlist();
     static_api_ptr_t<playlist_manager>()->playlist_set_selection_single(playlistIndex, itemIndex, state == VARIANT_TRUE);
     return S_OK;
 }
