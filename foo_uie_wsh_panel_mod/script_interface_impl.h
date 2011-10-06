@@ -275,13 +275,18 @@ protected:
 
 public:
 	STDMETHODIMP get__ptr(void ** pp);
-	STDMETHODIMP get_Item(UINT idx, IFbMetadbHandle ** pp);
+    STDMETHODIMP get_Item(UINT index, IFbMetadbHandle ** pp);
+    STDMETHODIMP put_Item(UINT index, IFbMetadbHandle * handle);
 	STDMETHODIMP get_Count(UINT * p);
 
 	STDMETHODIMP Clone(IFbMetadbHandleList ** pp);
+    STDMETHODIMP Insert(UINT index, IFbMetadbHandle * handle, UINT * outIndex);
+    STDMETHODIMP InsertRange(UINT index, IFbMetadbHandleList * handles, UINT * outIndex);
 	STDMETHODIMP Add(IFbMetadbHandle * handle, UINT * p);
-	STDMETHODIMP RemoveById(UINT idx);
+    STDMETHODIMP AddRange(IFbMetadbHandleList * handles);
+    STDMETHODIMP RemoveById(UINT index);
 	STDMETHODIMP Remove(IFbMetadbHandle * handle);
+    STDMETHODIMP RemoveRange(UINT from, UINT count);
 	STDMETHODIMP RemoveAll();
 	STDMETHODIMP Sort();
 	STDMETHODIMP Find(IFbMetadbHandle * handle, UINT * p);

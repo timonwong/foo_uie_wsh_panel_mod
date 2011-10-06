@@ -247,13 +247,18 @@ __interface IFbMetadbHandle: IDisposable
 __interface IFbMetadbHandleList: IDisposable
 {
 	[propget] STDMETHOD(_ptr)([out,retval] void ** pp);
-	[propget] STDMETHOD(Item)(UINT idx, [out,retval] IFbMetadbHandle ** pp);
+	[propget] STDMETHOD(Item)(UINT index, [out,retval] IFbMetadbHandle ** pp);
+    [propput] STDMETHOD(Item)(UINT index, IFbMetadbHandle * handle);
 	[propget] STDMETHOD(Count)([out,retval] UINT * p);
 
 	STDMETHOD(Clone)([out,retval] IFbMetadbHandleList ** pp);
+    STDMETHOD(Insert)(UINT index, IFbMetadbHandle * handle, [out,retval] UINT * outIndex);
+    STDMETHOD(InsertRange)(UINT index, IFbMetadbHandleList * handles, [out,retval] UINT * outIndex);
 	STDMETHOD(Add)(IFbMetadbHandle * handle, [out,retval] UINT * p);
-	STDMETHOD(RemoveById)(UINT idx);
+    STDMETHOD(AddRange)(IFbMetadbHandleList * handles);
+	STDMETHOD(RemoveById)(UINT index);
 	STDMETHOD(Remove)(IFbMetadbHandle * handle);
+    STDMETHOD(RemoveRange)(UINT from, UINT count);
 	STDMETHOD(RemoveAll)();
 	STDMETHOD(Sort)();
 	STDMETHOD(Find)(IFbMetadbHandle * handle, [out,retval] UINT * p);

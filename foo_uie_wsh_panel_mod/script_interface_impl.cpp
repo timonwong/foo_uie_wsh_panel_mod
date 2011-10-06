@@ -1435,14 +1435,28 @@ STDMETHODIMP FbMetadbHandleList::get__ptr(void ** pp)
     return S_OK;
 }
 
-STDMETHODIMP FbMetadbHandleList::get_Item(UINT idx, IFbMetadbHandle ** pp)
+STDMETHODIMP FbMetadbHandleList::get_Item(UINT index, IFbMetadbHandle ** pp)
 {
     TRACK_FUNCTION();
 
     if (!pp) return E_POINTER;
-    if (idx >= m_handles.get_count()) return E_INVALIDARG;
+    if (index >= m_handles.get_size()) return E_INVALIDARG;
+    if (index >= m_handles.get_count()) return E_INVALIDARG;
 
-    *pp = new com_object_impl_t<FbMetadbHandle>(m_handles.get_item_ref(idx));
+    *pp = new com_object_impl_t<FbMetadbHandle>(m_handles.get_item_ref(index));
+    return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::put_Item(UINT index, IFbMetadbHandle * handle)
+{
+    TRACK_FUNCTION();
+
+    if (index >= m_handles.get_size()) return E_INVALIDARG;
+    if (!handle) return E_INVALIDARG;
+
+    metadb_handle * ptr = NULL;
+    handle->get__ptr((void **)&ptr);
+    m_handles.replace_item(index, ptr);
     return S_OK;
 }
 
@@ -1499,6 +1513,33 @@ STDMETHODIMP FbMetadbHandleList::BSearch(IFbMetadbHandle * handle, UINT * p)
     return S_OK;
 }
 
+STDMETHODIMP FbMetadbHandleList::Insert(UINT index, IFbMetadbHandle * handle, UINT * outIndex)
+{
+    TRACK_FUNCTION();
+
+    if (!outIndex) return E_POINTER;
+    if (!handle) return E_INVALIDARG;
+
+    metadb_handle * ptr = NULL;
+    handle->get__ptr((void **)&ptr);
+    (*outIndex) = m_handles.insert_item(ptr, index);
+    return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::InsertRange(UINT index, IFbMetadbHandleList * handles, UINT * outIndex)
+{
+    TRACK_FUNCTION();
+
+    if (!outIndex) return E_POINTER;
+    if (!handles) return E_INVALIDARG;
+
+    metadb_handle_list * handles_ptr = NULL;
+    handles->get__ptr((void **)&handles_ptr);
+    if (!handles_ptr) return E_INVALIDARG;
+    (*outIndex) = m_handles.insert_items(*handles_ptr, index);
+    return S_OK;
+}
+
 STDMETHODIMP FbMetadbHandleList::Add(IFbMetadbHandle * handle, UINT * p)
 {
     TRACK_FUNCTION();
@@ -1512,12 +1553,25 @@ STDMETHODIMP FbMetadbHandleList::Add(IFbMetadbHandle * handle, UINT * p)
     return S_OK;
 }
 
-STDMETHODIMP FbMetadbHandleList::RemoveById(UINT idx)
+STDMETHODIMP FbMetadbHandleList::AddRange(IFbMetadbHandleList * handles)
 {
     TRACK_FUNCTION();
 
-    if (idx >= m_handles.get_count()) return E_INVALIDARG;
-    m_handles.remove_by_idx(idx);
+    if (!handles) return E_INVALIDARG;
+
+    metadb_handle_list * handles_ptr = NULL;
+    handles->get__ptr((void **)&handles_ptr);
+    if (!handles_ptr) return E_INVALIDARG;
+    m_handles.add_items(*handles_ptr);
+    return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::RemoveById(UINT index)
+{
+    TRACK_FUNCTION();
+
+    if (index >= m_handles.get_count()) return E_INVALIDARG;
+    m_handles.remove_by_idx(index);
     return S_OK;
 }
 
@@ -1538,6 +1592,14 @@ STDMETHODIMP FbMetadbHandleList::RemoveAll()
     TRACK_FUNCTION();
 
     m_handles.remove_all();
+    return S_OK;
+}
+
+STDMETHODIMP FbMetadbHandleList::RemoveRange(UINT from, UINT count)
+{
+    TRACK_FUNCTION();
+
+    m_handles.remove_from_idx(from, count);
     return S_OK;
 }
 

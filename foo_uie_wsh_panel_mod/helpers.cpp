@@ -239,7 +239,7 @@ namespace helpers
 
             if (get_text_width(hdc, text, textLength) < width)
             {
-                while (get_text_width(hdc, text, min(len, textLength + 1)) < width) 
+                while (get_text_width(hdc, text, min(len, textLength + 1)) <= width) 
                 {
                     ++textLength;
                 }
