@@ -2629,10 +2629,6 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 		return;
 
 	simple_callback_data_scope_releaser<nonautoregister_callbacks::t_on_changed_sorted_data> data(wp);
-
-	if (m_watched_handle.is_empty())
-		return;
-
 	VARIANTARG args[2];
 	IDispatch * handle = NULL;
 
@@ -2642,6 +2638,9 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 	}
 	else
 	{
+        if (m_watched_handle.is_empty())
+            return;
+
 		if (!data->m_items_sorted.have_item(m_watched_handle))
 			return;
 

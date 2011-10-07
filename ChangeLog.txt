@@ -1,3 +1,6 @@
+v1.5.0 Preview 7
+- FIX: Fix a problem that the callback "on_metadb_changed" never gets called.
+
 v1.5.0 Preview 6
 - CHG: "Item" property of "IFbMetadbHandleList" interface is writable now.
 - ADD: Add four new methods("Insert", "InsertRange", "AddRange" and "RemoveRange") to "IFbMetadbHandleList" interface.
