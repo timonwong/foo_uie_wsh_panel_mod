@@ -1,5 +1,5 @@
 v1.5.0 Preview 7
-- FIX: Fix a problem that the callback "on_metadb_changed" never gets called.
+- FIX: Fix a problem that the callback "on_metadb_changed" may never get called.
 
 v1.5.0 Preview 6
 - CHG: "Item" property of "IFbMetadbHandleList" interface is writable now.

@@ -25,22 +25,22 @@ public:
 	};
 
 protected:
-	HWND              m_hwnd;
-	INT               m_width;
-	INT               m_height;
-	POINT             m_max_size;
-	POINT             m_min_size;
-	UINT              m_dlg_code;
-	HDC               m_hdc;
-	HBITMAP           m_gr_bmp;
-	HBITMAP           m_gr_bmp_bk;
-	UINT              m_accuracy;
-	metadb_handle_ptr m_watched_handle;
-	t_script_info m_script_info;
-	ui_selection_holder::ptr m_selection_holder;
-	int               m_instance_type;
-	bool              m_suppress_drawing;
-	bool              m_paint_pending;
+	HWND                        m_hwnd;
+	INT                         m_width;
+	INT                         m_height;
+	POINT                       m_max_size;
+	POINT                       m_min_size;
+	UINT                        m_dlg_code;
+	HDC                         m_hdc;
+	HBITMAP                     m_gr_bmp;
+	HBITMAP                     m_gr_bmp_bk;
+	UINT                        m_accuracy;
+	metadb_handle_ptr           m_watched_handle;
+	t_script_info               m_script_info;
+	ui_selection_holder::ptr    m_selection_holder;
+	int                         m_instance_type;
+	bool                        m_suppress_drawing;
+	bool                        m_paint_pending;
 	
 	HostComm();
 	virtual ~HostComm();
@@ -70,7 +70,6 @@ public:
 
 	virtual DWORD GetColorCUI(unsigned type, const GUID & guid) = 0;
 	virtual HFONT GetFontCUI(unsigned type, const GUID & guid) = 0;
-	//virtual bool GetIsThemedCUI(unsigned type) = 0; // TODO:
 	virtual DWORD GetColorDUI(unsigned type) = 0;
 	virtual HFONT GetFontDUI(unsigned type) = 0;
 	
@@ -392,6 +391,7 @@ private:
     void on_playlist_items_reordered(WPARAM wp);
 	void on_playlist_items_removed(WPARAM wp, LPARAM lp);
 	void on_playlist_items_selection_change();
+    void on_playlist_item_ensure_visible(WPARAM wp, LPARAM lp);
     void on_item_focus_change(WPARAM wp);
 	void on_playback_order_changed(t_size p_new_index);
 	void on_playlist_switch();

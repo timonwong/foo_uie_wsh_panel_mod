@@ -253,6 +253,43 @@ void my_playlist_callback::on_items_selection_change(t_size p_playlist,const bit
 	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEMS_SELECTION_CHANGE);
 }
 
+void my_playlist_callback::on_item_ensure_visible(t_size p_playlist,t_size p_idx)
+{
+    panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYLIST_ITEM_ENSURE_VISIBLE, p_playlist, p_idx);
+}
+
+void my_playlist_callback::on_playlist_activate(t_size p_old,t_size p_new)
+{
+    // redirect
+    if (p_old != p_new) 
+        on_playlist_switch();
+}
+
+void my_playlist_callback::on_playlist_created(t_size p_index,const char * p_name,t_size p_name_len)
+{
+    // redirect
+    on_playlists_changed();
+}
+
+void my_playlist_callback::on_playlists_reorder(const t_size * p_order,t_size p_count)
+{
+    // redirect
+    on_playlists_changed();
+}
+
+void my_playlist_callback::on_playlists_removed(const bit_array & p_mask,t_size p_old_count,t_size p_new_count)
+{
+    // redirect
+    on_playlists_changed();
+}
+
+void my_playlist_callback::on_playlist_renamed(t_size p_index,const char * p_new_name,t_size p_new_name_len)
+{
+    // redirect
+    on_playlists_changed();
+}
+
+
 void my_playback_queue_callback::on_changed(t_change_origin p_origin)
 {
     panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_PLAYBACK_QUEUE_CHANGED, (WPARAM)p_origin);

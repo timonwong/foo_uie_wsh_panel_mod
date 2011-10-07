@@ -1979,6 +1979,10 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		on_playlist_items_selection_change();
         return 0;
 
+    case CALLBACK_UWM_ON_PLAYLIST_ITEM_ENSURE_VISIBLE:
+        on_playlist_item_ensure_visible(wp, lp);
+        return 0;
+
     case CALLBACK_UWM_ON_PLAYBACK_QUEUE_CHANGED:
         on_playback_queue_changed(wp);
         return 0;
@@ -2549,11 +2553,11 @@ void wsh_panel_window::on_item_focus_change(WPARAM wp)
     VARIANTARG args[3];
 
     args[0].vt = VT_I4;
-    args[0].intVal = data->m_item3;
+    args[0].lVal = data->m_item3;
     args[1].vt = VT_I4;
-    args[1].intVal = data->m_item2;
+    args[1].lVal = data->m_item2;
     args[2].vt = VT_I4;
-    args[2].intVal = data->m_item1;
+    args[2].lVal = data->m_item1;
 	script_invoke_v(L"on_item_focus_change", args, _countof(args));
 }
 
@@ -2619,6 +2623,18 @@ void wsh_panel_window::on_playlist_items_selection_change()
 	TRACK_FUNCTION();
 
 	script_invoke_v(L"on_playlist_items_selection_change");
+}
+
+void wsh_panel_window::on_playlist_item_ensure_visible(WPARAM wp, LPARAM lp)
+{
+    TRACK_FUNCTION();
+
+    VARIANTARG args[2];
+    args[0].vt = VT_UI4;
+    args[0].ulVal = lp;
+    args[1].vt = VT_UI4;
+    args[1].ulVal = wp;
+    script_invoke_v(L"on_playlist_item_ensure_visible", args, _countof(args));
 }
 
 void wsh_panel_window::on_changed_sorted(WPARAM wp)
