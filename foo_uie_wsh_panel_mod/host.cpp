@@ -1948,7 +1948,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		return 0;
 
 	case CALLBACK_UWM_ON_ITEM_FOCUS_CHANGE:
-		on_item_focus_change();
+		on_item_focus_change(wp);
 		return 0;
 
 	case CALLBACK_UWM_ON_PLAYBACK_ORDER_CHANGED:
@@ -2541,11 +2541,20 @@ void wsh_panel_window::on_volume_change(WPARAM wp)
 	script_invoke_v(L"on_volume_change", args, _countof(args));
 }
 
-void wsh_panel_window::on_item_focus_change()
+void wsh_panel_window::on_item_focus_change(WPARAM wp)
 {
 	TRACK_FUNCTION();
 
-	script_invoke_v(L"on_item_focus_change");
+    simple_callback_data_scope_releaser<simple_callback_data_3<t_size, t_size, t_size> > data(wp);
+    VARIANTARG args[3];
+
+    args[0].vt = VT_I4;
+    args[0].intVal = data->m_item3;
+    args[1].vt = VT_I4;
+    args[1].intVal = data->m_item2;
+    args[2].vt = VT_I4;
+    args[2].intVal = data->m_item1;
+	script_invoke_v(L"on_item_focus_change", args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_order_changed(t_size p_new_index)

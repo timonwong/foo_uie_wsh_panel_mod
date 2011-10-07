@@ -781,7 +781,8 @@ Methods:
     // Clear selection of specified playlist
     void ClearPlaylistSelection(playlistIndex);
     // [1.5.0 Preview 4]: New:
-    uint GetPlaylistFocusItemIndex(playlistIndex);
+    // Retrieves index of focus item on specified playlist; returns -1 when no item has focus.
+    int GetPlaylistFocusItemIndex(playlistIndex);
     IFbMetadbHandle GetPlaylistFocusItemHandle(force);
     void SetPlaylistFocusItem(playlistIndex, itemIndex);
     void SetPlaylistFocusItemByHandle(playlistIndex, itemHandle);

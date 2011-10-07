@@ -392,7 +392,7 @@ private:
     void on_playlist_items_reordered(WPARAM wp);
 	void on_playlist_items_removed(WPARAM wp, LPARAM lp);
 	void on_playlist_items_selection_change();
-	void on_item_focus_change();
+    void on_item_focus_change(WPARAM wp);
 	void on_playback_order_changed(t_size p_new_index);
 	void on_playlist_switch();
 	void on_playlists_changed();

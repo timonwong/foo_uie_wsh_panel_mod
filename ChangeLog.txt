@@ -1,6 +1,8 @@
 v1.5.0 Preview 6
 - CHG: "Item" property of "IFbMetadbHandleList" interface is writable now.
 - ADD: Add four new methods("Insert", "InsertRange", "AddRange" and "RemoveRange") to "IFbMetadbHandleList" interface.
+- CHG: Change callback prototype "on_item_focus_change()" to "on_item_focus_change(playlist, from, to)".
+- FIX: Fix a problem that "plman.GetPlaylistFocusItemIndex" always returns 0.
 
 v1.5.0 Preview 5
 - ADD: Add "InsertPlaylistItems" and "InsertPlaylistItemsFilter" to plman object.

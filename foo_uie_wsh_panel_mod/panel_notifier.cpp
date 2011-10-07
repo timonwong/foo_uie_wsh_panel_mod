@@ -213,7 +213,9 @@ void my_play_callback::on_volume_change(float newval)
 
 void my_playlist_callback::on_item_focus_change(t_size p_playlist,t_size p_from,t_size p_to)
 {
-	panel_notifier_manager::instance().post_msg_to_all(CALLBACK_UWM_ON_ITEM_FOCUS_CHANGE);
+    simple_callback_data_3<t_size, t_size, t_size> * on_item_focus_change_data = 
+        new simple_callback_data_3<t_size, t_size, t_size>(p_playlist, p_from, p_to);
+	panel_notifier_manager::instance().post_msg_to_all_pointer(CALLBACK_UWM_ON_ITEM_FOCUS_CHANGE, on_item_focus_change_data);
 }
 
 void my_playlist_callback::on_playback_order_changed(t_size p_new_index)

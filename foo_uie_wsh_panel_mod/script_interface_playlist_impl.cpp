@@ -108,12 +108,12 @@ STDMETHODIMP FbPlaylistMangerTemplate::ClearPlaylistSelection(UINT playlistIndex
     return S_OK;
 }
 
-STDMETHODIMP FbPlaylistMangerTemplate::GetPlaylistFocusItemIndex(UINT playlistIndex, UINT * outPlaylistItemIndex)
+STDMETHODIMP FbPlaylistMangerTemplate::GetPlaylistFocusItemIndex(UINT playlistIndex, INT * outPlaylistItemIndex)
 {
     TRACK_FUNCTION();
 
     if (!outPlaylistItemIndex) return E_POINTER;
-    static_api_ptr_t<playlist_manager>()->playlist_get_focus_item(playlistIndex);
+    (*outPlaylistItemIndex) = static_api_ptr_t<playlist_manager>()->playlist_get_focus_item(playlistIndex);
     return S_OK;
 }
 
@@ -658,7 +658,7 @@ STDMETHODIMP FbPlaylistManager::ClearPlaylistSelection(UINT playlistIndex)
     return FbPlaylistMangerTemplate::ClearPlaylistSelection(playlistIndex);
 }
 
-STDMETHODIMP FbPlaylistManager::GetPlaylistFocusItemIndex(UINT playlistIndex, UINT * outPlaylistItemIndex)
+STDMETHODIMP FbPlaylistManager::GetPlaylistFocusItemIndex(UINT playlistIndex, INT * outPlaylistItemIndex)
 {
     return FbPlaylistMangerTemplate::GetPlaylistFocusItemIndex(playlistIndex, outPlaylistItemIndex);
 }

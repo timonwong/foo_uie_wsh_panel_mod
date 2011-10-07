@@ -59,7 +59,7 @@ public:
 	virtual void on_watched_object_changed(const service_ptr_t<config_object> & p_object);
 };
 
-template <class T>
+template <typename T>
 struct simple_callback_data : public pfc::refcounted_object_root
 {
 	T m_item;
@@ -67,13 +67,28 @@ struct simple_callback_data : public pfc::refcounted_object_root
 	inline simple_callback_data(const T & p_item) : m_item(p_item) {}
 };
 
-template <class T1, class T2>
+template <typename T1, typename T2>
 struct simple_callback_data_2 : public pfc::refcounted_object_root
 {
 	T1 m_item1;
 	T2 m_item2;
 
 	inline simple_callback_data_2(const T1 & p_item1, const T2 & p_item2) : m_item1(p_item1), m_item2(p_item2) {}
+};
+
+template <typename T1, typename T2, typename T3>
+struct simple_callback_data_3 : public pfc::refcounted_object_root
+{
+    T1 m_item1;
+    T2 m_item2;
+    T3 m_item3;
+
+    inline simple_callback_data_3(const T1 & p_item1, const T2 & p_item2, const T3 & p_item3)
+        : m_item1(p_item1)
+        , m_item2(p_item2)
+        , m_item3(p_item3)
+    {
+    }
 };
 
 // Only used in message handler
