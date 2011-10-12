@@ -91,6 +91,7 @@ namespace helpers
 		if (node)
         {
 			node->execute();
+            return true;
         }
 
 		return false;
