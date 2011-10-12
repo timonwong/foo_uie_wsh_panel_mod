@@ -1,5 +1,8 @@
 v1.5.0 Preview 7
 - FIX: Fix a problem that the callback "on_metadb_changed" may never get called.
+- ADD: Add "on_playlist_item_ensure_visible" callback.
+- ADD: Add "fb.AcquireUiSelectionHolder" method.
+- ADD: Add "IFbUiSelectionHolder" interface.
 
 v1.5.0 Preview 6
 - CHG: "Item" property of "IFbMetadbHandleList" interface is writable now.

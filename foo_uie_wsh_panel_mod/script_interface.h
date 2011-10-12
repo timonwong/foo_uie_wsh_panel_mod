@@ -356,6 +356,21 @@ __interface IFbProfiler: IDispatch
     dual,
     pointer_default(unique),
     library_block,
+    uuid("1f40f9e1-c0fb-4021-80de-37c4d0a26f45")
+]
+__interface IFbUiSelectionHolder: IDisposable
+{
+    STDMETHOD(SetSelection)(IFbMetadbHandleList * handles);
+    STDMETHOD(SetPlaylistSelectionTracking)();
+    STDMETHOD(SetPlaylistTracking)();
+};
+
+
+[
+    object,
+    dual,
+    pointer_default(unique),
+    library_block,
     uuid("bae2e084-6545-4a17-9795-1496a4ee2741")
 ]
 __interface IFbUtils: IDispatch
@@ -369,7 +384,8 @@ __interface IFbUtils: IDispatch
 	STDMETHOD(GetSelection)([out,retval] IFbMetadbHandle** pp);
 	STDMETHOD(GetSelections)([defaultvalue(0)] UINT flags, [out,retval] IFbMetadbHandleList ** pp);
 	STDMETHOD(GetSelectionType)([out,retval] UINT* p);
-	//
+    STDMETHOD(AcquireUiSelectionHolder)([out,retval] IFbUiSelectionHolder ** outHolder);
+	
 	[propget] STDMETHOD(ComponentPath)([out,retval] BSTR* pp);
 	[propget] STDMETHOD(FoobarPath)([out,retval] BSTR* pp);
 	[propget] STDMETHOD(ProfilePath)([out,retval] BSTR* pp);

@@ -377,6 +377,25 @@ public:
 	STDMETHODIMP get_Time(INT * p);
 };
 
+class FbUiSelectionHolder : public IDisposableImpl4<IFbUiSelectionHolder>
+{
+protected:
+    ui_selection_holder::ptr m_holder;
+
+    FbUiSelectionHolder(const ui_selection_holder::ptr & holder) : m_holder(holder) {}
+    virtual ~FbUiSelectionHolder() {}
+
+    virtual void FinalRelease() 
+    {
+        m_holder.release();
+    }
+
+public:
+    STDMETHODIMP SetSelection(IFbMetadbHandleList * handles);
+    STDMETHODIMP SetPlaylistSelectionTracking();
+    STDMETHODIMP SetPlaylistTracking();
+};
+
 // NOTE: Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
 class FbUtils : public IDispatchImpl3<IFbUtils>
 {
@@ -394,6 +413,7 @@ public:
 	STDMETHODIMP GetSelection(IFbMetadbHandle** pp);
 	STDMETHODIMP GetSelections(UINT flags, IFbMetadbHandleList ** pp);
 	STDMETHODIMP GetSelectionType(UINT* p);
+    STDMETHODIMP AcquireUiSelectionHolder(IFbUiSelectionHolder ** outHolder);
 
 	STDMETHODIMP get_ComponentPath(BSTR* pp);
 	STDMETHODIMP get_FoobarPath(BSTR* pp);

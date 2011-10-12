@@ -1773,7 +1773,7 @@ STDMETHODIMP FbTitleFormat::Eval(VARIANT_BOOL force, BSTR* pp)
             static_api_ptr_t<metadb> m;
 
             // HACK: A fake file handle should be okay
-            m->handle_create(handle, make_playable_location("file://C:\\__blahblahblah .ogg", 0));
+            m->handle_create(handle, make_playable_location("file://C:\\________.ogg", 0));
         }
 
         handle->format_title(NULL, text, m_obj, NULL);
@@ -1955,6 +1955,17 @@ STDMETHODIMP FbUtils::GetSelectionType(UINT* p)
         }
     }
 
+    return S_OK;
+}
+
+STDMETHODIMP FbUtils::AcquireUiSelectionHolder(IFbUiSelectionHolder ** outHolder)
+{
+    TRACK_FUNCTION();
+
+    if (!outHolder) return E_INVALIDARG;
+
+    ui_selection_holder::ptr holder = static_api_ptr_t<ui_selection_manager>()->acquire();
+    (*outHolder) = new com_object_impl_t<FbUiSelectionHolder>(holder);
     return S_OK;
 }
 
@@ -2496,6 +2507,7 @@ STDMETHODIMP FbUtils::ShowAutoPlaylistUI(UINT idx, VARIANT_BOOL * p)
     return S_OK;
 }
 
+
 STDMETHODIMP MenuObj::get_ID(UINT * p)
 {
     TRACK_FUNCTION();
@@ -2819,6 +2831,36 @@ STDMETHODIMP FbProfiler::get_Time(INT * p)
     *p = (int)(m_timer.query() * 1000);
     return S_OK;
 }
+
+
+STDMETHODIMP FbUiSelectionHolder::SetSelection(IFbMetadbHandleList * handles)
+{
+    TRACK_FUNCTION();
+
+    if (!handles) return E_INVALIDARG;
+
+    metadb_handle_list * ptrHandles = NULL;
+    handles->get__ptr((void**)&handles);
+    if (ptrHandles) m_holder->set_selection(*ptrHandles);
+    return S_OK;
+}
+
+STDMETHODIMP FbUiSelectionHolder::SetPlaylistSelectionTracking()
+{
+    TRACK_FUNCTION();
+
+    m_holder->set_playlist_selection_tracking();
+    return S_OK;
+}
+
+STDMETHODIMP FbUiSelectionHolder::SetPlaylistTracking()
+{
+    TRACK_FUNCTION();
+
+    m_holder->set_playlist_tracking();
+    return S_OK;
+}
+
 
 STDMETHODIMP MeasureStringInfo::get_x(float * p)
 {

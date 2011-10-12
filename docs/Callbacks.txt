@@ -208,6 +208,9 @@ function on_playlists_changed() {}
 // NOTE: metadb will be not valid while preprocessor: "feature" is "v1.4" or newer. (See Preprocessors.txt)
 function on_selection_changed(metadb) {}
 
+// [1.5.0 Preview 7] New:
+function on_playlist_item_ensure_visible(playlist, item) {}
+
 // [1.4.1] Added:
 // playlist: index to indicate that which playlist has newly added items
 function on_playlist_items_added(playlist) {}
