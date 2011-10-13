@@ -2,7 +2,7 @@
 #include "host.h"
 #include "resource.h"
 #include "helpers.h"
-#include "panel_notifier.h"
+#include "panel_manager.h"
 #include "global_cfg.h"
 #include "ui_conf.h"
 #include "ui_property.h"
@@ -516,8 +516,9 @@ STDMETHODIMP FbWindow::CreateTooltip(IFbTooltip ** pp)
 	TRACK_FUNCTION();
 
 	if (!pp) return E_POINTER;
-
-	(*pp) = new com_object_impl_t<FbTooltip>(m_host->GetHWND());
+    panel_store & store = panel_manager::instance().query_store_by_window(m_host->GetHWND());
+    if (store.tooltipCount != 0) return E_ABORT;
+    if ((*pp) = new com_object_impl_t<FbTooltip>(m_host->GetHWND())) store.tooltipCount++;
 	return S_OK;
 }
 
@@ -1232,7 +1233,12 @@ void ScriptHost::ReportError(IActiveScriptError* err)
         }
         else
         {
-            formatter << "Unknown error code: 0x" << pfc::format_hex_lowercase((unsigned)excep.scode);
+            pfc::string8_fast errorMessage;
+            
+            if (uFormatSystemErrorMessage(errorMessage, excep.scode))
+                formatter << errorMessage;
+            else
+                formatter << "Unknown error code: 0x" << pfc::format_hex_lowercase((unsigned)excep.scode);
         }
 
 		SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, (LPARAM)formatter.get_ptr());

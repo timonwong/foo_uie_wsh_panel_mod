@@ -2,7 +2,7 @@
 #include "thread_pool.h"
 #include "delay_loader.h"
 #include "popup_msg.h"
-#include "panel_notifier.h"
+#include "panel_manager.h"
 #include "user_message.h"
 #include "version.h"
 

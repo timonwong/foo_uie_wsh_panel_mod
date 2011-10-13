@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "panel_notifier.h"
+#include "panel_manager.h"
 #include "helpers.h"
 #include "user_message.h"
 
@@ -18,15 +18,15 @@ namespace
 
 void panel_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 {
-	for (t_hwndlist::iterator iter = m_hwnds.first(); iter.is_valid(); ++iter)
-	{
-		SendMessage(*iter, p_msg, p_wp, p_lp);
-	}
+    m_hwnd_map.enumerate([p_msg, p_wp, p_lp](const HWND & hWnd, panel_store & store) -> void 
+    { 
+        SendMessage(hWnd, p_msg, p_wp, p_lp);
+    });
 }
 
 void panel_manager::send_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param)
 {
-	t_size count = m_hwnds.get_count();
+	t_size count = m_hwnd_map.get_count();
 
 	if (count < 2 || !p_param)
 		return;
@@ -34,28 +34,26 @@ void panel_manager::send_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pf
 	for (t_size i = 0; i < count - 1; ++i)
 		p_param->refcount_add_ref();
 
-	for (t_hwndlist::iterator iter = m_hwnds.first(); iter.is_valid(); ++iter)
-	{
-		const HWND & wnd = *iter;
-
-		if (wnd != p_wnd_except)
-		{
-			SendMessage(wnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0);
-		}
-	}
+    m_hwnd_map.enumerate([p_msg, p_param, p_wnd_except] (const HWND & hWnd, panel_store & store) -> void 
+    {
+        if (hWnd != p_wnd_except) 
+        {
+            PostMessage(hWnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0); 
+        }
+    });
 }
 
 void panel_manager::post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 {
-	for (t_hwndlist::iterator iter = m_hwnds.first(); iter.is_valid(); ++iter)
-	{
-		PostMessage(*iter, p_msg, p_wp, p_lp);
-	}
+    m_hwnd_map.enumerate([p_msg, p_wp, p_lp] (const HWND & hWnd, panel_store & store) -> void 
+    {
+        PostMessage(hWnd, p_msg, p_wp, p_lp); 
+    });
 }
 
 void panel_manager::post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_root * p_param)
 {
-	t_size count = m_hwnds.get_count();
+	t_size count = m_hwnd_map.get_count();
 
 	if (count < 1 || !p_param)
 		return;
@@ -63,10 +61,10 @@ void panel_manager::post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_r
 	for (t_size i = 0; i < count; ++i)
 		p_param->refcount_add_ref();
 
-	for (t_hwndlist::iterator iter = m_hwnds.first(); iter.is_valid(); ++iter)
-	{
-		PostMessage(*iter, p_msg, reinterpret_cast<WPARAM>(p_param), 0);
-	}
+    m_hwnd_map.enumerate([p_msg, p_param] (const HWND & hWnd, panel_store & store) -> void 
+    { 
+        PostMessage(hWnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0); 
+    });
 }
 
 t_size config_object_callback::get_watched_object_count()

@@ -15,20 +15,7 @@ protected:
 
     virtual ~FbTooltip() { }
 
-    virtual void FinalRelease()
-    {	
-        if (m_wndtooltip && IsWindow(m_wndtooltip))
-        {
-            DestroyWindow(m_wndtooltip);
-            m_wndtooltip = NULL;
-        }
-
-        if (m_tip_buffer)
-        {
-            SysFreeString(m_tip_buffer);
-            m_tip_buffer = NULL;
-        }
-    }
+    virtual void FinalRelease();
 
 public:
     STDMETHODIMP get_Text(BSTR * pp);
