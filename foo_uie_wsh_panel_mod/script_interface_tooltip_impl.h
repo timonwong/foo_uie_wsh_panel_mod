@@ -31,5 +31,4 @@ public:
     STDMETHODIMP GetDelayTime(int type, INT * p);
     STDMETHODIMP SetDelayTime(int type, int time);
     STDMETHODIMP TrackPosition(int x, int y);
-    STDMETHODIMP SetSize(int w, int h);
 };

@@ -256,3 +256,9 @@ function on_drag_leave() {}
 // x, y and mask have the same meaning as in on_mouse_*() callbacks.
 // action: an object of IDropTargetAction interface.
 function on_drag_drop(action, x, y, mask) {}
+
+
+// [1.5.0 Preview 8] New:
+// gr - Refer to IGdiGraphics, note that gr will be invalid out of this callback scope.
+// Please check your "tooltip" preprocessor directive before use.
+function on_tooltip_custom_paint(gr) {}

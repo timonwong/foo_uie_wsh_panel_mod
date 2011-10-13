@@ -2323,23 +2323,55 @@ bool wsh_panel_window::on_notify(LPARAM lp, LRESULT *pResult)
 
 bool wsh_panel_window::on_tooltip_custom_draw(LPNMTTCUSTOMDRAW lpnmcd, t_uint32 mask, LRESULT * &pResult)
 {
-    if (mask & t_script_info::kTooltipCustomPaintNoBackground) 
+    // From emule source code:
+    // For each tooltip which is to be shown Windows invokes the draw function at least 2 times.
+    //	1st invokation: to get the drawing rectangle
+    //	2nd invokation: to draw the actual tooltip window contents
+    // 
+    // 'DrawText' flags for the 1st and 2nd/3rd call
+    // ---------------------------------------------
+    // NMTTCUSTOMDRAW 00000e50	DT_NOPREFIX | DT_CALCRECT | DT_EXTERNALLEADING | DT_EXPANDTABS | DT_WORDBREAK
+    // TTN_SHOW
+    // NMTTCUSTOMDRAW 00000a50	DT_NOPREFIX |               DT_EXTERNALLEADING | DT_EXPANDTABS | DT_WORDBREAK
+    // --an additional NMTTCUSTOMDRAW may follow which is identical to the 2nd--
+    // NMTTCUSTOMDRAW 00000a50	DT_NOPREFIX |               DT_EXTERNALLEADING | DT_EXPANDTABS | DT_WORDBREAK
+
+    if (lpnmcd->nmcd.dwDrawStage == CDDS_PREPAINT)
     {
-        // While this component is target to XP/Vista, use "new" custom draw methods.
-        if (lpnmcd->nmcd.dwDrawStage == CDDS_PREPAINT)
+        if (lpnmcd->uDrawFlags & DT_CALCRECT)
+        {
+            SIZE sz;
+
+            try
+            {
+                panel_store & store = panel_manager::instance().query_store_by_window(m_hwnd);
+                sz = store.tooltip_size;
+            }
+            catch (...) {}
+
+            if (sz.cx > 0 || sz.cy > 0) 
+            {
+                lpnmcd->nmcd.rc.right = lpnmcd->nmcd.rc.left + sz.cx;
+                lpnmcd->nmcd.rc.bottom = lpnmcd->nmcd.rc.top + sz.cy;
+            }
+
+            *pResult = CDRF_NOTIFYPOSTPAINT;
+            return true;
+        }
+
+        if (mask & t_script_info::kTooltipCustomPaintNoBackground) 
+        {
             return on_tooltip_custom_paint(lpnmcd, pResult);
-    }
-    else
-    {
-        if (lpnmcd->nmcd.dwDrawStage == CDDS_PREPAINT)
+        }
+        else
         {
             *pResult = CDRF_NOTIFYPOSTPAINT;
             return true;
         }
-        else if (lpnmcd->nmcd.dwDrawStage == CDDS_POSTPAINT)
-        {
-            return on_tooltip_custom_paint(lpnmcd, pResult);
-        }
+    }
+    else if (lpnmcd->nmcd.dwDrawStage == CDDS_POSTPAINT)
+    {
+        return on_tooltip_custom_paint(lpnmcd, pResult);
     }
 
     return false;

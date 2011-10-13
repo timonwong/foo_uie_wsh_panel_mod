@@ -1,3 +1,8 @@
+v1.5.0 Preview 8
+- ADD: Add support for tooltip tracking with "TrackActivate" property and "TrackPosition" method of IFbTooltip interface.
+- ADD: Add a new preprocessor directive "tooltip" and two values: "custom-paint", "custom-paint-no-background". 
+- ADD: Add new callback "on_tooltip_custom_paint" for use with newly added "tooltip" directive.
+
 v1.5.0 Preview 7
 - FIX: Fix a problem that the callback "on_metadb_changed" may never get called.
 - ADD: Add "on_playlist_item_ensure_visible" callback.

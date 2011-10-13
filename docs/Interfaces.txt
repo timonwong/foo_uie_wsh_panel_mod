@@ -534,7 +534,16 @@ Methods:
 interface IFbTooltip {
 Properties:
     (read, write) Text; // Set tooltip text
-
+    // [1.5.0 Preview 8]: New:
+    // Set if enable tooltip tracking.
+    (writeonly) boolean TrackActivate;
+    // [1.5.0 Preview 8]: New:
+    // Used with custom paint only
+    (read, write) int Width;
+    // [1.5.0 Preview 8]: New:
+    // Used with custom paint only
+    (read, write) int Width;
+    
 Methods:
     // NOTE: Don't try to update tooltip text when tooltip is activated, because it will flick in Windows Vista/7.
     void Activate();
@@ -550,6 +559,9 @@ Methods:
     // [1.3.4] New:
     // type: See flags.txt
     void SetDelayTime(type, time);
+    // [1.5.0 Preview 8]: New:
+    // NOTE: You should make sure x, y is changed before call, or you will recive a blinking tooltip. 
+    void TrackPosition(x, y);
 }
 
 // [1.3.1] New interface
