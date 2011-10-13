@@ -5,8 +5,6 @@
 #include "com_array.h"
 
 
-
-
 STDMETHODIMP FbPlaylistMangerTemplate::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, VARIANT_BOOL select, UINT ** outSize)
 {
     TRACK_FUNCTION();
