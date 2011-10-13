@@ -20,28 +20,25 @@ FbTooltip::FbTooltip(HWND p_wndparent/*, bool p_want_multiline*/)
     SetWindowPos(m_wndtooltip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
     // Set up tooltip information.
-    TOOLINFO ti = { 0 };
+    memset(&m_ti, 0, sizeof(m_ti));
 
-    ti.cbSize = sizeof(ti);
-    ti.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
-    ti.hinst = NULL;
-    ti.hwnd = p_wndparent;
-    ti.uId = (UINT_PTR)p_wndparent;
-    ti.lpszText = m_tip_buffer;
+    m_ti.cbSize = sizeof(m_ti);
+    m_ti.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+    m_ti.hinst = core_api::get_my_instance();
+    m_ti.hwnd = p_wndparent;
+    m_ti.uId = (UINT_PTR)p_wndparent;
+    m_ti.lpszText = m_tip_buffer;
 
-    SendMessage(m_wndtooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);	
+    SendMessage(m_wndtooltip, TTM_ADDTOOL, 0, (LPARAM)&m_ti);	
     SendMessage(m_wndtooltip, TTM_ACTIVATE, FALSE, 0);
 }
 
 void FbTooltip::FinalRelease()
 {
-    if (m_wndtooltip/* && IsWindow(m_wndtooltip)*/)
+    if (m_wndtooltip && IsWindow(m_wndtooltip))
     {
         DestroyWindow(m_wndtooltip);
         m_wndtooltip = NULL;
-
-        panel_store & store = panel_manager::instance().query_store_by_window(m_wndparent);
-        store.tooltipCount--;
     }
 
     if (m_tip_buffer)
@@ -69,15 +66,22 @@ STDMETHODIMP FbTooltip::put_Text(BSTR text)
 
     // realloc string
     SysReAllocString(&m_tip_buffer, text);
+    m_ti.lpszText = m_tip_buffer;
+    SendMessage(m_wndtooltip, TTM_SETTOOLINFO, 0, (LPARAM)&m_ti);
+    return S_OK;
+}
 
-    TOOLINFO ti = { 0 };
+STDMETHODIMP FbTooltip::put_TrackActivate(VARIANT_BOOL activate)
+{
+    TRACK_FUNCTION();
 
-    ti.cbSize = sizeof(ti);
-    ti.hinst = NULL;
-    ti.hwnd = m_wndparent;
-    ti.uId = (UINT_PTR)m_wndparent;
-    ti.lpszText = m_tip_buffer;
-    SendMessage(m_wndtooltip, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
+    if (activate) {
+        m_ti.uFlags |= TTF_TRACK | TTF_ABSOLUTE;
+    } else {
+        m_ti.uFlags &= ~(TTF_TRACK | TTF_ABSOLUTE);
+    }
+
+    SendMessage(m_wndtooltip, TTM_TRACKACTIVATE, activate ? TRUE : FALSE, (LPARAM)&m_ti);
     return S_OK;
 }
 
@@ -123,5 +127,15 @@ STDMETHODIMP FbTooltip::SetDelayTime(int type, int time)
     if (type < TTDT_AUTOMATIC || type > TTDT_INITIAL) return E_INVALIDARG;
 
     SendMessage(m_wndtooltip, TTM_SETDELAYTIME, type, time);
+    return S_OK;
+}
+
+STDMETHODIMP FbTooltip::TrackPosition(int x, int y)
+{
+    TRACK_FUNCTION();
+
+    POINT pt = { x, y };
+    ClientToScreen(m_wndparent, &pt);
+    SendMessage(m_wndtooltip, TTM_TRACKPOSITION, 0, MAKELONG(pt.x, pt.y));
     return S_OK;
 }

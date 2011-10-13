@@ -516,9 +516,7 @@ STDMETHODIMP FbWindow::CreateTooltip(IFbTooltip ** pp)
 	TRACK_FUNCTION();
 
 	if (!pp) return E_POINTER;
-    panel_store & store = panel_manager::instance().query_store_by_window(m_host->GetHWND());
-    if (store.tooltipCount != 0) return E_ABORT;
-    if ((*pp) = new com_object_impl_t<FbTooltip>(m_host->GetHWND())) store.tooltipCount++;
+    (*pp) = new com_object_impl_t<FbTooltip>(m_host->GetHWND());
 	return S_OK;
 }
 

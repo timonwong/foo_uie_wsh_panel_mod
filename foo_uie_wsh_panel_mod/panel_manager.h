@@ -3,7 +3,6 @@
 
 struct panel_store
 {
-    int tooltipCount;
 };
 
 class panel_manager
