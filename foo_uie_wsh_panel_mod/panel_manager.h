@@ -3,6 +3,8 @@
 
 struct panel_store
 {
+    pfc::rcptr_t<HWND> tooltip_hwnd_rcptr;
+    SIZE tooltip_size;
 };
 
 class panel_manager

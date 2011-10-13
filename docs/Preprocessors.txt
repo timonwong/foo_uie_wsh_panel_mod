@@ -56,6 +56,12 @@ DIRECTIVES
       // @feature "watch-metadb"
       // @feature "dragdrop"
       // ==/PREPROCESSOR==
+      
+  @tooltip "tooltip-feature-string"
+  Set features(s) of tooltip control.
+  "tooltip-feature-string":
+    "custom-paint"                  - Enable tooltip custom paint support, with "on_tooltip_custom_paint" callback.
+    "custom-paint-no-background"    - Same as "custom-paint", but this one will not draw tooltip background.
 
   @name "name"
   Set name of the script.

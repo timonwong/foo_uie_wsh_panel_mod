@@ -1801,6 +1801,13 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 		}
 		break;
 
+    case WM_NOTIFY:
+        {
+            LRESULT result = 0;
+            if (on_notify(lp, &result)) return result;
+        }
+        break;
+
 	case UWM_SCRIPT_ERROR_TIMEOUT:
 		get_disabled_before() = true;
 		//script_unload();
@@ -2284,6 +2291,83 @@ void wsh_panel_window::on_mouse_button_down(UINT msg, WPARAM wp, LPARAM lp)
 		script_invoke_v(L"on_mouse_rbtn_down", args, _countof(args));
 		break;
 	}
+}
+
+bool wsh_panel_window::on_notify(LPARAM lp, LRESULT *pResult)
+{
+    LPNMHDR lpnmhdr = (LPNMHDR)lp;
+
+    if (lpnmhdr->code == NM_CUSTOMDRAW) 
+    {
+        LPNMTTCUSTOMDRAW lpnmcd = (LPNMTTCUSTOMDRAW)lpnmhdr;
+
+        // Check feature
+        t_uint32 mask = GetScriptInfo().tooltip_mask;
+        if ((mask & t_script_info::kTooltipCustomPaint) == 0 &&
+            (mask & t_script_info::kTooltipCustomPaintNoBackground) == 0)
+            return false;
+
+        // Check tooltip
+        panel_store & store = panel_manager::instance().query_store_by_window(m_hwnd);
+
+        if (store.tooltip_hwnd_rcptr.is_empty()) 
+            return false;
+        if (lpnmhdr->hwndFrom != *store.tooltip_hwnd_rcptr)
+            return false;
+
+        return on_tooltip_custom_draw(lpnmcd, mask, pResult);
+    }
+
+    return false;
+}
+
+bool wsh_panel_window::on_tooltip_custom_draw(LPNMTTCUSTOMDRAW lpnmcd, t_uint32 mask, LRESULT * &pResult)
+{
+    if (mask & t_script_info::kTooltipCustomPaintNoBackground) 
+    {
+        // While this component is target to XP/Vista, use "new" custom draw methods.
+        if (lpnmcd->nmcd.dwDrawStage == CDDS_PREPAINT)
+            return on_tooltip_custom_paint(lpnmcd, pResult);
+    }
+    else
+    {
+        if (lpnmcd->nmcd.dwDrawStage == CDDS_PREPAINT)
+        {
+            *pResult = CDRF_NOTIFYPOSTPAINT;
+            return true;
+        }
+        else if (lpnmcd->nmcd.dwDrawStage == CDDS_POSTPAINT)
+        {
+            return on_tooltip_custom_paint(lpnmcd, pResult);
+        }
+    }
+
+    return false;
+}
+
+bool wsh_panel_window::on_tooltip_custom_paint(LPNMTTCUSTOMDRAW lpnmcd, LRESULT * &pResult)
+{
+    Gdiplus::Graphics gr(lpnmcd->nmcd.hdc);
+    Gdiplus::Rect rect(lpnmcd->nmcd.rc.left, lpnmcd->nmcd.rc.top,
+        lpnmcd->nmcd.rc.right - lpnmcd->nmcd.rc.left,
+        lpnmcd->nmcd.rc.bottom -lpnmcd->nmcd.rc.top);
+
+    gr.SetClip(rect);
+    m_gr_wrap->put__ptr(&gr);
+
+    bool succeeded = false;
+    VARIANTARG args[1];
+    args[0].vt = VT_DISPATCH;
+    args[0].pdispVal = m_gr_wrap;
+    if (SUCCEEDED(script_invoke_v(L"on_tooltip_custom_paint", args, _countof(args))))
+        succeeded = true;
+
+    m_gr_wrap->put__ptr(NULL);
+
+    if (!succeeded)
+        return false;
+    *pResult = CDRF_SKIPDEFAULT;
+    return true;
 }
 
 void wsh_panel_window::on_refresh_background_done()

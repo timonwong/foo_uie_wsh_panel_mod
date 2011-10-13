@@ -31,10 +31,17 @@ struct t_script_info
 		kFeatureNoWatchMetadb		=	1 << 7,
 	};
 
+    enum
+    {
+        kTooltipCustomPaint             =   1 << 0,
+        kTooltipCustomPaintNoBackground =   1 << 1,
+    };
+
 	pfc::string_simple name;
 	pfc::string_simple version;
 	pfc::string_simple author;
 	t_uint32 feature_mask;
+    t_uint32 tooltip_mask;
 
 	t_script_info(GUID & guid_ref) : m_guid_ref(guid_ref) {}
 
@@ -44,6 +51,7 @@ struct t_script_info
 		version = "";
 		author = "";
 		feature_mask = 0;
+        tooltip_mask = 0;
 	}
 
 	pfc::string8 build_info_string() const
@@ -84,6 +92,7 @@ public:
 
 	HRESULT process_import(const t_script_info & info, t_script_list & scripts);
 	bool process_script_info(t_script_info & info);
+    void parse_directive_feature(pfc::string_simple &value, t_script_info &info);
 
 private:
 	bool preprocess(const wchar_t * script);

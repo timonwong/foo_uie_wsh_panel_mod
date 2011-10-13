@@ -31,10 +31,17 @@ FbTooltip::FbTooltip(HWND p_wndparent/*, bool p_want_multiline*/)
 
     SendMessage(m_wndtooltip, TTM_ADDTOOL, 0, (LPARAM)&m_ti);	
     SendMessage(m_wndtooltip, TTM_ACTIVATE, FALSE, 0);
+
+    panel_store & store = panel_manager::instance().query_store_by_window(p_wndparent);
+    m_hwnd_rcptr.new_t(m_wndtooltip);
+    store.tooltip_hwnd_rcptr = m_hwnd_rcptr;
+    store.tooltip_size.cx = store.tooltip_size.cy = -1;
 }
 
 void FbTooltip::FinalRelease()
 {
+    m_hwnd_rcptr.release();
+
     if (m_wndtooltip && IsWindow(m_wndtooltip))
     {
         DestroyWindow(m_wndtooltip);
@@ -82,6 +89,67 @@ STDMETHODIMP FbTooltip::put_TrackActivate(VARIANT_BOOL activate)
     }
 
     SendMessage(m_wndtooltip, TTM_TRACKACTIVATE, activate ? TRUE : FALSE, (LPARAM)&m_ti);
+    return S_OK;
+}
+
+
+STDMETHODIMP FbTooltip::get_Width(int * outWidth)
+{
+    TRACK_FUNCTION();
+
+    if (!outWidth) return E_POINTER;
+    try
+    {
+        (*outWidth) = panel_manager::instance().query_store_by_window(m_wndparent).tooltip_size.cx;
+    }
+    catch (...)
+    {
+        (*outWidth) = -1;
+    }
+    return S_OK;
+}
+
+STDMETHODIMP FbTooltip::put_Width(int width)
+{
+    TRACK_FUNCTION();
+
+    try
+    {
+        panel_manager::instance().query_store_by_window(m_wndparent).tooltip_size.cx = width;
+    }
+    catch (...)
+    {
+    }
+    return S_OK;
+}
+
+STDMETHODIMP FbTooltip::get_Height(int * outHeight)
+{
+    TRACK_FUNCTION();
+
+    if (!outHeight) return E_POINTER;
+    try
+    {
+        (*outHeight) = panel_manager::instance().query_store_by_window(m_wndparent).tooltip_size.cy;
+    }
+    catch (...)
+    {
+        (*outHeight) = -1;
+    }
+    return S_OK;
+}
+
+STDMETHODIMP FbTooltip::put_Height(int height)
+{
+    TRACK_FUNCTION();
+
+    try
+    {
+        panel_manager::instance().query_store_by_window(m_wndparent).tooltip_size.cy = height;
+    }
+    catch (...)
+    {
+    }
     return S_OK;
 }
 
