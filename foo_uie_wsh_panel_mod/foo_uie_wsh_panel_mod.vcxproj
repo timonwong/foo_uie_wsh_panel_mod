@@ -142,7 +142,7 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     </ClCompile>
     <ClCompile Include="global_cfg.cpp" />
     <ClCompile Include="host.cpp" />
-    <ClCompile Include="panel_notifier.cpp" />
+    <ClCompile Include="panel_manager.cpp" />
     <ClCompile Include="script_interface_impl.cpp" />
     <ClCompile Include="script_interface_playlist_impl.cpp" />
     <ClCompile Include="script_interface_tooltip_impl.cpp" />
@@ -175,7 +175,7 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClInclude Include="component_defines.h" />
     <ClInclude Include="hgrev.h" />
     <ClInclude Include="host.h" />
-    <ClInclude Include="panel_notifier.h" />
+    <ClInclude Include="panel_manager.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="script_interface.h" />
     <ClInclude Include="script_interface_impl.h" />

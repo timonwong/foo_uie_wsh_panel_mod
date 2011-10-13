@@ -55,7 +55,7 @@ namespace
 
 		void on_quit()
 		{
-			panel_notifier_manager::instance().send_msg_to_all(UWM_SCRIPT_TERM, 0, 0);
+			panel_manager::instance().send_msg_to_all(UWM_SCRIPT_TERM, 0, 0);
 			simple_thread_pool::instance().join();
 		}
 

@@ -1,16 +1,16 @@
 #pragma once
 
 
-class panel_notifier_manager
+class panel_manager
 {
 public:
 	typedef pfc::chain_list_v2_t<HWND> t_hwndlist;
 
-	panel_notifier_manager()
+	panel_manager()
 	{
 	}
 
-	static inline panel_notifier_manager & instance()
+	static inline panel_manager & instance()
 	{
 		return sm_instance;
 	}
@@ -46,9 +46,9 @@ public:
 
 private:
 	t_hwndlist m_hwnds;
-	static panel_notifier_manager sm_instance;
+	static panel_manager sm_instance;
 
-	PFC_CLASS_NOT_COPYABLE_EX(panel_notifier_manager)
+	PFC_CLASS_NOT_COPYABLE_EX(panel_manager)
 };
 
 class config_object_callback : public config_object_notify

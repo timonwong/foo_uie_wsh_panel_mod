@@ -48,9 +48,6 @@
     <ClCompile Include="host.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="panel_notifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="script_interface_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -108,6 +105,9 @@
     <ClCompile Include="script_interface_tooltip_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="panel_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
@@ -120,9 +120,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="host.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="panel_notifier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
@@ -225,6 +222,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="script_interface_tooltip_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="panel_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

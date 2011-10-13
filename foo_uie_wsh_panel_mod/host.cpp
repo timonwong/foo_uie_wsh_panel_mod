@@ -475,7 +475,7 @@ STDMETHODIMP FbWindow::NotifyOthers(BSTR name, VARIANT info)
 
 	notify_data->m_item2.Attach(var.Detach());
 
-	panel_notifier_manager::instance().send_msg_to_others_pointer(m_host->GetHWND(), 
+	panel_manager::instance().send_msg_to_others_pointer(m_host->GetHWND(), 
 		CALLBACK_UWM_NOTIFY_DATA, notify_data);
 
 	return S_OK;
@@ -1602,7 +1602,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 			create_context();
 			// Interfaces
 			m_gr_wrap.Attach(new com_object_impl_t<GdiGraphics>(), false);
-			panel_notifier_manager::instance().add_window(m_hwnd);
+			panel_manager::instance().add_window(m_hwnd);
 			if (get_delay_load())
 				delay_loader::g_enqueue(new delay_script_init_action(m_hwnd));
 			else
@@ -1612,7 +1612,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case WM_DESTROY:
 		script_unload();
-		panel_notifier_manager::instance().remove_window(m_hwnd);
+		panel_manager::instance().remove_window(m_hwnd);
 		if (m_gr_wrap)
 			m_gr_wrap.Release();
 		delete_context();
