@@ -43,8 +43,8 @@ DIRECTIVES
                No parameter will be passed to on_selection_changed() callback.
 
     -commons:
-      "watch-metadb" - Set by default when version is "v1.0" only.
-                       Enable on_metadb_changed() callback (See Notes in Callbacks.txt) (only in "v1.0").
+      "watch-metadb" - Set by default when version is only "v1.0".
+                       Enable on_metadb_changed() callback (See Notes in Callbacks.txt).
                        Enable window.WatchMetadb() and window.UnWatchMetadb() methods (only in "v1.0").
       "dragdrop"     - Enable drag drop callbacks.
 

@@ -31,7 +31,6 @@ var g_trackingMouse = false;
 var g_oldX, g_oldY;
 var ww, wh;
 
-g_tooltip.Width = g_tooltip.Height = 100;
 
 function on_mouse_move(x, y) {
     if (!g_trackingMouse) {

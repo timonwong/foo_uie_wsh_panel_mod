@@ -2355,7 +2355,6 @@ bool wsh_panel_window::on_tooltip_custom_draw(LPNMTTCUSTOMDRAW lpnmcd, t_uint32 
                 lpnmcd->nmcd.rc.bottom = lpnmcd->nmcd.rc.top + sz.cy;
             }
 
-            *pResult = CDRF_NOTIFYPOSTPAINT;
             return true;
         }
 
@@ -2371,7 +2370,8 @@ bool wsh_panel_window::on_tooltip_custom_draw(LPNMTTCUSTOMDRAW lpnmcd, t_uint32 
     }
     else if (lpnmcd->nmcd.dwDrawStage == CDDS_POSTPAINT)
     {
-        return on_tooltip_custom_paint(lpnmcd, pResult);
+        if ((lpnmcd->uDrawFlags & DT_CALCRECT) == 0)
+            return on_tooltip_custom_paint(lpnmcd, pResult);
     }
 
     return false;

@@ -3,25 +3,15 @@
 // ==PREPROCESSOR==
 // @name "Watch Metadb Change (Base)"
 // @author "T.P Wang"
+// The following two lines are required to make this sample to work.
+// @feature "v1.4"
+// @feature "watch-metadb"
 // ==/PREPROCESSOR==
 
-// This is a demo show how on_metadb_changed(metadb, fromhook), 
-// window.WatchMetadb(metadb)  and window.UnWatchMetadb() works.
-
-// Get a handle from startup
-var g_handle = fb.GetFocusItem();
-
-// Watch the metadb
-window.WatchMetadb(g_handle);
-
-// Unwatch
-
-function on_mouse_lbtn_up(x, y, mask) {
-    window.UnWatchMetadb();
-}
-
 // Callback
-
-function on_metadb_changed(metadb, fromhook) {
-    fb.ShowPopupMessage("metadb changed");
+function on_metadb_changed(handles, fromhook) {
+    fb.trace('on_metadb_changed');
+    var count = handles.Count;
+    // Prompt how many files has been changed
+    fb.ShowPopupMessage("" + count + ((count > 1) ? " files have" : " file has") + " been changed.");
 }
