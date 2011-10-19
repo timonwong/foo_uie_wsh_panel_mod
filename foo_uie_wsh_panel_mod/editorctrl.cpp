@@ -1328,31 +1328,6 @@ void CScriptEditorCtrl::ReadAPI()
 				if (IsIdentifierChar(*temp[i]))
 					m_apis.add_item(temp[i]);
 			}
-			/*
-			// Split string by lines
-			const char * str = content.get_ptr();
-
-			for(;;) 
-			{
-				const char * next = strchr(str, '\n');
-
-				if (next == NULL) 
-				{
-					if (*str != '#')
-						m_apis.add_item(str); 
-					break;
-				}
-
-				const char * walk = next;
-
-				while (walk > str && walk[-1] == '\r') 
-					--walk;
-
-				if (*str != '#')
-					m_apis.add_item(pfc::string_simple(str, walk - str));
-				str = next + 1;
-			}
-			*/
 		}
 		else
 		{
@@ -1369,7 +1344,7 @@ void CScriptEditorCtrl::ReadAPI()
 LRESULT CScriptEditorCtrl::OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	bHandled = FALSE;
-	::PostMessage(::GetAncestor(m_hWnd, GA_PARENT), UWM_SCN_KEYDOWN, wParam, lParam);
+	::PostMessage(::GetAncestor(m_hWnd, GA_PARENT), UWM_KEYDOWN, wParam, lParam);
 	return TRUE;
 }
 

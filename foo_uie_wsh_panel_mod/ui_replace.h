@@ -76,7 +76,6 @@ public:
 	}
 
 	void OnFinalMessage(HWND hWnd);
-	void FindResult(int pos);
 	CHARRANGE GetSelection();
 
 public:
@@ -104,7 +103,6 @@ public:
 	END_DLGRESIZE_MAP()
 
 public:
-	LRESULT OnFindUp(WORD wNotifyCode, WORD wID, HWND hWndCtl);
 	LRESULT OnFindNext(WORD wNotifyCode, WORD wID, HWND hWndCtl);
 	LRESULT OnEditFindWhatEnChange(WORD wNotifyCode, WORD wID, HWND hWndCtl);
 	LRESULT OnFlagCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl);

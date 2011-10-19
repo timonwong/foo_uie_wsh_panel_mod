@@ -290,31 +290,13 @@ bool CDialogConf::MatchShortcuts(unsigned vk)
 		(IsKeyPressed(VK_CONTROL) ? SCMOD_CTRL : 0) |
 		(IsKeyPressed(VK_MENU) ? SCMOD_ALT : 0);
 
-	// Hotkey
-	if (vk == VK_ESCAPE)
-	{
-		SendMessage(WM_COMMAND, MAKEWPARAM(IDCANCEL, BN_CLICKED), (LPARAM)m_hWnd);
-		return true;
-	}
-
+    // Hotkeys
 	if (modifiers == SCMOD_CTRL)
 	{
 		switch (vk)
 		{
 		case 'F':
-			{
-				if (!m_dlgfind)
-				{
-					// Create it on request.
-					m_dlgfind = new CDialogFind(GetDlgItem(IDC_EDIT));
-					
-					if (!m_dlgfind || !m_dlgfind->Create(m_hWnd))
-						break;
-				}
-
-				m_dlgfind->ShowWindow(SW_SHOW);
-				m_dlgfind->SetFocus();
-			}
+            OpenFindDialog();
 			return true;
 
 		case 'H':
@@ -344,12 +326,98 @@ bool CDialogConf::MatchShortcuts(unsigned vk)
 			Apply();
 			return true;
 		}
-	}
+	} 
+    else if (modifiers == 0) 
+    {
+        if (vk == VK_F3)
+        {
+            // Find next one
+            if (!m_lastSearchText.is_empty()) 
+            {
+                FindNext(m_editorctrl.m_hWnd, m_lastFlags, m_lastSearchText);
+            }
+            else
+            {
+                OpenFindDialog();
+            }
+        }
+    }
+    else if (modifiers == SCMOD_SHIFT)
+    {
+        if (vk == VK_F3)
+        {
+            // Find previous one
+            if (!m_lastSearchText.is_empty()) 
+            {
+                FindPrevious(m_editorctrl.m_hWnd, m_lastFlags, m_lastSearchText);
+            }
+            else
+            {
+                OpenFindDialog();
+            }
+        }
+    }
 
 	return false;
 }
 
-LRESULT CDialogConf::OnScnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CDialogConf::OnUwmKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	return MatchShortcuts(wParam);
+}
+
+LRESULT CDialogConf::OnUwmFindTextChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    m_lastFlags = wParam;
+    m_lastSearchText = reinterpret_cast<const char*>(lParam);
+    return 0;
+}
+
+void CDialogConf::FindNext(HWND hWndEdit, unsigned flags, const char *which)
+{
+    ::SendMessage(::GetAncestor(hWndEdit, GA_PARENT), UWM_FINDTEXTCHANGED, flags, reinterpret_cast<LPARAM>(which));
+
+    SendMessage(hWndEdit, SCI_CHARRIGHT, 0, 0);
+    SendMessage(hWndEdit, SCI_SEARCHANCHOR, 0, 0);
+    int pos = ::SendMessage(hWndEdit, SCI_SEARCHNEXT, flags, reinterpret_cast<LPARAM>(which));
+    FindResult(hWndEdit, pos, which);
+}
+
+void CDialogConf::FindPrevious(HWND hWndEdit, unsigned flags, const char *which)
+{
+    ::SendMessage(::GetAncestor(hWndEdit, GA_PARENT), UWM_FINDTEXTCHANGED, flags, reinterpret_cast<LPARAM>(which));
+
+    SendMessage(hWndEdit, SCI_SEARCHANCHOR, 0, 0);
+    int pos = ::SendMessage(hWndEdit, SCI_SEARCHPREV, flags, reinterpret_cast<LPARAM>(which));
+    FindResult(hWndEdit, pos, which);
+}
+
+void CDialogConf::FindResult(HWND hWndEdit, int pos, const char *which)
+{
+    if (pos != -1)
+    {
+        // Scroll to view
+        ::SendMessage(hWndEdit, SCI_SCROLLCARET, 0, 0);
+    }
+    else
+    {
+        pfc::string8 temp = "Cannot find \"";
+
+        temp += which;
+        temp += "\"";
+        uMessageBox(hWndEdit, temp.get_ptr(), WSPM_NAME, MB_ICONINFORMATION | MB_SETFOREGROUND);
+    }
+}
+
+void CDialogConf::OpenFindDialog()
+{
+    if (!m_dlgfind)
+    {
+        // Create it on request.
+        m_dlgfind = new CDialogFind(GetDlgItem(IDC_EDIT));
+        m_dlgfind->Create(m_hWnd);
+    }
+
+    m_dlgfind->ShowWindow(SW_SHOW);
+    m_dlgfind->SetFocus();
 }

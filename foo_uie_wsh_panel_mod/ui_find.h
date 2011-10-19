@@ -69,7 +69,6 @@ public:
 	{
 	}
 
-	void FindResult(int pos);
 	void OnFinalMessage(HWND hWnd);
 
 public:

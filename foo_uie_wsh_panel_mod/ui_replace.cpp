@@ -1,37 +1,15 @@
 #include "stdafx.h"
 #include "ui_replace.h"
+#include "ui_conf.h"
 
 
 LRESULT CDialogReplace::OnFindNext(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 {
-	int pos;
-
 	if (m_text.is_empty())
 		return 0;
 
-	SendMessage(m_hedit, SCI_CHARRIGHT, 0, 0);
-	SendMessage(m_hedit, SCI_SEARCHANCHOR, 0, 0);
-	pos = SendMessage(m_hedit, SCI_SEARCHNEXT, m_flags, (LPARAM)m_text.get_ptr());
-	FindResult(pos);
+    CDialogConf::FindNext(m_hedit, m_flags, m_text.get_ptr());
 	return 0;
-}
-
-void CDialogReplace::FindResult(int pos)
-{
-	if (pos != -1)
-	{
-		m_havefound = true;
-		SendMessage(m_hedit, SCI_SCROLLCARET, 0, 0);
-	}
-	else
-	{
-		m_havefound = false;
-		pfc::string8 temp = "Cannot find \"";
-
-		temp += m_text;
-		temp += "\"";
-		uMessageBox(m_hWnd, temp.get_ptr(), WSPM_NAME, MB_ICONINFORMATION | MB_SETFOREGROUND);
-	}
 }
 
 LRESULT CDialogReplace::OnEditFindWhatEnChange(WORD wNotifyCode, WORD wID, HWND hWndCtl)

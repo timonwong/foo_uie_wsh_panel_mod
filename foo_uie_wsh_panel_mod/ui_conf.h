@@ -19,12 +19,16 @@ private:
 	CDialogReplace * m_dlgreplace;
 	wsh_panel_window * m_parent;
 	pfc::string8 m_caption;
+    unsigned int m_lastFlags;
+    pfc::string8 m_lastSearchText;
 
 public:
 	CDialogConf(wsh_panel_window * p_parent) 
 		: m_parent(p_parent)
 		, m_dlgfind(NULL)
 		, m_dlgreplace(NULL)
+        , m_lastSearchText("")
+        , m_lastFlags(0)
 	{
 		//pfc::dynamic_assert(m_parent != NULL, "CDialogConf: m_parent invalid.");
 	}
@@ -35,8 +39,8 @@ public:
 	}
 
 	bool MatchShortcuts(unsigned vk);
-	void Apply();
-
+    void OpenFindDialog();
+    void Apply();
 	void OnResetDefault();
 	void OnResetCurrent();
 	void OnImport();
@@ -48,7 +52,8 @@ public:
 	BEGIN_MSG_MAP(CDialogConf)
 		MSG_WM_INITDIALOG(OnInitDialog)
 		MSG_WM_NOTIFY(OnNotify)
-		MESSAGE_HANDLER(UWM_SCN_KEYDOWN, OnScnKeyDown)
+		MESSAGE_HANDLER(UWM_KEYDOWN, OnUwmKeyDown)
+        MESSAGE_HANDLER(UWM_FINDTEXTCHANGED, OnUwmFindTextChanged)
 		COMMAND_RANGE_HANDLER_EX(IDOK, IDCANCEL, OnCloseCmd)
 		COMMAND_ID_HANDLER_EX(IDAPPLY, OnCloseCmd)
 		COMMAND_HANDLER_EX(IDC_SCRIPT_ENGINE, CBN_SELENDOK, OnScriptEngineCbnSelEndOk)
@@ -76,5 +81,9 @@ public:
 	LRESULT OnTools(WORD wNotifyCode, WORD wID, HWND hWndCtl);
 	LRESULT OnNotify(int idCtrl, LPNMHDR pnmh);
 	LRESULT OnNCDestroy();
-	LRESULT OnScnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnUwmKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnUwmFindTextChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    static void FindNext(HWND hWndEdit, unsigned flags, const char *which);
+    static void FindPrevious(HWND hWndEdit, unsigned flags, const char *which);
+    static void FindResult(HWND hWndEdit, int pos, const char *which);
 };
