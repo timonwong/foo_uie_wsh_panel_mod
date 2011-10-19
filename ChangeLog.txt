@@ -1,3 +1,6 @@
+v1.5.o Preview 9
+- FIX: Fix a problem that InsertPlaylistItems() and InsertPlaylistItemsFilter() don't work at all.
+
 v1.5.0 Preview 8
 - ADD: Add support for tooltip tracking with "TrackActivate" property and "TrackPosition" method of IFbTooltip interface.
 - ADD: Add a new preprocessor directive "tooltip" and two values: "custom-paint", "custom-paint-no-background". 

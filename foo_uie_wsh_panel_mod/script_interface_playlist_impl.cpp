@@ -5,32 +5,32 @@
 #include "com_array.h"
 
 
-STDMETHODIMP FbPlaylistMangerTemplate::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, VARIANT_BOOL select, UINT ** outSize)
+STDMETHODIMP FbPlaylistMangerTemplate::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize)
 {
     TRACK_FUNCTION();
     
-    if (!data) return E_INVALIDARG;
-    
-    metadb_handle_list * handles = NULL;
-    data->get__ptr((void**)&handles);
     if (!handles) return E_INVALIDARG;
+    
+    metadb_handle_list * metadbHandles = NULL;
+    handles->get__ptr((void**)&metadbHandles);
+    if (!metadbHandles) return E_INVALIDARG;
 
     bit_array_val selection(select == VARIANT_TRUE);
-    static_api_ptr_t<playlist_manager>()->playlist_insert_items(playlistIndex, base, *handles, selection);
+    static_api_ptr_t<playlist_manager>()->playlist_insert_items(playlistIndex, base, *metadbHandles, selection);
     return S_OK;
 }
 
-STDMETHODIMP FbPlaylistMangerTemplate::InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, VARIANT_BOOL select, UINT ** outSize)
+STDMETHODIMP FbPlaylistMangerTemplate::InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize)
 {
     TRACK_FUNCTION();
 
-    if (!data) return E_INVALIDARG;
-
-    metadb_handle_list * handles = NULL;
-    data->get__ptr((void**)&handles);
     if (!handles) return E_INVALIDARG;
 
-    static_api_ptr_t<playlist_manager>()->playlist_insert_items_filter(playlistIndex, base, *handles, select == VARIANT_TRUE);
+    metadb_handle_list * metadbHandles = NULL;
+    handles->get__ptr((void**)&metadbHandles);
+    if (!metadbHandles) return E_INVALIDARG;
+
+    static_api_ptr_t<playlist_manager>()->playlist_insert_items_filter(playlistIndex, base, *metadbHandles, select == VARIANT_TRUE);
     return S_OK;
 }
 
@@ -577,18 +577,18 @@ STDMETHODIMP FbPlaylistMangerTemplate::SetActivePlaylistContext()
 }
 
 
-STDMETHODIMP FbPlaylistManager::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, VARIANT_BOOL select, UINT ** outSize)
+STDMETHODIMP FbPlaylistManager::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize)
 {
     TRACK_FUNCTION();
 
-    return FbPlaylistMangerTemplate::InsertPlaylistItems(playlistIndex, base, data, select, outSize);
+    return FbPlaylistMangerTemplate::InsertPlaylistItems(playlistIndex, base, handles, select, outSize);
 }
 
-STDMETHODIMP FbPlaylistManager::InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandle * data, VARIANT_BOOL select, UINT ** outSize)
+STDMETHODIMP FbPlaylistManager::InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize)
 {
     TRACK_FUNCTION();
 
-    return FbPlaylistMangerTemplate::InsertPlaylistItemsFilter(playlistIndex, base, data, select, outSize);
+    return FbPlaylistMangerTemplate::InsertPlaylistItemsFilter(playlistIndex, base, handles, select, outSize);
 }
 
 STDMETHODIMP FbPlaylistManager::GetPlaylistSelectedItems(UINT playlistIndex, __interface IFbMetadbHandleList ** outItems)

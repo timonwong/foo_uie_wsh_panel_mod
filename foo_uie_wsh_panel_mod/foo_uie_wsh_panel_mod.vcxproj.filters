@@ -232,9 +232,6 @@
     <None Include="res\default.js">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\Margin.cur">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\resource.rc">

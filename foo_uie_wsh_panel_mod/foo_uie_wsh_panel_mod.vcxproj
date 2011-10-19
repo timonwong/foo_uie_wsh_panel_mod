@@ -219,7 +219,6 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
   </ItemGroup>
   <ItemGroup>
     <None Include="res\default.js" />
-    <None Include="res\Margin.cur" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\resource.rc" />
