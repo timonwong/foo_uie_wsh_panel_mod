@@ -8,6 +8,8 @@
 #include "config.h"
 #include "user_message.h"
 #include "global_cfg.h"
+#include "IDropSourceImpl.h"
+#include "host_droptarget.h"
 
 
 // Smart pointers for Active Scripting
@@ -231,58 +233,6 @@ public:
     void CallDebugManager(IActiveScriptError* err, _bstr_t &name, ULONG line, _bstr_t &sourceline);
 };
 
-class PanelDropTarget : public IDropTarget
-{
-public:
-	struct MessageParam
-	{
-		DWORD key_state;
-		LONG x;
-		LONG y;
-		DropSourceAction * action;
-	};
-
-private:
-	class process_dropped_items_to_playlist : public process_locations_notify 
-	{
-	public:
-		process_dropped_items_to_playlist(int playlist_idx, bool to_select) 
-			: m_playlist_idx(playlist_idx), m_to_select(to_select) {}
-
-		void on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items);
-		void on_aborted() {}
-
-	private:
-		bool m_to_select;
-		int m_playlist_idx;
-	};
-
-	HostComm * m_host;
-	DWORD m_effect;
-	DropSourceAction *m_action;
-
-	BEGIN_COM_QI_IMPL()
-		COM_QI_ENTRY_MULTI(IUnknown, IDropTarget)
-		COM_QI_ENTRY(IDropTarget)
-	END_COM_QI_IMPL()
-
-public:
-	PanelDropTarget(HostComm * host) 
-		: m_host(host), m_effect(DROPEFFECT_NONE), m_action(new com_object_impl_t<DropSourceAction, true>()) {}
-	virtual ~PanelDropTarget(){ m_action->Release(); }
-
-public:
-	// IUnknown
-	STDMETHODIMP_(ULONG) AddRef() { return 1; }
-	STDMETHODIMP_(ULONG) Release() { return 1; }
-
-	// IDropTarget
-	STDMETHODIMP DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-	STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-	STDMETHODIMP DragLeave();
-	STDMETHODIMP Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-};
-
 class CDialogConf;
 class CDialogProperty;
 
@@ -303,7 +253,7 @@ private:
 		HWND wnd_;
 	};
 
-	PanelDropTarget  m_drop_target;
+	CComPtr<IDropTargetImpl>   m_drop_target;
 	// Scripting
 	IGdiGraphicsPtr  m_gr_wrap;
 	ScriptHost      *m_script_host;
@@ -311,11 +261,10 @@ private:
 	bool	         m_is_droptarget_registered;
 
 public:
-	wsh_panel_window() 
-		: m_drop_target(this)
-		, m_script_host(new ScriptHost(this))
-		, m_is_mouse_tracked(false)
-		, m_is_droptarget_registered(false)
+	wsh_panel_window() :
+        m_script_host(new ScriptHost(this)), 
+        m_is_mouse_tracked(false),
+        m_is_droptarget_registered(false)
 	{
 	}
 

@@ -1315,107 +1315,6 @@ void ScriptHost::CallDebugManager(IActiveScriptError* err, _bstr_t &name, ULONG 
     }
 }
 
-void PanelDropTarget::process_dropped_items_to_playlist::on_completion(const pfc::list_base_const_t<metadb_handle_ptr> & p_items)
-{
-	bit_array_true selection_them;
-	bit_array_false selection_none;
-	bit_array * select_ptr = &selection_them;
-	static_api_ptr_t<playlist_manager> pm;
-	t_size playlist;
-
-	if (m_playlist_idx == -1)
-		playlist = pm->get_active_playlist();
-	else
-		playlist = m_playlist_idx;
-
-	if (!m_to_select)
-		select_ptr = &selection_none;
-
-	if (playlist != pfc_infinite && playlist < pm->get_playlist_count())
-	{
-		pm->playlist_add_items(playlist, p_items, *select_ptr);
-	}
-}
-
-STDMETHODIMP PanelDropTarget::DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
-{
-	if (!pdwEffect) return E_POINTER;
-
-	m_action->Reset();
-
-	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
-	MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
-	SendMessage(m_host->GetHWND(), UWM_DRAG_ENTER, 0, (LPARAM)&param);
-
-    // Parsable?
-    m_action->Parsable() = m_action->Parsable() || static_api_ptr_t<playlist_incoming_item_filter>()->process_dropped_files_check_ex(pDataObj, &m_effect);
-
-	if (!m_action->Parsable())
-		*pdwEffect = DROPEFFECT_NONE;
-	else
-		*pdwEffect = m_effect;
-	return S_OK;
-}
-
-STDMETHODIMP PanelDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
-{
-	if (!pdwEffect) return E_POINTER;
-
-	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
-	MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
-	SendMessage(m_host->GetHWND(), UWM_DRAG_OVER, 0, (LPARAM)&param);
-
-	if (!m_action->Parsable())
-		*pdwEffect = DROPEFFECT_NONE;
-	else
-		*pdwEffect = m_effect;
-
-	return S_OK;
-}
-
-STDMETHODIMP PanelDropTarget::DragLeave()
-{
-	SendMessage(m_host->GetHWND(), UWM_DRAG_LEAVE, 0, 0);
-	return S_OK;
-}
-
-STDMETHODIMP PanelDropTarget::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
-{
-	if (!pdwEffect) return E_POINTER;
-
-	ScreenToClient(m_host->GetHWND(), reinterpret_cast<LPPOINT>(&pt));
-	MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
-	SendMessage(m_host->GetHWND(), UWM_DRAG_DROP, 0, (LPARAM)&param);
-
-	int playlist = m_action->Playlist();
-	bool to_select = m_action->ToSelect();
-
-	if (m_action->Parsable())
-	{
-		switch (m_action->Mode())
-		{
-		case DropSourceAction::kActionModePlaylist:
-			static_api_ptr_t<playlist_incoming_item_filter_v2>()->process_dropped_files_async(pDataObj, 
-				playlist_incoming_item_filter_v2::op_flag_delay_ui,
-				core_api::get_main_window(), new service_impl_t<process_dropped_items_to_playlist>(playlist, to_select));
-			break;
-
-        case DropSourceAction::kActionModeFilenames:
-            break;
-
-		default:
-			break;
-		}
-	}
-
-	if (!m_action->Parsable())
-		*pdwEffect = DROPEFFECT_NONE;
-	else
-		*pdwEffect = m_effect;
-
-	return S_OK;
-}
-
 void wsh_panel_window::update_script(const char * name /*= NULL*/, const char * code /*= NULL*/)
 {
 	if (name && code)
@@ -1490,7 +1389,8 @@ bool wsh_panel_window::script_load()
 		if (GetScriptInfo().feature_mask & t_script_info::kFeatureDragDrop)
 		{
 			// Ole Drag and Drop support
-			RegisterDragDrop(m_hwnd, &m_drop_target);
+            m_drop_target = new com_object_impl_t<HostDropTarget>(m_hwnd);
+			m_drop_target->RegisterDragDrop();
 			m_is_droptarget_registered = true;
 		}
 
@@ -1514,7 +1414,7 @@ void wsh_panel_window::script_unload()
 
 	if (m_is_droptarget_registered)
 	{
-		RevokeDragDrop(m_hwnd);
+		m_drop_target->RevokeDragDrop();
 		m_is_droptarget_registered = false;
 	}
 
@@ -2825,7 +2725,7 @@ void wsh_panel_window::on_drag_enter(LPARAM lp)
 {
 	TRACK_FUNCTION();
 
-	PanelDropTarget::MessageParam * param = reinterpret_cast<PanelDropTarget::MessageParam *>(lp);
+	HostDropTarget::MessageParam * param = reinterpret_cast<HostDropTarget::MessageParam *>(lp);
 	VARIANTARG args[4];
 	args[0].vt = VT_I4;
 	args[0].lVal = param->key_state;
@@ -2842,7 +2742,7 @@ void wsh_panel_window::on_drag_over(LPARAM lp)
 {
 	TRACK_FUNCTION();
 
-	PanelDropTarget::MessageParam * param = reinterpret_cast<PanelDropTarget::MessageParam *>(lp);
+	HostDropTarget::MessageParam * param = reinterpret_cast<HostDropTarget::MessageParam *>(lp);
 	VARIANTARG args[4];
 	args[0].vt = VT_I4;
 	args[0].lVal = param->key_state;
@@ -2866,7 +2766,7 @@ void wsh_panel_window::on_drag_drop(LPARAM lp)
 {
 	TRACK_FUNCTION();
 
-	PanelDropTarget::MessageParam * param = reinterpret_cast<PanelDropTarget::MessageParam *>(lp);
+	HostDropTarget::MessageParam * param = reinterpret_cast<HostDropTarget::MessageParam *>(lp);
 	VARIANTARG args[4];
 	args[0].vt = VT_I4;
 	args[0].lVal = param->key_state;

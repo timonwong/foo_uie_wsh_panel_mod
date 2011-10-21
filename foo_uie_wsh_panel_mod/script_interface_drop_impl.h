@@ -1,35 +1,21 @@
 #pragma once
 
 
-struct 
-{
-    IDispatchPtr m_disp;
-
-    void ToString(wchar_t * outString)
-    {
-        int pid = getpid();
-        UINT_PTR ptr = (UINT_PTR)m_disp.GetInterfacePtr();
-
-        wprintf(L"%d,%d", pid, ptr);
-    }
-};
-
-class DataObjectIDispatchWrapper : public IDataObject
+template <class T>
+class IDataObjectImpl : public IDataObject
 {
 protected:
-    IDispatchPtr m_disp;
-    FORMATETC m_formatEtc[1];
-
-    DataObjectIDispatchWrapper(IDispatch * pdisp)
+    struct DATAENTRY
     {
-        m_formatEtc[0].cfFormat = CF_UNICODETEXT;
-        m_formatEtc[0].dwAspect = DVASPECT_CONTENT;
-        m_formatEtc[0].lindex = -1;
-        m_formatEtc[0].ptd = NULL;
-        m_formatEtc[0].tymed = TYMED_HGLOBAL;
+        FORMATETC fe;
+        STGMEDIUM stgm;
+    };
 
-        m_disp = pdisp;
-    }
+    pfc::list_t<FORMATETC> m_dragFormats;
+    pfc::list_t<DATAENTRY> m_setDataList;
+
+    HRESULT AddRefStgMedium(STGMEDIUM *pstgmIn, STGMEDIUM *pstgmOut, BOOL fCopyIn);
+    IUnknown * GetCanonicalIUnknown(IUnknown* punk);
 
 public:
     STDMETHODIMP GetData(FORMATETC *pformatetc, STGMEDIUM *pmedium);
