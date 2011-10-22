@@ -275,12 +275,12 @@ public:
 
 	void update_script(const char * name = NULL, const char * code = NULL);
 
-private:
 	inline HRESULT script_invoke_v(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL)
 	{
 		return m_script_host->InvokeV(name, argv, argc, ret);
 	}
 
+private:
 	bool script_load();
 	void script_unload();
 
@@ -356,12 +356,6 @@ private:
 
 	// ui_selection_callback
 	void on_selection_changed(WPARAM wp);
-
-	// drag and drop
-	void on_drag_enter(LPARAM lp);
-	void on_drag_over(LPARAM lp);
-	void on_drag_leave();
-	void on_drag_drop(LPARAM lp);
 
     // playback queue callback
     void on_playback_queue_changed(WPARAM wp);

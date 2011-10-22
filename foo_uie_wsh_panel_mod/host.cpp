@@ -1389,7 +1389,7 @@ bool wsh_panel_window::script_load()
 		if (GetScriptInfo().feature_mask & t_script_info::kFeatureDragDrop)
 		{
 			// Ole Drag and Drop support
-            m_drop_target.Attach(new com_object_impl_t<HostDropTarget>(m_hwnd));
+            m_drop_target.Attach(new com_object_impl_t<HostDropTarget>(this));
 			m_drop_target->RegisterDragDrop();
 			m_is_droptarget_registered = true;
 		}
@@ -1756,22 +1756,6 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 	case UWM_SHOWPROPERTIES:
 		show_property_popup(m_hwnd);
-		return 0;
-
-	case UWM_DRAG_ENTER:
-		on_drag_enter(lp);
-		return 0;
-
-	case UWM_DRAG_OVER:
-		on_drag_over(lp);
-		return 0;
-
-	case UWM_DRAG_LEAVE:
-		on_drag_leave();
-		return 0;
-
-	case UWM_DRAG_DROP:
-		on_drag_drop(lp);
 		return 0;
 
 	case CALLBACK_UWM_PLAYLIST_STOP_AFTER_CURRENT:
@@ -2719,64 +2703,6 @@ void wsh_panel_window::on_selection_changed(WPARAM wp)
 				handle->Release();
 		}
 	}
-}
-
-void wsh_panel_window::on_drag_enter(LPARAM lp)
-{
-	TRACK_FUNCTION();
-
-	HostDropTarget::MessageParam * param = reinterpret_cast<HostDropTarget::MessageParam *>(lp);
-	VARIANTARG args[4];
-	args[0].vt = VT_I4;
-	args[0].lVal = param->key_state;
-	args[1].vt = VT_I4;
-	args[1].lVal = param->y;
-	args[2].vt = VT_I4;
-	args[2].lVal = param->x;	
-	args[3].vt = VT_DISPATCH;
-	args[3].pdispVal = param->action;
-	script_invoke_v(L"on_drag_enter", args, _countof(args));
-}
-
-void wsh_panel_window::on_drag_over(LPARAM lp)
-{
-	TRACK_FUNCTION();
-
-	HostDropTarget::MessageParam * param = reinterpret_cast<HostDropTarget::MessageParam *>(lp);
-	VARIANTARG args[4];
-	args[0].vt = VT_I4;
-	args[0].lVal = param->key_state;
-	args[1].vt = VT_I4;
-	args[1].lVal = param->y;
-	args[2].vt = VT_I4;
-	args[2].lVal = param->x;	
-	args[3].vt = VT_DISPATCH;
-	args[3].pdispVal = param->action;
-	script_invoke_v(L"on_drag_over", args, _countof(args));
-}
-
-void wsh_panel_window::on_drag_leave()
-{
-	TRACK_FUNCTION();
-
-	script_invoke_v(L"on_drag_leave");
-}
-
-void wsh_panel_window::on_drag_drop(LPARAM lp)
-{
-	TRACK_FUNCTION();
-
-	HostDropTarget::MessageParam * param = reinterpret_cast<HostDropTarget::MessageParam *>(lp);
-	VARIANTARG args[4];
-	args[0].vt = VT_I4;
-	args[0].lVal = param->key_state;
-	args[1].vt = VT_I4;
-	args[1].lVal = param->y;
-	args[2].vt = VT_I4;
-	args[2].lVal = param->x;	
-	args[3].vt = VT_DISPATCH;
-	args[3].pdispVal = param->action;
-	script_invoke_v(L"on_drag_drop", args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_queue_changed(WPARAM wp)
