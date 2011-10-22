@@ -58,6 +58,7 @@ __interface IFbPlaylistManager : IDispatch
     [propput] STDMETHOD(PlayingPlaylist)(UINT playlistIndex);
     [propget] STDMETHOD(PlaylistCount)([out,retval] UINT * outCount);
     [propget] STDMETHOD(PlaylistItemCount)(UINT playlistIndex, [out,retval] UINT * outCount);
+    [propget] STDMETHOD(PlaylistRecyclerManager)([out,retval] __interface IFbPlaylistRecyclerManager * outRecycler);
 };
 _COM_SMARTPTR_TYPEDEF(IFbPlaylistManager, __uuidof(IFbPlaylistManager));
 
@@ -95,4 +96,24 @@ __interface IFbPlayingItemLocation : IDispatch
     [propget] STDMETHOD(IsValid)([out,retval] VARIANT_BOOL * outIsValid);
     [propget] STDMETHOD(PlaylistIndex)([out,retval] UINT * outPlaylistIndex);
     [propget] STDMETHOD(PlaylistItemIndex)([out,retval] UINT * outPlaylistItemIndex);
+};
+
+[
+    object,
+    dual,
+    pointer_default(unique),
+    library_block,
+    uuid("0bc36d7f-3fcb-4157-8b90-db1281423e81")
+]
+__interface IFbPlaylistRecyclerManager : IDispatch
+{
+    [propget] STDMETHOD(Count)([out,retval] UINT * outCount);
+    [propget] STDMETHOD(Name)(UINT which, [out,retval] BSTR * outName);
+    [propget] STDMETHOD(Content)(UINT which, [out,retval] __interface IFbMetadbHandleList * outContent);
+    [propget] STDMETHOD(Id)(UINT index, UINT * outId);
+
+    STDMETHOD(Purge)();
+    STDMETHOD(Restore)(UINT index);
+    STDMETHOD(RestoreById)(UINT id);
+    STDMETHOD(FindById)(UINT id, [out,retval] UINT * outId);
 };
