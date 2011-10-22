@@ -70,28 +70,13 @@ STDMETHODIMP FbPlaylistMangerTemplate::SetPlaylistSelection(UINT playlistIndex, 
 {
     TRACK_FUNCTION();
 
-    helpers::com_array_reader arrayReader;
-    int count;
-
-    // cannot convert, just fail
-    if (!arrayReader.convert(&affectedItems)) return E_INVALIDARG;
-    // no items
-    if (arrayReader.get_count() == 0) return S_OK;
-
+    unsigned bitArrayCount;
+    bool empty;
     static_api_ptr_t<playlist_manager> plm;
-    count = plm->playlist_get_item_count(playlistIndex);
-
-    bit_array_bittable affected(count);
-
-    for (int i = arrayReader.get_lbound(); i < arrayReader.get_count(); ++i)
-    {
-        _variant_t index;
-
-        arrayReader.get_item(i, index);
-        if (FAILED(VariantChangeType(&index, &index, 0, VT_I4))) return E_INVALIDARG;
-
-        affected.set(index.lVal, true);
-    }
+    bit_array_bittable affected;
+    bitArrayCount = plm->playlist_get_item_count(playlistIndex);
+    if (!helpers::com_array_to_bitarray::convert(affectedItems, bitArrayCount, affected, empty)) return E_INVALIDARG;
+    if (empty) return S_OK;
 
     bit_array_val status(state == VARIANT_TRUE);
     static_api_ptr_t<playlist_manager>()->playlist_set_selection(playlistIndex, affected, status);
@@ -382,29 +367,15 @@ STDMETHODIMP FbPlaylistMangerTemplate::RemoveItemsFromPlaybackQueue(VARIANT affe
 {
     TRACK_FUNCTION();
 
-    helpers::com_array_reader arrayReader;
-    static_api_ptr_t<playlist_manager> plman;
-    int count;
-   
-    // cannot convert, just fail
-    if (!arrayReader.convert(&affectedItems)) return E_INVALIDARG;
-    // no items
-    if (arrayReader.get_count() == 0) return S_OK;
+    unsigned bitArrayCount;
+    bool empty;
+    static_api_ptr_t<playlist_manager> plm;
+    bit_array_bittable affected;
+    bitArrayCount = plm->queue_get_count();
+    if (!helpers::com_array_to_bitarray::convert(affectedItems, bitArrayCount, affected, empty)) return E_INVALIDARG;
+    if (empty) return S_OK;
 
-    count = plman->queue_get_count();
-    bit_array_bittable affected(count);
-
-    for (int i = arrayReader.get_lbound(); i < arrayReader.get_count(); ++i)
-    {
-        _variant_t index;
-
-        arrayReader.get_item(i, index);
-        if (FAILED(VariantChangeType(&index, &index, 0, VT_I4))) return E_INVALIDARG;
-
-        affected.set(index.lVal, true);
-    }
-
-    plman->queue_remove_mask(affected);
+    plm->queue_remove_mask(affected);
     return S_OK;
 }
 
@@ -791,6 +762,28 @@ STDMETHODIMP FbPlaylistManager::SetActivePlaylistContext()
     return FbPlaylistMangerTemplate::SetActivePlaylistContext();
 }
 
+STDMETHODIMP FbPlaylistManager::get_PlaylistRecyclerManager(__interface IFbPlaylistRecyclerManager ** outRecyclerManagerManager)
+{
+    TRACK_FUNCTION();
+    
+    try
+    {
+        if (!m_fbPlaylistRecyclerManager)
+        {
+            m_fbPlaylistRecyclerManager.Attach(new com_object_impl_t<FbPlaylistRecyclerManager>());
+        }
+
+        (*outRecyclerManagerManager) = m_fbPlaylistRecyclerManager;
+        (*outRecyclerManagerManager)->AddRef();
+    }
+    catch (...)
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
 
 FbPlaybackQueueItem::FbPlaybackQueueItem(const t_playback_queue_item & playbackQueueItem)
 {
@@ -917,5 +910,184 @@ STDMETHODIMP FbPlayingItemLocation::get_PlaylistItemIndex(UINT * outPlaylistItem
 
     if (!outPlaylistItemIndex) return E_POINTER;
     (*outPlaylistItemIndex) = m_itemIndex;
+    return S_OK;
+}
+
+
+STDMETHODIMP FbPlaylistRecyclerManager::get_Count(UINT * outCount)
+{
+    TRACK_FUNCTION();
+
+    if (!outCount) return E_POINTER;
+
+    try
+    {
+        (*outCount) = static_api_ptr_t<playlist_manager_v3>()->recycler_get_count();
+    }
+    catch (...)
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistRecyclerManager::get_Name(UINT index, BSTR * outName)
+{
+    TRACK_FUNCTION();
+
+    if (!outName) return E_POINTER;
+
+    try
+    {
+        pfc::string8_fast name;
+        static_api_ptr_t<playlist_manager_v3>()->recycler_get_name(index, name);
+        (*outName) = SysAllocString(pfc::stringcvt::string_wide_from_utf8_fast(name));
+    }
+    catch (pfc::exception_invalid_params & ex)
+    {
+        return E_INVALIDARG;
+    }
+    catch (...)
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistRecyclerManager::get_Content(UINT index, __interface IFbMetadbHandleList ** outContent)
+{
+    TRACK_FUNCTION();
+
+    if (!outContent) return E_POINTER;
+
+    try
+    {
+        metadb_handle_list handles;
+        static_api_ptr_t<playlist_manager_v3>()->recycler_get_content(index, handles);
+        (*outContent) = new com_object_impl_t<FbMetadbHandleList>(handles);
+    }
+    catch (pfc::exception_invalid_params & ex)
+    {
+        return E_INVALIDARG;
+    }
+    catch (...)
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistRecyclerManager::get_Id(UINT index, UINT * outId)
+{
+    TRACK_FUNCTION();
+
+    if (!outId) return E_POINTER;
+
+    try
+    {
+        (*outId) = static_api_ptr_t<playlist_manager_v3>()->recycler_get_id(index);
+    }
+    catch (pfc::exception_invalid_params & ex)
+    {
+        return E_INVALIDARG;
+    }
+    catch (...)
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistRecyclerManager::Purge(VARIANT affectedItems)
+{
+    TRACK_FUNCTION();
+
+    try
+    {
+        unsigned bitArrayCount;
+        bool empty;
+        static_api_ptr_t<playlist_manager_v3> plm;
+        bit_array_bittable mask;
+        bitArrayCount = plm->recycler_get_count();
+        if (!helpers::com_array_to_bitarray::convert(affectedItems, bitArrayCount, mask, empty)) return E_INVALIDARG;
+        if (empty) return S_OK;
+
+        plm->recycler_purge(mask);
+    }
+    catch (pfc::exception_invalid_params & ex)
+    {
+        return E_INVALIDARG;
+    }
+    catch (...)
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistRecyclerManager::Restore(UINT index)
+{
+    TRACK_FUNCTION();
+
+    try
+    {
+        static_api_ptr_t<playlist_manager_v3>()->recycler_restore(index);
+    }
+    catch (pfc::exception_invalid_params & ex)
+    {
+        return E_INVALIDARG;
+    }
+    catch (...)
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistRecyclerManager::RestoreById(UINT id)
+{
+    TRACK_FUNCTION();
+
+    try
+    {
+        static_api_ptr_t<playlist_manager_v3>()->recycler_restore_by_id(id);
+    }
+    catch (pfc::exception_invalid_params & ex)
+    {
+        return E_INVALIDARG;
+    }
+    catch (...)
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistRecyclerManager::FindById(UINT id, UINT * outId)
+{
+    TRACK_FUNCTION();
+
+    if (!outId) return E_POINTER;
+
+    try
+    {
+        (*outId) = static_api_ptr_t<playlist_manager_v3>()->recycler_find_by_id(id);
+    }
+    catch (pfc::exception_invalid_params & ex)
+    {
+        return E_INVALIDARG;
+    }
+    catch (...)
+    {
+        return E_FAIL;
+    }
+
     return S_OK;
 }

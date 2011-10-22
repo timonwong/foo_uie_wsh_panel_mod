@@ -1389,7 +1389,7 @@ bool wsh_panel_window::script_load()
 		if (GetScriptInfo().feature_mask & t_script_info::kFeatureDragDrop)
 		{
 			// Ole Drag and Drop support
-            m_drop_target = new com_object_impl_t<HostDropTarget>(m_hwnd);
+            m_drop_target.Attach(new com_object_impl_t<HostDropTarget>(m_hwnd));
 			m_drop_target->RegisterDragDrop();
 			m_is_droptarget_registered = true;
 		}

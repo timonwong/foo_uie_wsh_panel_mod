@@ -58,7 +58,7 @@ __interface IFbPlaylistManager : IDispatch
     [propput] STDMETHOD(PlayingPlaylist)(UINT playlistIndex);
     [propget] STDMETHOD(PlaylistCount)([out,retval] UINT * outCount);
     [propget] STDMETHOD(PlaylistItemCount)(UINT playlistIndex, [out,retval] UINT * outCount);
-    [propget] STDMETHOD(PlaylistRecyclerManager)([out,retval] __interface IFbPlaylistRecyclerManager * outRecycler);
+    [propget] STDMETHOD(PlaylistRecyclerManager)([out,retval] __interface IFbPlaylistRecyclerManager ** outRecyclerManager);
 };
 _COM_SMARTPTR_TYPEDEF(IFbPlaylistManager, __uuidof(IFbPlaylistManager));
 
@@ -108,12 +108,13 @@ __interface IFbPlayingItemLocation : IDispatch
 __interface IFbPlaylistRecyclerManager : IDispatch
 {
     [propget] STDMETHOD(Count)([out,retval] UINT * outCount);
-    [propget] STDMETHOD(Name)(UINT which, [out,retval] BSTR * outName);
-    [propget] STDMETHOD(Content)(UINT which, [out,retval] __interface IFbMetadbHandleList * outContent);
+    [propget] STDMETHOD(Name)(UINT index, [out,retval] BSTR * outName);
+    [propget] STDMETHOD(Content)(UINT index, [out,retval] __interface IFbMetadbHandleList ** outContent);
     [propget] STDMETHOD(Id)(UINT index, UINT * outId);
 
-    STDMETHOD(Purge)();
+    STDMETHOD(Purge)(VARIANT affectedItems);
     STDMETHOD(Restore)(UINT index);
     STDMETHOD(RestoreById)(UINT id);
     STDMETHOD(FindById)(UINT id, [out,retval] UINT * outId);
 };
+_COM_SMARTPTR_TYPEDEF(IFbPlaylistRecyclerManager, __uuidof(IFbPlaylistRecyclerManager));

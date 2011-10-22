@@ -57,6 +57,14 @@ public:
 // NOTE: Do not use com_object_impl_t<> to initialize, use com_object_singleton_t<> instead.
 class FbPlaylistManager : public IDispatchImpl3<IFbPlaylistManager>
 {
+private:
+    IFbPlaylistRecyclerManagerPtr m_fbPlaylistRecyclerManager;
+
+protected:
+    FbPlaylistManager() : m_fbPlaylistRecyclerManager(NULL)
+    {
+    }
+
 public:
     // Methods
     STDMETHODIMP InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize);
@@ -104,6 +112,7 @@ public:
     STDMETHODIMP put_PlayingPlaylist(UINT playlistIndex);
     STDMETHODIMP get_PlaylistCount(UINT * outCount);
     STDMETHODIMP get_PlaylistItemCount(UINT playlistIndex, UINT * outCount);
+    STDMETHODIMP get_PlaylistRecyclerManager(__interface IFbPlaylistRecyclerManager ** outRecyclerManager);
 };
 
 class FbPlaybackQueueItem : public IDisposableImpl4<IFbPlaybackQueueItem>
@@ -146,4 +155,18 @@ public:
     STDMETHODIMP get_IsValid(VARIANT_BOOL * outIsValid);
     STDMETHODIMP get_PlaylistIndex(UINT * outPlaylistIndex);
     STDMETHODIMP get_PlaylistItemIndex(UINT * outPlaylistItemIndex);
+};
+
+class FbPlaylistRecyclerManager : public IDispatchImpl3<IFbPlaylistRecyclerManager>
+{
+public:
+    STDMETHODIMP get_Count(UINT * outCount);
+    STDMETHODIMP get_Name(UINT index, BSTR * outName);
+    STDMETHODIMP get_Content(UINT index, __interface IFbMetadbHandleList ** outContent);
+    STDMETHODIMP get_Id(UINT index, UINT * outId);
+
+    STDMETHODIMP Purge(VARIANT affectedItems);
+    STDMETHODIMP Restore(UINT index);
+    STDMETHODIMP RestoreById(UINT id);
+    STDMETHODIMP FindById(UINT id, UINT * outId);
 };

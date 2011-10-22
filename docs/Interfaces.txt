@@ -883,4 +883,24 @@ Properties:
     (read, write) uint PlaylingPlaylist;
     (readonly) uint PlaylistCount;
     (readonly) uint PlaylistItemCount;
+    // [1.5.0 Preview 9] New:
+    (readonly) IFbPlaylistRecyclerManager PlaylistRecyclerManager;
+}
+
+// [1.5.0 Preveiw 9] New:
+interface PlaylistRecyclerManager {
+Properties:
+    // Purge multiple content at once.
+    // affectedItems is an array contains the indexes.
+    void Purge(affectedItems);
+    void Restore(index);
+    void RestoreById(id);
+    // returns the index
+    uint FindById(id);
+    
+Methods:
+    (readonly) uint Count;
+    (readonly) String Name(index);
+    (readonly) IFbMetadbHandleList Content(index);
+    (readonly) uint Id(index);
 }

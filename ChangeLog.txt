@@ -1,5 +1,7 @@
-v1.5.o Preview 9
+v1.5.0 Preview 9
 - FIX: Fix a problem that InsertPlaylistItems() and InsertPlaylistItemsFilter() don't work at all.
+- ADD: Add plman.PlaylistRecyclerManager property.
+- ADD: Add IFbPlaylistRecyclerManager interface.
 
 v1.5.0 Preview 8
 - ADD: Add support for tooltip tracking with "TrackActivate" property and "TrackPosition" method of IFbTooltip interface.

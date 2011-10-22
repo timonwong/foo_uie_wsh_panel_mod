@@ -3,7 +3,6 @@
 #include "script_interface_dragsource.h"
 #include "com_tools.h"
 
-
 _COM_SMARTPTR_TYPEDEF(IDragSourceHelper, IID_IDragSourceHelper);
 
 
