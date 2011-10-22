@@ -114,6 +114,12 @@
     <ClCompile Include="IDataObjectImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="script_interface_datatransfer_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="script_interface_dragsource_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
@@ -246,6 +252,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="script_interface_datatransfer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="script_interface_datatransfer_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="script_interface_dragsource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="script_interface_dragsource_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

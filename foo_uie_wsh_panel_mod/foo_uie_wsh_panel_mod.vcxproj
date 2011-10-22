@@ -145,6 +145,8 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClCompile Include="host_droptarget.cpp" />
     <ClCompile Include="IDataObjectImpl.cpp" />
     <ClCompile Include="panel_manager.cpp" />
+    <ClCompile Include="script_interface_datatransfer_impl.cpp" />
+    <ClCompile Include="script_interface_dragsource_impl.cpp" />
     <ClCompile Include="script_interface_impl.cpp" />
     <ClCompile Include="script_interface_playlist_impl.cpp" />
     <ClCompile Include="script_interface_tooltip_impl.cpp" />
@@ -185,6 +187,9 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClInclude Include="resource.h" />
     <ClInclude Include="script_interface.h" />
     <ClInclude Include="script_interface_datatransfer.h" />
+    <ClInclude Include="script_interface_datatransfer_impl.h" />
+    <ClInclude Include="script_interface_dragsource.h" />
+    <ClInclude Include="script_interface_dragsource_impl.h" />
     <ClInclude Include="script_interface_impl.h" />
     <ClInclude Include="script_interface_playlist.h" />
     <ClInclude Include="script_interface_playlist_impl.h" />

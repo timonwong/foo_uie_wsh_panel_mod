@@ -12,7 +12,6 @@ class IDropTargetImpl : public IDropTarget
 {
 protected:
     IDropTargetHelperPtr m_dropTargetHelper;
-    IDragSourceHelper 
     HWND m_hWnd;
 
 public:
