@@ -558,7 +558,6 @@ public:
 	STDMETHODIMP GetSystemMetrics(UINT index, INT * p);
 	STDMETHODIMP Glob(BSTR pattern, UINT exc_mask, UINT inc_mask, VARIANT * p);
 	STDMETHODIMP FileTest(BSTR path, BSTR mode, VARIANT * p);
-	//STDMETHODIMP MapVirtualKey(UINT code, UINT maptype, UINT * p);
 };
 
 // forward declaration

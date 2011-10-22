@@ -111,6 +111,9 @@
     <ClCompile Include="host_droptarget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IDataObjectImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
@@ -237,6 +240,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IDropSourceImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IDataObjectImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="script_interface_datatransfer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

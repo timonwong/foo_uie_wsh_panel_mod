@@ -63,7 +63,7 @@ HRESULT HostDropTarget::OnDragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffec
     if (!pdwEffect) return E_POINTER;
 
     ScreenToClient(m_hWnd, reinterpret_cast<LPPOINT>(&pt));
-    MessageParam param = {grfKeyState, pt.x, pt.y, m_action };
+    MessageParam param = { grfKeyState, pt.x, pt.y, m_action };
     SendMessage(m_hWnd, UWM_DRAG_OVER, 0, (LPARAM)&param);
 
     if (!m_action->Parsable())
@@ -90,6 +90,55 @@ HRESULT HostDropTarget::OnDrop(IDataObject *pDataObj, DWORD grfKeyState, POINTL 
 
     int playlist = m_action->Playlist();
     bool to_select = m_action->ToSelect();
+
+    // TEST CODE
+#if defined(DEBUG)
+    {
+        IEnumSTATDATA * enumStatData = NULL;
+        HRESULT hr;
+
+        hr = pDataObj->EnumDAdvise(&enumStatData);
+        console::formatter() << "pDataObj->EnumDAdvise(): " << pfc::format_hex(hr);
+
+        IEnumFORMATETC * enumFormatetcGet = NULL;
+        IEnumFORMATETC * enumFormatetcSet = NULL;
+        
+        hr = pDataObj->EnumFormatEtc(DATADIR_GET, &enumFormatetcGet);
+        
+        pfc::map_t<int, pfc::string8> tymedMap;
+        pfc::map_t<int, pfc::string8> dvaspectMap;
+        tymedMap[TYMED_HGLOBAL]     = "TYMED_HGLOBAL";
+        tymedMap[TYMED_FILE]        = "TYMED_FILE";
+        tymedMap[TYMED_ISTREAM]     = "TYMED_ISTREAM";
+        tymedMap[TYMED_ISTORAGE]    = "TYMED_ISTORAGE";
+        tymedMap[TYMED_GDI]         = "TYMED_GDI";
+        tymedMap[TYMED_MFPICT]      = "TYMED_MFPICT";
+        tymedMap[TYMED_ENHMF]       = "TYMED_ENHMF";
+        tymedMap[TYMED_NULL]        = "TYMED_NULL";
+
+        dvaspectMap[DVASPECT_CONTENT]       = "DVASPECT_CONTENT";
+        dvaspectMap[DVASPECT_THUMBNAIL]     = "DVASPECT_THUMBNAIL";
+        dvaspectMap[DVASPECT_ICON]          = "DVASPECT_ICON";
+        dvaspectMap[DVASPECT_DOCPRINT]      = "DVASPECT_DOCPRINT";
+
+        if (enumFormatetcGet)
+        {
+            WCHAR buffer[256];
+            FORMATETC formatetc;
+
+            console::formatter() << "enumFormatetcGet:";
+
+            while (enumFormatetcGet->Next(1, &formatetc, 0) == S_OK)
+            {
+                GetClipboardFormatName(formatetc.cfFormat, buffer, _countof(buffer));
+                console::printf("cfFormat: \"%s\", dwAspect: \"%s\", tymed: \"%s\"", 
+                    pfc::stringcvt::string_utf8_from_wide(buffer).get_ptr(),
+                    dvaspectMap[static_cast<int>(formatetc.dwAspect)].get_ptr(), 
+                    tymedMap[static_cast<int>(formatetc.tymed)].get_ptr());
+            }
+        }
+    }
+#endif
 
     if (m_action->Parsable())
     {

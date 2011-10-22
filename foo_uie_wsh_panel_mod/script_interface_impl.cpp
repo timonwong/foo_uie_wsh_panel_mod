@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include <MLang.h>
-//#include "ppl.h"
 #include "script_interface_impl.h"
 #include "script_interface_playlist_impl.h"
 #include "helpers.h"
@@ -3313,27 +3312,6 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
         p->vt = VT_BOOL;
         p->boolVal = TO_VARIANT_BOOL(PathIsDirectory(path));
     }
-    //else if (_wcsicmp(mode, L"pretty") == 0)
-    //{
-    //	wchar_t buff[MAX_PATH] = {0};
-    //	wchar_t buff_out[MAX_PATH] = {0};
-    //	wchar_t * s = buff;
-
-    //	StringCchCopy(buff, _countof(buff), path);
-
-    //	while (*s)
-    //	{
-    //		if (*s == '/')
-    //			*s = '\\';
-
-    //		++s;
-    //	}
-
-    //	int x = PathCanonicalize(buff_out, buff);
-
-    //	p->vt = VT_BSTR;
-    //	p->bstrVal = SysAllocString(buff_out);
-    //}
     else if (wcscmp(mode, L"split") == 0)
     {
         const wchar_t * fn = PathFindFileName(path);
@@ -3504,16 +3482,6 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
 
     return S_OK;
 }
-
-//STDMETHODIMP WSHUtils::MapVirtualKey(UINT code, UINT maptype, UINT * p)
-//{
-//	TRACK_FUNCTION();
-//
-//	if (!p) return E_POINTER;
-//
-//	*p = ::MapVirtualKey(code, maptype);
-//	return S_OK;
-//}
 
 StyleTextRender::StyleTextRender(bool pngmode) : m_pOutLineText(NULL), m_pngmode(pngmode)
 {

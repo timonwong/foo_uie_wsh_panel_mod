@@ -143,6 +143,7 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClCompile Include="global_cfg.cpp" />
     <ClCompile Include="host.cpp" />
     <ClCompile Include="host_droptarget.cpp" />
+    <ClCompile Include="IDataObjectImpl.cpp" />
     <ClCompile Include="panel_manager.cpp" />
     <ClCompile Include="script_interface_impl.cpp" />
     <ClCompile Include="script_interface_playlist_impl.cpp" />
@@ -172,6 +173,7 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClInclude Include="config.h" />
     <ClInclude Include="dbgtrace.h" />
     <ClInclude Include="delay_loader.h" />
+    <ClInclude Include="IDataObjectImpl.h" />
     <ClInclude Include="IDropSourceImpl.h" />
     <ClInclude Include="global_cfg.h" />
     <ClInclude Include="component_defines.h" />
@@ -182,6 +184,7 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClInclude Include="panel_manager.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="script_interface.h" />
+    <ClInclude Include="script_interface_datatransfer.h" />
     <ClInclude Include="script_interface_impl.h" />
     <ClInclude Include="script_interface_playlist.h" />
     <ClInclude Include="script_interface_playlist_impl.h" />
