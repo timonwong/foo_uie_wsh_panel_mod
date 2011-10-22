@@ -699,38 +699,6 @@ STDMETHODIMP FbWindow::GetFontDUI(UINT type, IGdiFont ** pp)
 	return S_OK;
 }
 
-//STDMETHODIMP FbWindow::CreateObject(BSTR progid_or_clsid, IUnknown ** pp)
-//{
-//	TRACK_FUNCTION();
-//
-//	if (!progid_or_clsid) return E_INVALIDARG;
-//	if (!pp) return E_POINTER;
-//
-//	HRESULT hr = S_OK;
-//	CLSID clsid;
-//	IUnknownPtr unk;
-//	*pp = NULL;
-//	
-//	// Check safety
-//	if (g_cfg_safe_mode)
-//	{
-//		if (progid_or_clsid[0] == '{')
-//		{
-//			hr = CLSIDFromString(progid_or_clsid, &clsid);
-//		}
-//		else 
-//		{
-//			hr = CLSIDFromProgID(progid_or_clsid, &clsid);
-//		}
-//
-//
-//	}
-//
-//	if (SUCCEEDED(hr)) hr = unk.CreateInstance(clsid, NULL, CLSCTX_ALL);
-//	*pp = unk.Detach();
-//	return hr;
-//}
-
 STDMETHODIMP FbWindow::CreateThemeManager(BSTR classid, IThemeManager ** pp)
 {
 	TRACK_FUNCTION();
@@ -992,10 +960,23 @@ HRESULT ScriptHost::Initialize()
 	pfc::stringcvt::string_wide_from_utf8_fast wcode(m_host->get_script_code());
 	// Load preprocessor module
 	script_preprocessor preprocessor(wcode.get_ptr());
-
 	preprocessor.process_script_info(m_host->GetScriptInfo());
 
-	if (SUCCEEDED(hr)) hr = m_script_engine.CreateInstance(wname.get_ptr(), NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER);
+    if (wcscmp(wname.get_ptr(), L"JScript9") == 0) 
+    {
+        // Try using JScript9 from IE9
+        CLSID clsid = GUID_NULL;
+        CLSIDFromString(L"{16d51579-a30b-4c8b-a276-0ff4dc41e755}", &clsid);
+        if (FAILED(hr = m_script_engine.CreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER)))
+        {
+            // fallback to default JScript engine.
+            hr = m_script_engine.CreateInstance(L"JScript", NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER);
+        }
+    }
+    else
+    {
+	    hr = m_script_engine.CreateInstance(wname.get_ptr(), NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER);
+    }
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptSite(this);
 	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
 	if (SUCCEEDED(hr)) hr = parser->InitNew();
@@ -1009,7 +990,7 @@ HRESULT ScriptHost::Initialize()
 		if (SUCCEEDED(m_script_engine->QueryInterface(&psafe)))
 		{
 			psafe->SetInterfaceSafetyOptions(IID_IDispatch, 
-				INTERFACE_USES_SECURITY_MANAGER, INTERFACE_USES_SECURITY_MANAGER);
+                INTERFACE_USES_SECURITY_MANAGER, INTERFACE_USES_SECURITY_MANAGER);
 		}
 	}
 

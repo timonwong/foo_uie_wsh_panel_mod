@@ -9,6 +9,8 @@ struct NameToValueTable
     unsigned value;
 };
 
+_COM_SMARTPTR_TYPEDEF(IDragSourceHelper, IID_IDragSourceHelper);
+
 
 DataTransferObject::DataTransferObject() : m_dropEffect(DROPEFFECT_MOVE), m_effectAllowed(~0)
 {
@@ -155,7 +157,6 @@ STDMETHODIMP DataTransferObject::SetData(BSTR type, BSTR data)
     TRACK_FUNCTION();
 
     if (!type || !data) return E_INVALIDARG;
-
     return S_OK;
 }
 
@@ -168,12 +169,44 @@ STDMETHODIMP DataTransferObject::GetData(BSTR type, VARIANT * outData)
     return S_OK;
 }
 
-STDMETHODIMP DataTransferObject::SetDragImage(__interface IGdiRawBitmap * rawBitmap, int x, int y)
+STDMETHODIMP DataTransferObject::GetMetadbHandles(IDispatch * callback)
 {
     TRACK_FUNCTION();
 
-    if (!rawBitmap) return E_INVALIDARG;
+    if (!callback) return E_INVALIDARG;
 
-    // TODO:
+    //callback->Invoke(DISPID_VALUE)
+
+    return S_OK;
+}
+
+STDMETHODIMP DataTransferObject::SetDragImage(__interface IGdiBitmap * bitmap, int x, int y)
+{
+    TRACK_FUNCTION();
+
+    if (!bitmap) return E_INVALIDARG;
+
+    IDragSourceHelperPtr dragSourceHelper;
+    if (dragSourceHelper.CreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER) && dragSourceHelper)
+    {
+        Gdiplus::Bitmap * pBitmap = NULL;
+        HBITMAP hBitmap = NULL;
+        bitmap->get__ptr((void**)&pBitmap);
+        if (!pBitmap) return E_INVALIDARG;
+
+        pBitmap->GetHBITMAP(Gdiplus::Color::White, &hBitmap);
+        if (!hBitmap) return E_INVALIDARG;
+
+        SHDRAGIMAGE sdi;
+        sdi.crColorKey          = 0xffffffff;
+        sdi.hbmpDragImage       = hBitmap;
+        sdi.ptOffset.x          = x;
+        sdi.ptOffset.y          = y;
+        sdi.sizeDragImage.cx    = pBitmap->GetWidth();
+        sdi.sizeDragImage.cy    = pBitmap->GetHeight();
+
+        dragSourceHelper->InitializeFromBitmap(&sdi, m_dataObject);
+    }
+
     return S_OK;
 }

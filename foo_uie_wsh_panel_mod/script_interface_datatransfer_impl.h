@@ -9,7 +9,7 @@ class DataTransferObject : public IDispatchImpl3<IDataTransferObject>
 private:
     unsigned m_dropEffect;
     unsigned m_effectAllowed;
-    CBitmap m_bitmap;
+    IDataObject * m_dataObject;
 
 protected:
     DataTransferObject();
@@ -26,5 +26,6 @@ public:
     STDMETHODIMP ClearData(BSTR type);
     STDMETHODIMP SetData(BSTR type, BSTR data);
     STDMETHODIMP GetData(BSTR type, VARIANT * outData);
-    STDMETHODIMP SetDragImage(__interface IGdiRawBitmap * rawBitmap, int x, int y);
+    STDMETHODIMP GetMetadbHandles(IDispatch * callback);
+    STDMETHODIMP SetDragImage(__interface IGdiBitmap * bitmap, int x, int y);
 };

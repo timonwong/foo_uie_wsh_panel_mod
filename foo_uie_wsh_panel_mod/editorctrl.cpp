@@ -1063,11 +1063,11 @@ void CScriptEditorCtrl::RestoreDefaultStyle()
 
 void CScriptEditorCtrl::SetLanguage(const char * lang)
 {
-	if (_stricmp(lang, "JScript") == 0)
+	if (strcmp(lang, "JScript") == 0 || strcmp(lang, "JScript9") == 0) 
 	{
 		SetJScript();
 	}
-	else if (_stricmp(lang, "VBScript") == 0)
+	else if (strcmp(lang, "VBScript") == 0)
 	{
 		SetVBScript();
 	}

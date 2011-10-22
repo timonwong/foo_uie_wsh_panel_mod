@@ -6,7 +6,6 @@
 
 DragSourceObject::DragSourceObject()
 {
-    m_dragSourceHelper.CreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER);
 }
 
 STDMETHODIMP DragSourceObject::StartDrag(__interface IDataTransferObject * dataTransfer)

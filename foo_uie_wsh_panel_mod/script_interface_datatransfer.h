@@ -22,5 +22,5 @@ __interface IDataTransferObject : IDispatch
     STDMETHOD(ClearData)([defaultvalue("")] BSTR type);
     STDMETHOD(SetData)(BSTR type, VARIANT data);
     STDMETHOD(GetData)(BSTR type, [out,retval] VARIANT * outData);
-    STDMETHOD(SetDragImage)(__interface IGdiRawBitmap * rawBitmap, int x, int y);
+    STDMETHOD(SetDragImage)(__interface IGdiBitmap * bitmap, int x, int y);
 };

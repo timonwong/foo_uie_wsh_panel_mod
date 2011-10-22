@@ -38,6 +38,7 @@ LRESULT CDialogConf::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 	HWND combo_script_engine = GetDlgItem(IDC_SCRIPT_ENGINE);
 
 	ComboBox_AddString(combo_script_engine, _T("JScript"));
+    ComboBox_AddString(combo_script_engine, _T("JScript9"));
 	ComboBox_AddString(combo_script_engine, _T("VBScript"));
 
 	if (!uComboBox_SelectString(combo_script_engine, m_parent->get_script_engine()))

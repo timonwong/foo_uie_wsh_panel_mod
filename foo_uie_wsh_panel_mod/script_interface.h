@@ -543,7 +543,6 @@ __interface IFbWindow: IDispatch
 	STDMETHOD(GetFontCUI)(UINT type, [defaultvalue("")] BSTR guidstr, [out,retval] IGdiFont ** pp);
 	STDMETHOD(GetColorDUI)(UINT type, [out,retval] DWORD * p);
 	STDMETHOD(GetFontDUI)(UINT type, [out,retval] IGdiFont ** pp);
-	//STDMETHOD(CreateObject)(BSTR progid_or_clsid, [out,retval] IUnknown ** pp);
 	STDMETHOD(CreateThemeManager)(BSTR classid, [out,retval] IThemeManager ** pp);
 };
 _COM_SMARTPTR_TYPEDEF(IFbWindow, __uuidof(IFbWindow));
