@@ -1,14 +1,13 @@
 // vi:set ft=javascript ff=dos ts=4 sts=4 sw=4 et:
 
 // USAGE:
-//   Put background.jpg, mask.png and image.jpg to {foobar2000 folder}\images
+//   mask.png and image.jpg to {foobar2000 folder}\images
 
 // ==PREPROCESSOR==
 // @name "ApplyMask"
 // @author "T.P Wang"
 // ==/PREPROCESSOR==
 
-var g_img_background = gdi.Image(fb.FoobarPath + "images\\background.jpg");
 var g_img_mask = gdi.Image(fb.FoobarPath + "images\\mask.png");
 var g_img = gdi.Image(fb.FoobarPath + "images\\image.jpg");
 var ww = 0,
@@ -16,9 +15,6 @@ var ww = 0,
 
 
 function on_paint(gr) {
-    // Draw background image
-    g_img_background && gr.DrawImage(g_img_background, 0, 0, ww, wh, 0, 0, g_img_background.Width, g_img_background.Height);
-
     if (g_img) {
         // Keep aspect ratio
         var scale_w = ww / g_img.Width;
@@ -40,8 +36,7 @@ function on_size() {
 }
 
 // Init
-
-function on_init() {
+(function(){
     // mask *MUST* be the same size as g_img
     var mask = g_img_mask.Resize(g_img.Width, g_img.Height);
 
@@ -51,5 +46,5 @@ function on_init() {
     // Dispose() method is added in WSH Panel Mod 1.1.10, in order to free unused resource
     // So, now CollectGarbage() is no longer encouraged
     mask.Dispose();
-}
-on_init();
+})();
+

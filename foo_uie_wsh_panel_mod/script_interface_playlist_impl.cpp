@@ -5,10 +5,11 @@
 #include "com_array.h"
 
 
-STDMETHODIMP FbPlaylistMangerTemplate::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize)
+STDMETHODIMP FbPlaylistMangerTemplate::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT * outSize)
 {
     TRACK_FUNCTION();
     
+    if (!outSize) return E_POINTER;
     if (!handles) return E_INVALIDARG;
     
     metadb_handle_list * metadbHandles = NULL;
@@ -16,21 +17,22 @@ STDMETHODIMP FbPlaylistMangerTemplate::InsertPlaylistItems(UINT playlistIndex, U
     if (!metadbHandles) return E_INVALIDARG;
 
     bit_array_val selection(select == VARIANT_TRUE);
-    static_api_ptr_t<playlist_manager>()->playlist_insert_items(playlistIndex, base, *metadbHandles, selection);
+    (*outSize) = static_api_ptr_t<playlist_manager>()->playlist_insert_items(playlistIndex, base, *metadbHandles, selection);
     return S_OK;
 }
 
-STDMETHODIMP FbPlaylistMangerTemplate::InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize)
+STDMETHODIMP FbPlaylistMangerTemplate::InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT * outSize)
 {
     TRACK_FUNCTION();
 
+    if (!outSize) return E_POINTER;
     if (!handles) return E_INVALIDARG;
 
     metadb_handle_list * metadbHandles = NULL;
     handles->get__ptr((void**)&metadbHandles);
     if (!metadbHandles) return E_INVALIDARG;
 
-    static_api_ptr_t<playlist_manager>()->playlist_insert_items_filter(playlistIndex, base, *metadbHandles, select == VARIANT_TRUE);
+    (*outSize) = static_api_ptr_t<playlist_manager>()->playlist_insert_items_filter(playlistIndex, base, *metadbHandles, select == VARIANT_TRUE);
     return S_OK;
 }
 
@@ -548,14 +550,14 @@ STDMETHODIMP FbPlaylistMangerTemplate::SetActivePlaylistContext()
 }
 
 
-STDMETHODIMP FbPlaylistManager::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize)
+STDMETHODIMP FbPlaylistManager::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT * outSize)
 {
     TRACK_FUNCTION();
 
     return FbPlaylistMangerTemplate::InsertPlaylistItems(playlistIndex, base, handles, select, outSize);
 }
 
-STDMETHODIMP FbPlaylistManager::InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize)
+STDMETHODIMP FbPlaylistManager::InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT * outSize)
 {
     TRACK_FUNCTION();
 
@@ -944,7 +946,7 @@ STDMETHODIMP FbPlaylistRecyclerManager::get_Name(UINT index, BSTR * outName)
         static_api_ptr_t<playlist_manager_v3>()->recycler_get_name(index, name);
         (*outName) = SysAllocString(pfc::stringcvt::string_wide_from_utf8_fast(name));
     }
-    catch (pfc::exception_invalid_params & ex)
+    catch (pfc::exception_invalid_params&)
     {
         return E_INVALIDARG;
     }
@@ -968,7 +970,7 @@ STDMETHODIMP FbPlaylistRecyclerManager::get_Content(UINT index, __interface IFbM
         static_api_ptr_t<playlist_manager_v3>()->recycler_get_content(index, handles);
         (*outContent) = new com_object_impl_t<FbMetadbHandleList>(handles);
     }
-    catch (pfc::exception_invalid_params & ex)
+    catch (pfc::exception_invalid_params&)
     {
         return E_INVALIDARG;
     }
@@ -990,7 +992,7 @@ STDMETHODIMP FbPlaylistRecyclerManager::get_Id(UINT index, UINT * outId)
     {
         (*outId) = static_api_ptr_t<playlist_manager_v3>()->recycler_get_id(index);
     }
-    catch (pfc::exception_invalid_params & ex)
+    catch (pfc::exception_invalid_params&)
     {
         return E_INVALIDARG;
     }
@@ -1018,7 +1020,7 @@ STDMETHODIMP FbPlaylistRecyclerManager::Purge(VARIANT affectedItems)
 
         plm->recycler_purge(mask);
     }
-    catch (pfc::exception_invalid_params & ex)
+    catch (pfc::exception_invalid_params&)
     {
         return E_INVALIDARG;
     }
@@ -1038,7 +1040,7 @@ STDMETHODIMP FbPlaylistRecyclerManager::Restore(UINT index)
     {
         static_api_ptr_t<playlist_manager_v3>()->recycler_restore(index);
     }
-    catch (pfc::exception_invalid_params & ex)
+    catch (pfc::exception_invalid_params&)
     {
         return E_INVALIDARG;
     }
@@ -1058,7 +1060,7 @@ STDMETHODIMP FbPlaylistRecyclerManager::RestoreById(UINT id)
     {
         static_api_ptr_t<playlist_manager_v3>()->recycler_restore_by_id(id);
     }
-    catch (pfc::exception_invalid_params & ex)
+    catch (pfc::exception_invalid_params&)
     {
         return E_INVALIDARG;
     }
@@ -1080,7 +1082,7 @@ STDMETHODIMP FbPlaylistRecyclerManager::FindById(UINT id, UINT * outId)
     {
         (*outId) = static_api_ptr_t<playlist_manager_v3>()->recycler_find_by_id(id);
     }
-    catch (pfc::exception_invalid_params & ex)
+    catch (pfc::exception_invalid_params&)
     {
         return E_INVALIDARG;
     }

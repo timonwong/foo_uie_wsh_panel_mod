@@ -1,3 +1,7 @@
+v1.5.0 Beta 2
+- FIX: Fix a bug that foobar2000 will crash when calling EvalWithMetadb() method from a metadb handle after disposed.
+- FIX: Fix "Variable uses an Automation type not supported in JScript" error while using plman.InsertPlaylistItems() and plman.InsertPlaylistItemsFilter().
+
 v1.5.0 Beta 1
 - ADD: Add support for new JScript engine (aka "Chakra") from IE9.
 

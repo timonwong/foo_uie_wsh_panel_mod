@@ -173,9 +173,11 @@ namespace helpers
             {
                 _variant_t index;
                 arrayReader.get_item(i, index);
-                if (FAILED(VariantChangeType(&index, &index, 0, VT_I4))) return E_INVALIDARG;
+                if (FAILED(VariantChangeType(&index, &index, 0, VT_I4))) return false;
                 out.set(index.lVal, true);
             }
+
+            return true;
         }
     };
 }

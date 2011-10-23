@@ -7,8 +7,8 @@ class FbPlaylistMangerTemplate
 {
 public:
     // Methods
-    static STDMETHODIMP InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize);
-    static STDMETHODIMP InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize);
+    static STDMETHODIMP InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT * outSize);
+    static STDMETHODIMP InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT * outSize);
     static STDMETHODIMP MovePlaylistSelection(UINT playlistIndex, int delta);
     static STDMETHODIMP RemovePlaylistSelection(UINT playlistIndex, VARIANT_BOOL crop);
     static STDMETHODIMP GetPlaylistSelectedItems(UINT playlistIndex, __interface IFbMetadbHandleList ** outItems);
@@ -67,8 +67,8 @@ protected:
 
 public:
     // Methods
-    STDMETHODIMP InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize);
-    STDMETHODIMP InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT ** outSize);
+    STDMETHODIMP InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT * outSize);
+    STDMETHODIMP InsertPlaylistItemsFilter(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT * outSize);
     STDMETHODIMP MovePlaylistSelection(UINT playlistIndex, int delta);
     STDMETHODIMP RemovePlaylistSelection(UINT playlistIndex, VARIANT_BOOL crop);
     STDMETHODIMP GetPlaylistSelectedItems(UINT playlistIndex, __interface IFbMetadbHandleList ** outItems);

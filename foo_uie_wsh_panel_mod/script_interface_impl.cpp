@@ -1410,7 +1410,6 @@ STDMETHODIMP FbMetadbHandle::Compare(IFbMetadbHandle * handle, VARIANT_BOOL * p)
     TRACK_FUNCTION();
 
     if (!p) return E_POINTER;
-
     *p = VARIANT_FALSE;
 
     if (handle)
@@ -1792,9 +1791,9 @@ STDMETHODIMP FbTitleFormat::EvalWithMetadb(IFbMetadbHandle * handle, BSTR * pp)
 
     metadb_handle * ptr = NULL;
     handle->get__ptr((void**)&ptr);
+    if (!ptr) return E_INVALIDARG;
 
     pfc::string8_fast text;
-
     ptr->format_title(NULL, text, m_obj, NULL);
     (*pp) = SysAllocString(pfc::stringcvt::string_wide_from_utf8_fast(text));
     return S_OK;
