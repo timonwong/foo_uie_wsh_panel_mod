@@ -8,6 +8,7 @@
 #include "user_message.h"
 #include "popup_msg.h"
 #include "dbgtrace.h"
+#include "obsolete.h"
 #include "../TextDesinger/OutlineText.h"
 #include "../TextDesinger/PngOutlineText.h"
 
@@ -1325,6 +1326,8 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfo(IFbFileInfo * fileinfo)
     fileinfo->get__ptr((void**)&info_ptr);
     if (!info_ptr) return E_INVALIDARG;
 
+    print_obsolete_message("UpdateFileInfo() is now obsolete, please use UpdateFileInfoSimple() instead.");
+
     io->update_info_async_simple(pfc::list_single_ref_t<metadb_handle_ptr>(m_handle),
         pfc::list_single_ref_t<const file_info *>(info_ptr),
         core_api::get_main_window(), metadb_io_v2::op_flag_delay_ui, NULL);
@@ -2523,6 +2526,12 @@ STDMETHODIMP MenuObj::AppendMenuItem(UINT flags, UINT item_id, BSTR text)
 
     if (!m_hMenu) return E_POINTER;
     if ((flags & MF_STRING) && !text) return E_INVALIDARG;
+    if ((flags & MF_POPUP) && !(item_id & 0xffff0000)) return E_INVALIDARG;
+
+    if (flags & MF_POPUP)
+    {
+        print_obsolete_message("Use AppendTo() method to create sub menu instead.");
+    }
 
     ::AppendMenu(m_hMenu, flags, item_id, text);
     return S_OK;
@@ -2533,7 +2542,6 @@ STDMETHODIMP MenuObj::AppendMenuSeparator()
     TRACK_FUNCTION();
 
     if (!m_hMenu) return E_POINTER;
-
     ::AppendMenu(m_hMenu, MF_SEPARATOR, 0, 0);
     return S_OK;
 }
@@ -2559,7 +2567,6 @@ STDMETHODIMP MenuObj::CheckMenuItem(UINT id_or_pos, VARIANT_BOOL check, VARIANT_
 
     UINT ucheck = bypos ? MF_BYPOSITION : MF_BYCOMMAND;
     if (check) ucheck = MF_CHECKED;
-
     ::CheckMenuItem(m_hMenu, id_or_pos, ucheck);
     return S_OK;
 }
@@ -2569,7 +2576,6 @@ STDMETHODIMP MenuObj::CheckMenuRadioItem(UINT first, UINT last, UINT check, VARI
     TRACK_FUNCTION();
 
     if (!m_hMenu) return E_POINTER;
-
     ::CheckMenuRadioItem(m_hMenu, first, last, check, bypos ? MF_BYPOSITION : MF_BYCOMMAND);
     return S_OK;
 }
@@ -2592,66 +2598,20 @@ STDMETHODIMP MenuObj::TrackPopupMenu(int x, int y, UINT flags, UINT * item_id)
     return S_OK;
 }
 
-//STDMETHODIMP MenuObj::GetMenuItemCount(INT * p)
-//{
-//	TRACK_FUNCTION();
-//
-//	if (!m_hMenu || !p) return E_POINTER;
-//
-//	*p = ::GetMenuItemCount(m_hMenu);
-//	return S_OK;
-//}
-//
-//STDMETHODIMP MenuObj::GetMenuItemID(int pos, UINT * p)
-//{
-//	TRACK_FUNCTION();
-//
-//	if (!m_hMenu || !p) return E_POINTER;
-//
-//	*p = ::GetMenuItemID(m_hMenu, pos);
-//	return S_OK;
-//}
-//
-//STDMETHODIMP MenuObj::GetMenuItemState(UINT id_or_pos, VARIANT_BOOL bypos, UINT * p)
-//{
-//	TRACK_FUNCTION();
-//
-//	if (!m_hMenu || !p) return E_POINTER;
-//
-//	*p = ::GetMenuState(m_hMenu, id_or_pos, bypos ? MF_BYPOSITION : MF_BYCOMMAND);
-//	return S_OK;
-//}
-//
-//STDMETHODIMP MenuObj::GetMenuItemString(UINT id_or_pos, VARIANT_BOOL bypos, BSTR * pp)
-//{
-//	TRACK_FUNCTION();
-//
-//	if (!m_hMenu || !pp) return E_POINTER;
-//
-//	pfc::array_t<wchar_t> buff;
-//	int len = ::GetMenuString(m_hMenu, id_or_pos, NULL, 0, bypos ? MF_BYPOSITION : MF_BYCOMMAND);
-//	
-//	buff.set_size(len + 1);
-//	::GetMenuString(m_hMenu, id_or_pos, buff.get_ptr(), len, bypos ? MF_BYPOSITION : MF_BYCOMMAND);
-//	buff[len] = 0;
-//
-//	*pp = SysAllocString(buff.get_ptr());
-//	return S_OK;
-//}
-//
-//STDMETHODIMP MenuObj::InsertMenuItem(UINT id_or_pos, UINT flags, UINT item_id, BSTR text, VARIANT_BOOL bypos)
-//{
-//	TRACK_FUNCTION();
-//
-//	if (!m_hMenu) return E_POINTER;
-//	if ((flags & MF_STRING) && !text) return E_INVALIDARG;
-//
-//	flags &= ~(MF_BYPOSITION | MF_BYCOMMAND);
-//	flags |= bypos ? MF_BYPOSITION : MF_BYCOMMAND;
-//
-//	::InsertMenu(m_hMenu, id_or_pos, flags, item_id, text);
-//	return S_OK;
-//}
+STDMETHODIMP MenuObj::AppendTo(IMenuObj * parent, UINT flags, BSTR text)
+{
+    TRACK_FUNCTION();
+
+    if (!parent) return E_POINTER;
+    if (!m_hMenu) return E_POINTER;
+    if (!text) return E_INVALIDARG;
+
+    MenuObj * pMenuParent = static_cast<MenuObj *>(parent);
+    if (::AppendMenu(pMenuParent->m_hMenu, flags | MF_STRING | MF_POPUP, UINT_PTR(m_hMenu), text))
+        m_has_detached = true;
+    return S_OK;
+}
+
 
 STDMETHODIMP ContextMenuManager::InitContext(VARIANT handle)
 {

@@ -17,7 +17,6 @@ Properties:
     // [1.5.0 Preview 2] New:
     (readonly) int Style;
 Methods:
-    // [1.1.10] New:
     void Dispose();
 }
 
@@ -30,7 +29,6 @@ Methods:
     IGdiBitmap Clone(x, y, w, h);
     void RotateFlip(mode);
     IGdiBitmap ApplyAlpha(alpha);
-    // [1.1.10] New:
     // Changes will be saved in the current bitmap
     boolean ApplyMask(IGdiBitmap);
     // Create a DDB bitmap from IGdiBitmap, which is used in GdiDrawBitmap()
@@ -39,9 +37,7 @@ Methods:
     IGdiGraphics GetGraphics();
     void ReleaseGraphics(IGdiGraphics);
     void BoxBlur(radius, iteration = 1);
-    // [1.1.10] New:
     IGdiBitmap Resize(w, h);
-    // [1.1.10] New:
     void Dispose();
 }
     
@@ -50,7 +46,6 @@ Properties:
     (readonly) int Width;
     (readonly) int Height;
 Methods:
-    // [1.1.10] New:
     void Dispose();
 }
 
@@ -60,9 +55,7 @@ Methods:
     // [1.3.4] Updated:
     // focus: Specify where the center color will be at its highest intensity, from 0.0 to 1.0
     void FillGradRect(x, y, w, h, angle, color1, color2, focus = 1.0);
-    // [1.1.5] New:
     void FillRoundRect(x, y, w, h, arc_width, arc_height, color);
-    // [1.1.5] New:
     void FillEllipse(x, y, w, h, color);
     // [1.3,2] New:
     // fillmode: 0 - Alternate, 1 - Winding
@@ -70,9 +63,7 @@ Methods:
     void FillPolygon(color, fillmode, points);
     void DrawLine(x1, y1, x2, y2, line_width, color);
     void DrawRect(x, y, w, h, line_width, color);
-    // [1.1.5] New:
     void DrawRoundRect(x, y, w, h, arc_width, arc_height, line_width, color);
-    // [1.1.5] New:
     void DrawEllipse(x, y, w, h, line_width, color);
     // [1.3.2] New:
     // points is either a VBArray or JScript array.
@@ -117,7 +108,6 @@ Methods:
     void SetSmoothingMode(mode);
     // See Flags.txt meanings of modes.
     void SetInterpolationMode(mode);
-    // [1.1.10] New:
     void GdiAlphaBlend(IGdiRawBitmap, dstX, dstY, dstW, dstH, srcX, srcY, srcW, srcH, alpha = 255);
 }
 
@@ -139,7 +129,6 @@ Methods:
     IGdiBitmap Image(path);
     // Create an image. By default, this image is transparent
     IGdiBitmap CreateImage(w, h);
-    // [1.2.1] New:
     // [1.3.0] Add: pngmode
     IStyleTextRender CreateStyleTextRender(pngmode = false);
     // [1.3.2] New:
@@ -148,7 +137,6 @@ Methods:
 }
 
 
-// [1.2.1] New interface
 interface IStyleTextRender {
 Methods:
     // ---- Outline Mode ----
@@ -178,7 +166,6 @@ Methods:
 }
 
 
-// [1.1.0] Updated:
 interface IFbFileInfo {
 Properties:
     (readonly) int MetaCount;
@@ -186,28 +173,22 @@ Properties:
 
 Methods:
     int MetaValueCount(idx);
-    // [1.1.5] New: return idx
+    // returns idx
     int MetaFind(name);
-    // [1.1.5] New: return idx
+    // returns idx
     int InfoFind(name);
     String MetaName(idx);
     String MetaValue(idx, vidx);
-    // [1.1.10] New:
     void MetaRemoveField(name);
-    // [1.1.10] New: return idx
     int MetaAdd(name, value);
-    // [1.1.10] New:
     void MetaInsertValue(idx, vidx, value);
     String InfoName(idx);
     String InfoValue(idx);
-    // [1.1.0] New:
     void MetaSet(name, value);
-    // [1.1.10] New:
     void Dispose();
 }
 
 
-// [1.1.0] New
 interface IFbMetadbHandle {
 Properties:
     (readonly) String Path;
@@ -218,7 +199,7 @@ Properties:
     
 Methods:
     IFbFileInfo GetFileInfo();
-    // [Depreciated] do not use, use UpdateFileInfoSimple instead.
+    // [Obsolete] do not use, use UpdateFileInfoSimple instead.
     void UpdateFileInfo(IFbFileInfo);
     // It's recommended to use this method if you want to update tags
     // if value is a empty string, field will be removed
@@ -230,7 +211,6 @@ Methods:
     // Compare two IFbMetadbHandle instances, pointer only.
     //   If you want to compare them physically, use the "RawPath" property, and compare these two values.
     boolean Compare(IFbMetadbHandle);
-    // [1.1.10] New:
     void Dispose();
 }
 
@@ -283,21 +263,18 @@ Methods:
 
 interface IFbTitleFormat {
 Methods:
-    // [1.1.2] Updated:
     // By default, returns a valid value if there is track playing.
     // force: while true, Eval() will always return a valid value even there is no playing track, useful for
     //   title formatting without track-related fields like "%title%", "%artist%", etc.
     String Eval(force = false);
-    // [1.1.0] New:
     String EvalWithMetadb(IFbMetadbHandle);
-    // [1.1.10] New:
     void Dispose();
 }
 
 
 interface IMenuObj {
 Properties:
-    // [1.1.8] Fixed:
+    // [1.5.0 Beta 2]: NOTE: In order to create popup menus, please use AppendTo() method.
     (readonly) uint ID;
 
 Methods:
@@ -319,26 +296,23 @@ Methods:
     // [1.4.0 Beta 3] Updated:
     // flags: Control popup positions and animations. (See Flags.txt)
     int TrackPopupMenu(x, y, flags = 0);
-    // [1.1.10] New:
+    // [1.5.0 Beta 2] New:
+    void AppendTo(parentMenu, flags, text);
     void Dispose();
 }
 
 
 interface IContextMenuManager {
 Methods:
-    // [1.1.8] New:
     // [1.4.0] Changed: accept handle list.
     void InitContext(handle_or_handles);
     void InitNowPlaying();
     void BuildMenu(IMenuObj, base_id, max_id);
-    // [1.2.1] Changed, return boolean
     boolean ExecuteByID(id);
-    // [1.1.10] New:
     void Dispose();
 }
 
 
-// [1.2.1] New
 interface IMainMenuManager {
 Methods:
     // NOTE: Only root menu name
@@ -352,7 +326,6 @@ Methods:
 
 interface IFbProfiler {
 Properties:
-    // [1.1.4] New:
     // in ms
     int Time;
     
@@ -402,9 +375,7 @@ Properties:
     (read, write) uint PlaybackOrder;
     // [1.0.2] New:
     (read, write) boolean StopAfterCurrent;
-    // [1.1.1] New:
     (read, write) boolean CursorFollowPlayback;
-    // [1.1.1] New:
     (read, write) boolean PlaybackFollowCursor;
     (read, write) float Volume;
     // [1.3.2] New:
@@ -417,16 +388,13 @@ Properties:
     (readonly) uint PlaylistItemCount(idx);
 
 Methods:
-    // [1.1.4] Updated:
     void trace(...);
     // [1.0.4] New:
     // iconid: See Flags.txt for more information
     void ShowPopupMessage(msg, title = "WSH Panel Mod", iconid = 0);
     IFbProfiler CreateProfiler(name = "");
     IFbTitleFormat TitleFormat(expression);
-    // [1.1.0] Updated:
     IFbMetadbHandle GetNowPlaying();
-    // [1.1.0] Updated:
     // [1.3.0] Updated:
     // force: if this parameter is set to false, GetFocusItem() will only look for the focus item, otherwise, 
     //   if the focus item not found, find the first item of the active playlist.
@@ -481,7 +449,6 @@ Methods:
     //          4 - flag_view_reduced
     //          8 - flag_view_full
     boolean RunContextCommand(command, flags = 0);
-    // [1.1.2] New:
     // [1.4.0] Changed: Accept IFbMetadbHandleList interface for metadb handle list.
     // [1.5.0 Preview 2] Changed: Add new "flags" parameter
     // flags:   0 - default (depends on whether SHIFT key is pressed, flag_view_reduced or flag_view_full is selected)
@@ -489,7 +456,6 @@ Methods:
     //          8 - flag_view_full
     boolean RunContextCommandWithMetadb(command, handle_or_handles, flags = 0);
     IContextMenuManager CreateContextMenuManager();
-    // [1.1.7] New:
     boolean IsMetadbInMediaLibrary(metadb);
     // [1.3.2] New:
     String GetPlaylistName(idx);
@@ -526,11 +492,9 @@ Properties:
     (readonly) uint ID;
 
 Methods:
-    // [1.1.10] New:
     void Dispose();
 }
 
-// [1.1.5] New:
 interface IFbTooltip {
 Properties:
     (read, write) Text; // Set tooltip text
@@ -548,9 +512,7 @@ Methods:
     // NOTE: Don't try to update tooltip text when tooltip is activated, because it will flick in Windows Vista/7.
     void Activate();
     void Deactivate();
-    // [1.1.6] New:
     void SetMaxWidth(width);
-    // [1.1.10] New:
     void Dispose();
     // [1.3.4] New:
     // in milliseconds
@@ -597,20 +559,15 @@ Methods:
 
 interface IFbWindow {
 Properties:
-    // [1.1.10] New:
     (readonly) int ID;
     (readonly) int Width;
     (readonly) int Height;
     // [1.3.0] New:
     // Returns: 0 - CUI, 1 - DUI
     (readonly) int InstanceType;
-    // [1.2.0] New:
     (read, write) int MaxWidth;
-    // [1.2.0] New:
     (read, write) int MaxHeight;
-    // [1.2.0] New:
     (read, write) int MinWidth;
-    // [1.2.0] New:
     (read, write) int MinHeight;
     // [1.3.2] New:
     // See Flags.txt for more details
@@ -628,38 +585,37 @@ Methods:
     ITimerObj CreateTimerTimeout(timeout);
     // Create an periodic timer, this timer will occur periodicly.
     ITimerObj CreateTimerInterval(delay);
-    // [Depreciated] Instead of KillTimer, you should use ITimerObj.Dispose()
+    // [Obsolete] Instead of KillTimer, you should use ITimerObj.Dispose()
     void KillTimer(ITimerObj);
-    // [1.1.1] New: Notify other wsh panels with specified info thru callback function on_notify_data(name, info).
+    // Notify other wsh panels with specified info thru callback function on_notify_data(name, info).
     // [1.3.0] Update:
     //  info can be any type now, but be aware of passing arrays and objects (because they may be unrecognized between
     //     JScript and VBScript). However, VBArrays, strings, booleans, integers and floats, are safe to use.
     void NotifyOthers(name, info);
-    // [1.1.3] New: These two methods below are in cooperation with callback on_metadb_changed().
+    // These two methods below are in cooperation with callback on_metadb_changed().
     // [1.4.0] Changed:
     // NOTE: Make sure you have read Preprocessors.txt if you are using "feature" directive.
-    // [Depreciated] see on_metadb_changed() in Callbacks.txt
+    // [Obsolete] see on_metadb_changed() in Callbacks.txt
     void WatchMetadb(IFbMetadbHandle);
-    // [1.1.3] New:
     // [1.4.0] Changed:
     // NOTE: Make sure you have read Preprocessors.txt if you are using "feature" directive.
-    // [Depreciated] see on_metadb_changed() in Callbacks.txt
+    // [Obsolete] see on_metadb_changed() in Callbacks.txt
     void UnWatchMetadb();
-    // [1.1.5] New: Create a tooltip object
+    // Create a tooltip object
     IFbTooltip CreateTooltip();
-    // [1.1.7] New: Show configuration window of current panel
+    // Show configuration window of current panel
     void ShowConfigure();
-    // [1.1.7] New: Show properties window of current panel
+    // Show properties window of current panel
     void ShowProperties();
-    // [1.1.7] New: Get value of name from properties
+    // Get value of name from properties
     // If no value is present, store the defaultval for the name and returns
     variant GetProperty(name[, defaultval]);
-    // [1.1.7] New: Set property value, if val is invalid, the remove it from properties
+    // Set property value, if val is invalid, the remove it from properties
     // property values will be saved as per-instance config in CUI, and can be exported to FCLs.
     void SetProperty(name, val);
-    // [1.1.10] New: Retrieve pseudo transparent bakground image.
+    // Retrieve pseudo transparent bakground image.
     IGdiBitmap GetBackgroundImage();
-    // [1.1.11] New: Set mouse cursor
+    // Set mouse cursor
     // For standard cursors, see Flags.txt for more details.
     void SetCursor(id);
     // [1.3.0] New:
@@ -687,17 +643,14 @@ Methods:
 }
 
 
-// [1.1.0] New:
 interface IWSHUtils {
 Methods:
-    // [1.1.0] New: 
     // While is_dll is true, check component file name, for example: utils.CheckComponent("foo_uie_wsh_panel_mod", true);
     //   otherwise, check the name of the component only.
     boolean CheckComponent(name, is_dll = false);
-    // [1.1.0] New:
     // name: can be either in english or the localized name in your os.
     boolean CheckFont(name);
-    // [1.1.0] New: For art_id, see Flags.txt: AlbumArtId
+    // For art_id, see Flags.txt: AlbumArtId
     // need_stub: Determine whether querying for stub image to display when there's no album art to show
     // this is set in "Advanced" page of fb2k preferences
     // return null if failed
@@ -706,40 +659,32 @@ Methods:
     // [1.3.0] New;
     // Use this instead of GetAlbumArt() to retrieve album art data (support fb2k 1.0 search patterns).
     IGdiBitmap GetAlbumArtV2(metadb, art_id = 0, need_stub = true);
-    // [1.1.7] New:
     // Only read embedded album art
     IGdiBitmap GetAlbumArtEmbedded(rawpath, art_id = 0);
-    // [1.1.10] New:
     // [1.3.0] CHG: Support fb2k 1.0 album art search patterns.
     // [1.3.3] CHG: New no_load parameter, if true, the image will not load into memory. so parameter "image" will be 
     //     set to null in on_get_album_art_done() callback.
     // HINT: window_id can be retrieved by window.ID
     // NOTE: This function returns immediately, album art will be sent to on_get_album_art_done() callback as soon as album art is found
     uint GetAlbumArtAsync(window_id, IFbMetadbHandle, art_id = 0, need_stub = true, only_embed = false, no_load = false);
-    // [1.1.4] New: A INI file should like this:
+    // An INI file should like this:
     // [section]
     // key=val
     // NOTE: ReadINI() return up to 255 characters, more characters will be truncated, so use INI files to read/write simple values
     String ReadINI(filename, section, key[, defaultval]);
-    // [1.1.4] New:
     boolean WriteINI(filename, section, key, val);
-    // [1.1.7] New:
     // For virtual key codes: http://msdn.microsoft.com/en-us/library/ms927178.aspx
     boolean IsKeyPressed(vkey);
-    // [1.1.8] New:
     // Using Microsoft MS-DOS wildcards match type. ex ("*.txt", "abc?.tx?")
     boolean PathWildcardMatch(pattern, str);
-    // [1.2.0] New:
     // [1.4.0] Updated:
     // Returns null if file cannot be read or doesn't exist.
     // If codepabe == 0, text file can be either: UTF-16 with BOM, UTF-8 with BOM and ANSI.
     // You can consider using helper routines for codepage in Codepages.txt.
     String ReadTextFile(filename, codepage = 0);
-    // [1.2.1] New:
     // index: http://msdn.microsoft.com/en-us/library/ms724371%28VS.85%29.aspx
     // Returns 0 if failed.
     uint GetSysColor(index);
-    // [1.2.1] New
     // index: http://msdn.microsoft.com/en-us/library/ms724385%28VS.85%29.aspx
     // Returns 0 if failed.
     int GetSystemMetrics(index);

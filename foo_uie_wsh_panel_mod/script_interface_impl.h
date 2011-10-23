@@ -481,8 +481,9 @@ class MenuObj : public IDisposableImpl4<IMenuObj>
 protected:
 	HMENU m_hMenu;
 	HWND  m_wnd_parent;
+    bool  m_has_detached;
 
-	MenuObj(HWND wnd_parent) : m_wnd_parent(wnd_parent)
+	MenuObj(HWND wnd_parent) : m_wnd_parent(wnd_parent), m_has_detached(false)
 	{
 		m_hMenu = ::CreatePopupMenu();
 	}
@@ -491,7 +492,7 @@ protected:
 
 	virtual void FinalRelease()
 	{
-		if (m_hMenu && IsMenu(m_hMenu))
+		if (!m_has_detached && m_hMenu && IsMenu(m_hMenu))
 		{
 			DestroyMenu(m_hMenu);
 			m_hMenu = NULL;
@@ -506,11 +507,7 @@ public:
 	STDMETHODIMP CheckMenuItem(UINT id_or_pos, VARIANT_BOOL check, VARIANT_BOOL bypos);
 	STDMETHODIMP CheckMenuRadioItem(UINT first, UINT last, UINT check, VARIANT_BOOL bypos);
 	STDMETHODIMP TrackPopupMenu(int x, int y, UINT flags, UINT * item_id);
-	//STDMETHODIMP GetMenuItemCount(INT * p);
-	//STDMETHODIMP GetMenuItemID(int pos, UINT * p);
-	//STDMETHODIMP GetMenuItemState(UINT id_or_pos, VARIANT_BOOL bypos, UINT * p);
-	//STDMETHODIMP GetMenuItemString(UINT id_or_pos, VARIANT_BOOL bypos, BSTR * pp);
-	//STDMETHODIMP InsertMenuItem(UINT id_or_pos, UINT flags, UINT item_id, BSTR text, VARIANT_BOOL bypos);
+    STDMETHODIMP AppendTo(IMenuObj * parent, UINT flags, BSTR text);
 };
 
 class TimerObj : public IDisposableImpl4<ITimerObj>

@@ -257,6 +257,9 @@
     <ClInclude Include="script_interface_dragsource_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="obsolete.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\default.js">

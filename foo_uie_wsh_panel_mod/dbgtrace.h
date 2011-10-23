@@ -51,25 +51,6 @@ public:
 
 				formatter << "Additional Info:\n" << "==> IDispatch::Invoke: flags=\"0x" << pfc::format_hex_lowercase(sm_last_flag);
 
-				//switch (sm_last_flag)
-				//{
-				//case DISPATCH_METHOD:
-				//	formatter << "DISPATCH_METHOD";
-				//	break;
-
-				//case DISPATCH_PROPERTYGET:
-				//	formatter << "DISPATCH_PROPERTYGET";
-				//	break;
-
-				//case DISPATCH_PROPERTYPUT:
-				//	formatter << "DISPATCH_PROPERTYPUT";
-				//	break;
-
-				//case DISPATCH_PROPERTYPUTREF:
-				//	formatter << "DISPATCH_PROPERTYPUTREF";
-				//	break;
-				//}
-
 				if (SUCCEEDED(sm_last_typeinfo->GetTypeAttr(&ptype_attr)))
 				{
 					guid = ptype_attr->guid;
@@ -96,4 +77,5 @@ private:
 FOOGUIDDECL ITypeInfo * disp_call_tracker::sm_last_typeinfo = NULL;
 FOOGUIDDECL DISPID disp_call_tracker::sm_last_dispid = 0;
 FOOGUIDDECL WORD disp_call_tracker::sm_last_flag = 0;
+
 #endif
