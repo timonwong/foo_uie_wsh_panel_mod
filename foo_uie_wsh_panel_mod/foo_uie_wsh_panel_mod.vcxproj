@@ -174,6 +174,7 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClInclude Include="config.h" />
     <ClInclude Include="dbgtrace.h" />
     <ClInclude Include="delay_loader.h" />
+    <ClInclude Include="IDataObjectImpl.h" />
     <ClInclude Include="obsolete.h" />
     <ClInclude Include="IDropSourceImpl.h" />
     <ClInclude Include="global_cfg.h" />
@@ -229,6 +230,7 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClInclude Include="thread_pool.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="IDataObjectImpl.cpp" />
     <None Include="res\default.js" />
   </ItemGroup>
   <ItemGroup>

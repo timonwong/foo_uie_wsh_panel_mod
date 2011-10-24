@@ -8,6 +8,7 @@ v1.5.0 Beta 2
 
 v1.5.0 Beta 1
 - ADD: Add support for new JScript engine (aka "Chakra") from IE9.
+       In order to get it work, select "JScript9" from the script editior, and ensure the IE9 is installled, or it will fallback to the default JScript engine.
 
 v1.5.0 Preview 9
 - FIX: Fix a problem that InsertPlaylistItems() and InsertPlaylistItemsFilter() don't work at all.

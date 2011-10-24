@@ -954,14 +954,23 @@ STDMETHODIMP GdiUtils::Font(BSTR name, float pxSize, int style, IGdiFont** pp)
         return S_OK;
     }
 
-    // Gen HFONT
-    Gdiplus::Bitmap img(1, 1, PixelFormat32bppARGB);
-    Gdiplus::Graphics g(&img);
-    LOGFONT logfont = { 0 };
-    HFONT hFont = NULL;
-
-    font->GetLogFontW(&g, &logfont);
-    hFont = CreateFontIndirect(&logfont);
+    // Generate HFONT
+    // The benefit of replacing Gdiplus::Font::GetLogFontW is that you can get it work with CCF/OpenType fonts.
+    HFONT hFont = CreateFont(
+            -(int)pxSize,
+            0,
+            0,
+            0,
+            (style & Gdiplus::FontStyleBold) ? FW_BOLD : FW_NORMAL,
+            (style & Gdiplus::FontStyleItalic) ? TRUE : FALSE,
+            (style & Gdiplus::FontStyleUnderline) ? TRUE : FALSE,
+            (style & Gdiplus::FontStyleStrikeout) ? TRUE : FALSE,
+            DEFAULT_CHARSET,
+            OUT_DEFAULT_PRECIS,
+            CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY,
+            DEFAULT_PITCH | FF_DONTCARE,
+            name);
     (*pp) = new com_object_impl_t<GdiFont>(font, hFont);
     return S_OK;
 }
