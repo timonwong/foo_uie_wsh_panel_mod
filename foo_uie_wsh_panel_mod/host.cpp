@@ -1066,7 +1066,8 @@ HRESULT ScriptHost::InitScriptEngineByName(const wchar_t * engineName)
         hr = m_script_engine.CreateInstance(engineName, NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER);
     }
 
-    if (wcsncmp(engineName, L"JScript", _countof(L"JScript")))
+    // In order to support new features after JScript 5.8
+    if (wcsncmp(engineName, L"JScript", _countof(L"JScript")) == 0)
     {
         IActiveScriptProperty *pActScriProp = NULL;
         
