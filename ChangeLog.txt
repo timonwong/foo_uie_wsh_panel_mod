@@ -1,6 +1,8 @@
 v1.5.0 Beta 3
 - ADD: Add AppendTo() method to IMenuObj interface.
 - CHG: Creating sub menu by AppendMenuItem() is now Obsolete, use AppendTo() method instead.
+- FIX: Fix a bug that GdiDrawText() doen't support OpenType fonts.
+- FIX: JScript and JScript9 now can use new features which are shipped with JScript 5.8 or later, such as native JSON support.
 
 v1.5.0 Beta 2
 - FIX: Fix a bug that foobar2000 will crash when calling EvalWithMetadb() method from a metadb handle after disposed.

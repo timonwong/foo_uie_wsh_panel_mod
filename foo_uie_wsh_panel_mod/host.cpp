@@ -737,6 +737,7 @@ ScriptHost::ScriptHost(HostComm * host)
 	, m_dwRef(1)
 	, m_engine_inited(false)
 	, m_has_error(false)
+    , m_lastSourceContext(0)
 {
 	if (g_cfg_debug_mode)
 	{
@@ -770,6 +771,23 @@ ScriptHost::~ScriptHost()
 		m_debug_application->Close();
 		m_debug_application.Release();
 	}
+}
+
+STDMETHODIMP_(ULONG) ScriptHost::AddRef()
+{
+    return InterlockedIncrement(&m_dwRef);
+}
+
+STDMETHODIMP_(ULONG) ScriptHost::Release()
+{
+    ULONG n = InterlockedDecrement(&m_dwRef); 
+
+    if (n == 0)
+    {
+        delete this;
+    }
+
+    return n;
 }
 
 STDMETHODIMP ScriptHost::GetLCID(LCID* plcid)
@@ -962,11 +980,81 @@ HRESULT ScriptHost::Initialize()
 	script_preprocessor preprocessor(wcode.get_ptr());
 	preprocessor.process_script_info(m_host->GetScriptInfo());
 
-    if (wcscmp(wname.get_ptr(), L"JScript9") == 0) 
+    hr = InitScriptEngineByName(wname);
+
+	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptSite(this);
+	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
+	if (SUCCEEDED(hr)) hr = parser->InitNew();
+
+    EnableSafeModeToScriptEngine(g_cfg_safe_mode);
+
+	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"window", SCRIPTITEM_ISVISIBLE);
+	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
+	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"fb", SCRIPTITEM_ISVISIBLE);
+	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
+    if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"plman", SCRIPTITEM_ISVISIBLE);
+	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
+	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
+    if (SUCCEEDED(hr)) hr = ProcessImportedScripts(preprocessor, parser);
+
+	// Parse main script
+	DWORD source_context = 0;
+	if (SUCCEEDED(hr)) hr = GenerateSourceContext(NULL, wcode, source_context);
+    m_contextToPathMap[source_context] = "<main>";
+
+	if (SUCCEEDED(hr)) hr = parser->ParseScriptText(wcode.get_ptr(), NULL, NULL, NULL, 
+		source_context, 0, SCRIPTTEXT_HOSTMANAGESSOURCE | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
+
+	if (SUCCEEDED(hr)) m_engine_inited = true;
+	return hr;
+}
+
+void ScriptHost::EnableSafeModeToScriptEngine(bool enable)
+{
+    if (!enable)
+        return;
+
+    _COM_SMARTPTR_TYPEDEF(IObjectSafety, IID_IObjectSafety);
+    IObjectSafetyPtr psafe;
+
+    if (SUCCEEDED(m_script_engine->QueryInterface(&psafe)))
+    {
+        psafe->SetInterfaceSafetyOptions(IID_IDispatch, 
+            INTERFACE_USES_SECURITY_MANAGER, INTERFACE_USES_SECURITY_MANAGER);
+    }
+}
+
+HRESULT ScriptHost::ProcessImportedScripts(script_preprocessor &preprocessor, IActiveScriptParsePtr &parser)
+{
+    // processing "@import"
+    script_preprocessor::t_script_list scripts;
+    HRESULT hr = preprocessor.process_import(m_host->GetScriptInfo(), scripts);
+
+    for (t_size i = 0; i < scripts.get_count(); ++i)
+    {
+        DWORD source_context;
+
+        if (SUCCEEDED(hr)) hr = GenerateSourceContext(scripts[i].path.get_ptr(), scripts[i].code.get_ptr(), source_context);
+        if (FAILED(hr)) break;
+        m_contextToPathMap[source_context] = pfc::stringcvt::string_utf8_from_wide(scripts[i].path.get_ptr());
+        hr = parser->ParseScriptText(scripts[i].code.get_ptr(), NULL, NULL, NULL, 
+            source_context, 0, SCRIPTTEXT_HOSTMANAGESSOURCE | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
+    }
+
+    return hr;
+}
+
+HRESULT ScriptHost::InitScriptEngineByName(const wchar_t * engineName)
+{
+    HRESULT hr;
+
+    if (wcscmp(engineName, L"JScript9") == 0) 
     {
         // Try using JScript9 from IE9
-        CLSID clsid = GUID_NULL;
-        CLSIDFromString(L"{16d51579-a30b-4c8b-a276-0ff4dc41e755}", &clsid);
+        // {16d51579-a30b-4c8b-a276-0ff4dc41e755}
+        static const CLSID clsid = 
+        {0x16d51579, 0xa30b, 0x4c8b, {0xa2, 0x76, 0x0f, 0xf4, 0xdc, 0x41, 0xe7, 0x55 } };
+
         if (FAILED(hr = m_script_engine.CreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER)))
         {
             // fallback to default JScript engine.
@@ -975,67 +1063,29 @@ HRESULT ScriptHost::Initialize()
     }
     else
     {
-	    hr = m_script_engine.CreateInstance(wname.get_ptr(), NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER);
+        hr = m_script_engine.CreateInstance(engineName, NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER);
     }
-	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptSite(this);
-	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
-	if (SUCCEEDED(hr)) hr = parser->InitNew();
 
-	if (g_cfg_safe_mode)
-	{
-		_COM_SMARTPTR_TYPEDEF(IObjectSafety, IID_IObjectSafety);
+    if (wcsncmp(engineName, L"JScript", _countof(L"JScript")))
+    {
+        IActiveScriptProperty *pActScriProp = NULL;
+        
+        if (SUCCEEDED(m_script_engine->QueryInterface(IID_IActiveScriptProperty, (void **)&pActScriProp)))
+        {
+            VARIANT scriptLangVersion;
+            scriptLangVersion.vt = VT_I4;
+            scriptLangVersion.lVal = SCRIPTLANGUAGEVERSION_5_8;
+            if (FAILED(pActScriProp->SetProperty(SCRIPTPROP_INVOKEVERSIONING, NULL, &scriptLangVersion)))
+            {
+                // Reset to default
+                scriptLangVersion.lVal = SCRIPTLANGUAGEVERSION_DEFAULT;
+                pActScriProp->SetProperty(SCRIPTPROP_INVOKEVERSIONING, NULL, &scriptLangVersion);
+            }
+            pActScriProp->Release();
+        }
+    }
 
-		IObjectSafetyPtr psafe;
-
-		if (SUCCEEDED(m_script_engine->QueryInterface(&psafe)))
-		{
-			psafe->SetInterfaceSafetyOptions(IID_IDispatch, 
-                INTERFACE_USES_SECURITY_MANAGER, INTERFACE_USES_SECURITY_MANAGER);
-		}
-	}
-
-	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"window", SCRIPTITEM_ISVISIBLE);
-	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
-	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"fb", SCRIPTITEM_ISVISIBLE);
-	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"utils", SCRIPTITEM_ISVISIBLE);
-    if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"plman", SCRIPTITEM_ISVISIBLE);
-	//if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_STARTED);
-	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
-	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
-	
-	// processing "@import"
-	{
-		script_preprocessor::t_script_list scripts;
-		if (SUCCEEDED(hr)) hr = preprocessor.process_import(m_host->GetScriptInfo(), scripts);
-
-		for (t_size i = 0; i < scripts.get_count(); ++i)
-		{
-			DWORD source_context;
-
-			if (SUCCEEDED(hr)) 
-				hr = GenerateSourceContext(scripts[i].path.get_ptr(), scripts[i].code.get_ptr(), source_context);
-
-			if (SUCCEEDED(hr))
-			{
-				hr = parser->ParseScriptText(scripts[i].code.get_ptr(), NULL, NULL, NULL, 
-					source_context, 0, SCRIPTTEXT_HOSTMANAGESSOURCE | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
-			}
-			else
-			{
-				break;
-			}
-		}
-	}
-
-	// Parse main script
-	DWORD source_context;
-	if (SUCCEEDED(hr)) hr = GenerateSourceContext(NULL, wcode, source_context);
-	if (SUCCEEDED(hr)) hr = parser->ParseScriptText(wcode.get_ptr(), NULL, NULL, NULL, 
-		source_context, 0, SCRIPTTEXT_HOSTMANAGESSOURCE | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
-
-	//
-	if (SUCCEEDED(hr)) m_engine_inited = true;
-	return hr;
+    return hr;
 }
 
 void ScriptHost::Finalize()
@@ -1046,7 +1096,6 @@ void ScriptHost::Finalize()
 	{
 		// Call GC explicitly 
  		IActiveScriptGarbageCollector * gc = NULL;
- 
  		if (SUCCEEDED(m_script_engine->QueryInterface(IID_IActiveScriptGarbageCollector, (void **)&gc)))
  		{
  			gc->CollectGarbage(SCRIPTGCTYPE_EXHAUSTIVE);
@@ -1055,7 +1104,6 @@ void ScriptHost::Finalize()
 
 		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
 		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
-
 		m_engine_inited = false;
 	}
 
@@ -1071,6 +1119,7 @@ void ScriptHost::Finalize()
 	}
 
 	m_debug_docs.remove_all();
+    m_contextToPathMap.remove_all();
 
 	if (m_script_engine)
 	{
@@ -1112,6 +1161,17 @@ HRESULT ScriptHost::InvokeV(LPOLESTR name, VARIANTARG * argv /*= NULL*/, UINT ar
 			// breakpoint
 			__debugbreak();
 		}
+        catch (_com_error & e)
+        {
+            pfc::print_guid guid(m_host->get_config_guid());
+
+            console::printf(WSPM_NAME " (%s): Unhandled COM Error: \"%s\", will crash now...", 
+                m_host->GetScriptInfo().build_info_string().get_ptr(), 
+                pfc::stringcvt::string_utf8_from_wide(e.ErrorMessage()).get_ptr());
+            PRINT_DISPATCH_TRACK_MESSAGE();
+            // breakpoint
+            __debugbreak();
+        }
 		catch (...)
 		{
 			pfc::print_guid guid(m_host->get_config_guid());
@@ -1129,37 +1189,37 @@ HRESULT ScriptHost::InvokeV(LPOLESTR name, VARIANTARG * argv /*= NULL*/, UINT ar
 
 HRESULT ScriptHost::GenerateSourceContext(const wchar_t * path, const wchar_t * code, DWORD & source_context)
 {
-	pfc::stringcvt::string_wide_from_utf8_fast namebuf, guidstring;
+	pfc::stringcvt::string_wide_from_utf8_fast name, guidString;
 	HRESULT hr = S_OK;
 	t_size len = wcslen(code);
 
 	if (!path) 
 	{
 		if (m_host->GetScriptInfo().name.is_empty())
-			namebuf.convert(pfc::print_guid(m_host->GetGUID()));
+			name.convert(pfc::print_guid(m_host->GetGUID()));
 		else
-			namebuf.convert(m_host->GetScriptInfo().name);
+			name.convert(m_host->GetScriptInfo().name);
 
-		guidstring.convert(pfc::print_guid(m_host->GetGUID()));
+		guidString.convert(pfc::print_guid(m_host->GetGUID()));
 	}	
 
 	if (m_debug_manager) 
 	{
-		IDebugDocumentHelperPtr helper;
+		IDebugDocumentHelperPtr docHelper;
 
-		if (SUCCEEDED(hr)) hr = m_debug_manager->CreateDebugDocumentHelper(NULL, &helper);
-		if (SUCCEEDED(hr)) hr = helper->Init(m_debug_application, 
-			(!path) ? namebuf.get_ptr() : path, 
-			(!path) ? guidstring.get_ptr() : path,
+		if (SUCCEEDED(hr)) hr = m_debug_manager->CreateDebugDocumentHelper(NULL, &docHelper);
+		if (SUCCEEDED(hr)) hr = docHelper->Init(m_debug_application, 
+			(!path) ? name.get_ptr() : path, 
+			(!path) ? guidString.get_ptr() : path,
 			TEXT_DOC_ATTR_READONLY);
-		if (SUCCEEDED(hr)) hr = helper->Attach(NULL);
-		if (SUCCEEDED(hr)) hr = helper->AddUnicodeText(code);
-		if (SUCCEEDED(hr)) hr = helper->DefineScriptBlock(0, len, m_script_engine, FALSE, &source_context);
-		if (SUCCEEDED(hr)) m_debug_docs.find_or_add(source_context) = helper;
+		if (SUCCEEDED(hr)) hr = docHelper->Attach(NULL);
+		if (SUCCEEDED(hr)) hr = docHelper->AddUnicodeText(code);
+		if (SUCCEEDED(hr)) hr = docHelper->DefineScriptBlock(0, len, m_script_engine, FALSE, &source_context);
+		if (SUCCEEDED(hr)) m_debug_docs.find_or_add(source_context) = docHelper;
 	}
 	else
 	{
-		source_context = 0;
+		source_context = m_lastSourceContext++;
 	}
 
 	return hr;
@@ -1191,41 +1251,46 @@ void ScriptHost::ReportError(IActiveScriptError* err)
 	// HACK: Try to retrieve additional infomation from Debug Manger Interface
     CallDebugManager(err, name, line, sourceline);
 
-	if (SUCCEEDED(err->GetExceptionInfo(&excep)))
-	{
-		// Do a deferred fill-in if necessary
-		if (excep.pfnDeferredFillIn)
-			(*excep.pfnDeferredFillIn)(&excep);
-		
-		using namespace pfc::stringcvt;
-		pfc::string_formatter formatter;
-		formatter << WSPM_NAME << " (" << m_host->GetScriptInfo().build_info_string().get_ptr() << "): ";
+	if (FAILED(err->GetExceptionInfo(&excep)))
+        return;
 
-        if (excep.bstrSource && excep.bstrDescription) 
-        {
-            formatter << string_utf8_from_wide(excep.bstrSource) << ":\n";
-            formatter << string_utf8_from_wide(excep.bstrDescription) << "\n";
-            formatter << "Ln: " << (t_uint32)(line + 1) << ", Col: " << (t_uint32)(charpos + 1) << "\n";
-            formatter << string_utf8_from_wide(sourceline);
-            if (name.length() > 0) 
-                formatter << "\n(at): " << name;
-        }
+    // Do a deferred fill-in if necessary
+    if (excep.pfnDeferredFillIn)
+        (*excep.pfnDeferredFillIn)(&excep);
+
+    using namespace pfc::stringcvt;
+    pfc::string_formatter formatter;
+    formatter << WSPM_NAME << " (" << m_host->GetScriptInfo().build_info_string().get_ptr() << "): ";
+
+    if (excep.bstrSource && excep.bstrDescription) 
+    {
+        formatter << string_utf8_from_wide(excep.bstrSource) << ":\n";
+        formatter << string_utf8_from_wide(excep.bstrDescription) << "\n";
+    }
+    else
+    {
+        pfc::string8_fast errorMessage;
+
+        if (uFormatSystemErrorMessage(errorMessage, excep.scode))
+            formatter << errorMessage;
         else
-        {
-            pfc::string8_fast errorMessage;
-            
-            if (uFormatSystemErrorMessage(errorMessage, excep.scode))
-                formatter << errorMessage;
-            else
-                formatter << "Unknown error code: 0x" << pfc::format_hex_lowercase((unsigned)excep.scode);
-        }
+            formatter << "Unknown error code: 0x" << pfc::format_hex_lowercase((unsigned)excep.scode);
+    }
 
-		SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, (LPARAM)formatter.get_ptr());
+    if (m_contextToPathMap.exists(ctx))
+    {
+        formatter << "File: " << m_contextToPathMap[ctx] << "\n";
+    }
 
-		if (excep.bstrSource)      SysFreeString(excep.bstrSource);
-		if (excep.bstrDescription) SysFreeString(excep.bstrDescription);
-		if (excep.bstrHelpFile)    SysFreeString(excep.bstrHelpFile);
-	}
+    formatter << "Ln: " << (t_uint32)(line + 1) << ", Col: " << (t_uint32)(charpos + 1) << "\n";
+    formatter << string_utf8_from_wide(sourceline);
+    if (name.length() > 0) formatter << "\nAt: " << name;
+
+    SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, (LPARAM)formatter.get_ptr());
+
+    if (excep.bstrSource)      SysFreeString(excep.bstrSource);
+    if (excep.bstrDescription) SysFreeString(excep.bstrDescription);
+    if (excep.bstrHelpFile)    SysFreeString(excep.bstrHelpFile);
 }
 
 void ScriptHost::CallDebugManager(IActiveScriptError* err, _bstr_t &name, ULONG line, _bstr_t &sourceline)
@@ -1260,7 +1325,6 @@ void ScriptHost::CallDebugManager(IActiveScriptError* err, _bstr_t &name, ULONG 
             ULONG charsRead = 0;
 
             text->GetName(DOCUMENTNAMETYPE_TITLE, name.GetAddress());
-
             text->GetPositionOfLine(line, &charPosLine);
             text->GetSize(&lines, &numChars);
 
