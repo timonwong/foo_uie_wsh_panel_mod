@@ -14,10 +14,12 @@
 #if !defined(NO_TRACK_DISPATCH)
 #define TRACK_THIS_DISPATCH_CALL(typeinfo, dispid, flag) \
 	disp_call_tracker DISPCALLTRACKER__##__LINE__(typeinfo, dispid, flag)
-#define PRINT_DISPATCH_TRACK_MESSAGE() disp_call_tracker::print_msg()
+#define PRINT_DISPATCH_TRACK_MESSAGE() do { disp_call_tracker::print_msg(); } while(0)
+#define PRINT_DISPATCH_TRACK_MESSAGE_AND_BREAK() do { PRINT_DISPATCH_TRACK_MESSAGE(); __debugbreak(); } while(0)
 #else
 #define TRACK_THIS_DISPATCH_CALL(typeinfo, dispid, flag) 
 #define PRINT_DISPATCH_TRACK_MESSAGE() 
+#define PRINT_DISPATCH_TRACK_MESSAGE_AND_BREAK() 
 #endif
 
 #if !defined(NO_TRACK_DISPATCH)

@@ -1067,7 +1067,8 @@ HRESULT ScriptHost::InitScriptEngineByName(const wchar_t * engineName)
     }
 
     // In order to support new features after JScript 5.8
-    if (wcsncmp(engineName, L"JScript", _countof(L"JScript")) == 0)
+    const wchar_t jscriptName[] = L"JScript";
+    if (wcsncmp(engineName, jscriptName, _countof(jscriptName) - 1) == 0)
     {
         IActiveScriptProperty *pActScriProp = NULL;
         
@@ -1146,43 +1147,33 @@ HRESULT ScriptHost::InvokeV(LPOLESTR name, VARIANTARG * argv /*= NULL*/, UINT ar
 	
 	HRESULT hr = disp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
 
-	if (SUCCEEDED(hr))
+	if (FAILED(hr)) return hr;
+
+	try
 	{
-		try
-		{
-			hr = disp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &param, ret, NULL, NULL);
-		}
-		catch (std::exception & e)
-		{
-			pfc::print_guid guid(m_host->get_config_guid());
-
-			console::printf(WSPM_NAME " (%s): Unhandled C++ Exception: \"%s\", will crash now...", 
-				m_host->GetScriptInfo().build_info_string().get_ptr(), e.what());
-			PRINT_DISPATCH_TRACK_MESSAGE();
-			// breakpoint
-			__debugbreak();
-		}
-        catch (_com_error & e)
-        {
-            pfc::print_guid guid(m_host->get_config_guid());
-
-            console::printf(WSPM_NAME " (%s): Unhandled COM Error: \"%s\", will crash now...", 
-                m_host->GetScriptInfo().build_info_string().get_ptr(), 
-                pfc::stringcvt::string_utf8_from_wide(e.ErrorMessage()).get_ptr());
-            PRINT_DISPATCH_TRACK_MESSAGE();
-            // breakpoint
-            __debugbreak();
-        }
-		catch (...)
-		{
-			pfc::print_guid guid(m_host->get_config_guid());
-
-			console::printf(WSPM_NAME " (%s): Unhandled Unknown Exception, will crash now...", 
-				m_host->GetScriptInfo().build_info_string().get_ptr());
-			PRINT_DISPATCH_TRACK_MESSAGE();
-			// breakpoint
-			__debugbreak();
-		}
+		hr = disp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &param, ret, NULL, NULL);
+	}
+	catch (std::exception & e)
+	{
+		pfc::print_guid guid(m_host->get_config_guid());
+		console::printf(WSPM_NAME " (%s): Unhandled C++ Exception: \"%s\", will crash now...", 
+			m_host->GetScriptInfo().build_info_string().get_ptr(), e.what());
+		PRINT_DISPATCH_TRACK_MESSAGE_AND_BREAK();
+	}
+    catch (_com_error & e)
+    {
+        pfc::print_guid guid(m_host->get_config_guid());
+        console::printf(WSPM_NAME " (%s): Unhandled COM Error: \"%s\", will crash now...", 
+            m_host->GetScriptInfo().build_info_string().get_ptr(), 
+            pfc::stringcvt::string_utf8_from_wide(e.ErrorMessage()).get_ptr());
+        PRINT_DISPATCH_TRACK_MESSAGE_AND_BREAK();
+    }
+	catch (...)
+	{
+		pfc::print_guid guid(m_host->get_config_guid());
+		console::printf(WSPM_NAME " (%s): Unhandled Unknown Exception, will crash now...", 
+			m_host->GetScriptInfo().build_info_string().get_ptr());
+        PRINT_DISPATCH_TRACK_MESSAGE_AND_BREAK();
 	}
 
 	return hr;
