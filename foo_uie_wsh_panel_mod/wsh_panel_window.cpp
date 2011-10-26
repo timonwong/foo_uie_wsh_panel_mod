@@ -37,6 +37,8 @@ bool wsh_panel_window::script_load()
 {
     TRACK_FUNCTION();
 
+    m_host_timer_dispatcher.setWindow(m_hwnd);
+
     helpers::mm_timer timer;
     bool result = true;
     timer.start();
@@ -124,6 +126,7 @@ void wsh_panel_window::script_unload()
         m_is_droptarget_registered = false;
     }
 
+    m_host_timer_dispatcher.reset();
     m_watched_handle.release();
     m_selection_holder.release();
 }
@@ -454,6 +457,10 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
     case UWM_TIMER:
         on_timer(wp);
+        return 0;
+
+    case UWM_TIMER_NEW:
+        m_host_timer_dispatcher.invoke(wp);
         return 0;
 
     case UWM_SHOWCONFIGURE:

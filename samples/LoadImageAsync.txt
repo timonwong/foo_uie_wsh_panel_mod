@@ -15,8 +15,8 @@ var ww = 0,
 var g_img = null;
 var g_valid_tid = 0;
 
-// every 5 seconds.
-var g_timer = window.CreateTimerInterval(5000);
+// Trigger every 5 seconds.
+var g_timer = window.SetInterval(on_every_5000_seconds, 5000);
 
 load_random_image_async();
 
@@ -52,10 +52,8 @@ function on_paint(gr) {
     }
 }
 
-function on_timer(timer_id) {
-    if (g_timer.ID == timer_id) {
-        load_random_image_async();
-    }
+function on_every_5000_seconds(timer_id) {
+    load_random_image_async();
 }
 
 // After loading image is done in the background, this callback will be invoked

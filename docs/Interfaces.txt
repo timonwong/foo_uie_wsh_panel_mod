@@ -486,7 +486,7 @@ Methods:
     boolean ShowAutoPlaylistUI(idx);
 }
 
-
+// [Obsolete] Please use window.SetInterval() and/or window.SetTimeout()
 interface ITimerObj {
 Properties:
     (readonly) uint ID;
@@ -581,12 +581,25 @@ Methods:
     void Repaint(force = false);
     void RepaintRect(x, y, w, h, force = false);
     IMenuObj CreatePopupMenu();
+    // [Obsolete] Please use window.SetTimeout() instead.
     // Create an one shot timer, this timer will occur only once.
     ITimerObj CreateTimerTimeout(timeout);
+    // [Obsolete] Please use window.SetInterval() instead.
     // Create an periodic timer, this timer will occur periodicly.
     ITimerObj CreateTimerInterval(delay);
-    // [Obsolete] Instead of KillTimer, you should use ITimerObj.Dispose()
+    // [Obsolete] 
+    // Instead of KillTimer, you should use ITimerObj.Dispose()
     void KillTimer(ITimerObj);
+    // [1.5.0 Beta 4] New:
+    // returns the id or newly created timer
+    uint SetInterval(func, delay);
+    // [1.5.0 Beta 4] New:
+    // returns the id or newly created timer
+    uint SetInterval(func, delay);
+    // [1.5.0 Beta 4] New;
+    void ClearTimeout(timerID);
+    // [1.5.0 Beta 4] New:
+    void ClearInterval(timerID);
     // Notify other wsh panels with specified info thru callback function on_notify_data(name, info).
     // [1.3.0] Update:
     //  info can be any type now, but be aware of passing arrays and objects (because they may be unrecognized between

@@ -9,6 +9,7 @@
 #include "global_cfg.h"
 #include "IDropSourceImpl.h"
 #include "host_droptarget.h"
+#include "host_timer_dispatcher.h"
 
 
 // Smart pointers for Active Scripting
@@ -16,6 +17,7 @@ _COM_SMARTPTR_TYPEDEF(IActiveScriptParse, IID_IActiveScriptParse);
 _COM_SMARTPTR_TYPEDEF(IProcessDebugManager, IID_IProcessDebugManager);
 _COM_SMARTPTR_TYPEDEF(IDebugDocumentHelper, IID_IDebugDocumentHelper);
 _COM_SMARTPTR_TYPEDEF(IDebugApplication, IID_IDebugApplication);
+
 
 class HostComm : public wsh_panel_vars
 {
@@ -43,6 +45,7 @@ protected:
 	int                         m_instance_type;
 	bool                        m_suppress_drawing;
 	bool                        m_paint_pending;
+    HostTimerDispatcher         m_host_timer_dispatcher;
 	
 	HostComm();
 	virtual ~HostComm();
@@ -69,7 +72,9 @@ public:
 	ITimerObj * CreateTimerTimeout(UINT timeout);
 	ITimerObj * CreateTimerInterval(UINT delay);
 	void KillTimer(ITimerObj * p);
-    void KillTimerById(UINT timerId);
+    unsigned SetTimeout(IDispatch * func, INT delay);
+    unsigned SetInterval(IDispatch * func, INT delay);
+    void ClearIntervalOrTimeout(UINT timerId);
 
 	virtual DWORD GetColorCUI(unsigned type, const GUID & guid) = 0;
 	virtual HFONT GetFontCUI(unsigned type, const GUID & guid) = 0;

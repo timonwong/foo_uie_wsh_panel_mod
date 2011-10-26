@@ -129,6 +129,9 @@
     <ClCompile Include="wsh_panel_window_dui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="host_timer_dispatcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
@@ -282,6 +285,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="wsh_panel_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="host_timer_dispatcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -6,6 +6,7 @@
 #include "global_cfg.h"
 #include "popup_msg.h"
 #include "dbgtrace.h"
+#include "obsolete.h"
 
 
 HostComm::HostComm() 
@@ -26,20 +27,10 @@ HostComm::HostComm()
 
 	m_min_size.x = 0;
 	m_min_size.y = 0;
-
-	TIMECAPS tc;
-
-	if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) == TIMERR_NOERROR)
-	{
-		m_accuracy = min(max(tc.wPeriodMin, 5), tc.wPeriodMax);
-	}
-
-	timeBeginPeriod(m_accuracy);
 }
 
 HostComm::~HostComm()
 {
-	timeEndPeriod(m_accuracy);
 }
 
 void HostComm::Redraw()
@@ -153,20 +144,16 @@ void HostComm::RefreshBackground(LPRECT lprcUpdate /*= NULL*/)
 
 ITimerObj * HostComm::CreateTimerTimeout(UINT timeout)
 {
-	UINT id = timeSetEvent(timeout, m_accuracy, g_timer_proc, reinterpret_cast<DWORD_PTR>(m_hwnd), TIME_ONESHOT);
-
-	if (id == NULL) return NULL;
-
+	UINT id = m_host_timer_dispatcher.setTimeoutLegacy(timeout);
+	if (id == 0) return NULL;
 	ITimerObj * timer = new com_object_impl_t<TimerObj>(id);
 	return timer;
 }
 
 ITimerObj * HostComm::CreateTimerInterval(UINT delay)
 {
-	UINT id = timeSetEvent(delay, m_accuracy, g_timer_proc, reinterpret_cast<DWORD_PTR>(m_hwnd), TIME_PERIODIC);
-
-	if (id == NULL) return NULL;
-
+	UINT id = m_host_timer_dispatcher.setIntervalLegacy(delay);
+	if (id == 0) return NULL;
 	ITimerObj * timer = new com_object_impl_t<TimerObj>(id);
 	return timer;
 }
@@ -174,14 +161,23 @@ ITimerObj * HostComm::CreateTimerInterval(UINT delay)
 void HostComm::KillTimer(ITimerObj * p)
 {
 	UINT id;
-
 	p->get_ID(&id);
-	timeKillEvent(id); 
+	m_host_timer_dispatcher.killLegacy(id); 
 }
 
-void HostComm::KillTimerById(UINT timerId)
+unsigned HostComm::SetTimeout(IDispatch * func, INT delay)
 {
-    timeKillEvent(timerId);
+    return m_host_timer_dispatcher.setTimeout(delay, func);
+}
+
+unsigned HostComm::SetInterval(IDispatch * func, INT delay)
+{
+    return m_host_timer_dispatcher.setInterval(delay, func);
+}
+
+void HostComm::ClearIntervalOrTimeout(UINT timerId)
+{
+    m_host_timer_dispatcher.kill(timerId);
 }
 
 IGdiBitmap * HostComm::GetBackgroundImage()
@@ -395,9 +391,8 @@ STDMETHODIMP FbWindow::CreatePopupMenu(IMenuObj ** pp)
 STDMETHODIMP FbWindow::CreateTimerTimeout(UINT timeout, ITimerObj ** pp)
 {
 	TRACK_FUNCTION();
-
 	if (!pp) return E_POINTER;
-
+    print_obsolete_message("window.CreateTimerTimeout() is now obsolete, please use window.SetTimeout() in new script.");
 	(*pp) = m_host->CreateTimerTimeout(timeout);
 	return S_OK;
 }
@@ -405,9 +400,8 @@ STDMETHODIMP FbWindow::CreateTimerTimeout(UINT timeout, ITimerObj ** pp)
 STDMETHODIMP FbWindow::CreateTimerInterval(UINT delay, ITimerObj ** pp)
 {
 	TRACK_FUNCTION();
-
 	if (!pp) return E_POINTER;
-
+    print_obsolete_message("window.CreateTimerInterval() is now obsolete, please use window.SetInterval() in new script.");
 	(*pp)= m_host->CreateTimerInterval(delay);
 	return S_OK;
 }
@@ -415,9 +409,7 @@ STDMETHODIMP FbWindow::CreateTimerInterval(UINT delay, ITimerObj ** pp)
 STDMETHODIMP FbWindow::KillTimer(ITimerObj * p)
 {
 	TRACK_FUNCTION();
-
 	if (!p) return E_INVALIDARG;
-
 	m_host->KillTimer(p);
 	return S_OK;
 }
@@ -425,30 +417,29 @@ STDMETHODIMP FbWindow::KillTimer(ITimerObj * p)
 STDMETHODIMP FbWindow::SetInterval(IDispatch * func, INT delay, UINT * outIntervalID)
 {
     TRACK_FUNCTION();
-
+    if (!outIntervalID) return E_POINTER;
+    (*outIntervalID) = m_host->SetInterval(func, delay);
     return S_OK;
 }
 
 STDMETHODIMP FbWindow::ClearInterval(UINT intervalID)
 {
     TRACK_FUNCTION();
-
-    m_host->KillTimerById(intervalID);
+    m_host->ClearIntervalOrTimeout(intervalID);
     return S_OK;
 }
 
 STDMETHODIMP FbWindow::SetTimeout(IDispatch * func, INT delay, UINT * outTimeoutID)
 {
     TRACK_FUNCTION();
-
+    (*outTimeoutID) = m_host->SetTimeout(func, delay);
     return S_OK;
 }
 
 STDMETHODIMP FbWindow::ClearTimeout(UINT timeoutID)
 {
     TRACK_FUNCTION();
-
-    m_host->KillTimerById(timeoutID);
+    m_host->ClearIntervalOrTimeout(timeoutID);
     return S_OK;
 }
 
