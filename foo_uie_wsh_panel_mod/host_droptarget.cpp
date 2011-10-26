@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "host.h"
 #include "host_droptarget.h"
+#include "wsh_panel_window.h"
 
 
 class process_dropped_items_to_playlist : public process_locations_notify 

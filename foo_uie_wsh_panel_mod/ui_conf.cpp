@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ui_conf.h"
-#include "host.h"
+#include "wsh_panel_window.h"
 #include "ui_goto.h"
 #include "ui_find.h"
 #include "ui_replace.h"
@@ -100,7 +100,7 @@ LRESULT CDialogConf::OnCloseCmd(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 		if (m_editorctrl.GetModify())
 		{
 			// Prompt?
-			int ret = uMessageBox(m_hWnd, "Save and apply changes?", m_caption, MB_ICONWARNING | MB_SETFOREGROUND | MB_YESNOCANCEL);
+			int ret = uMessageBox(m_hWnd, "Do you want to apply your changes?", m_caption, MB_ICONWARNING | MB_SETFOREGROUND | MB_YESNOCANCEL);
 
 			switch (ret)
 			{

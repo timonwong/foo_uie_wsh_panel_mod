@@ -525,6 +525,10 @@ __interface IFbWindow: IDispatch
 	STDMETHOD(CreateTimerTimeout)(UINT timeout, [out,retval] ITimerObj ** pp);
 	STDMETHOD(CreateTimerInterval)(UINT delay, [out,retval] ITimerObj ** pp);
 	STDMETHOD(KillTimer)(ITimerObj * p);
+    STDMETHOD(SetInterval)(IDispatch * func, INT delay, [out,retval] UINT * outIntervalID);
+    STDMETHOD(ClearInterval)(UINT intervalID);
+    STDMETHOD(SetTimeout)(IDispatch * func, INT delay, [out,retval] UINT * outTimeoutID);
+    STDMETHOD(ClearTimeout)(UINT timeoutID);
 	STDMETHOD(NotifyOthers)(BSTR name, VARIANT info);
 	STDMETHOD(WatchMetadb)(IFbMetadbHandle * handle);
 	STDMETHOD(UnWatchMetadb)();

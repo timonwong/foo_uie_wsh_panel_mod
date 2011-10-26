@@ -80,12 +80,14 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>GdiPlus.lib;shared.lib;shlwapi.lib;WinMM.lib;Imm32.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>GdiPlus.lib;shared.lib;shlwapi.lib;WinMM.lib;Imm32.lib;uxtheme.lib;libcmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../shared;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>libcmtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Command>copy $(TargetPath) "F:\foobar2000\components\"
@@ -168,6 +170,9 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClCompile Include="editorctrl.cpp" />
     <ClCompile Include="scintilla_prop_sets.cpp" />
     <ClCompile Include="version.cpp" />
+    <ClCompile Include="wsh_panel_window.cpp" />
+    <ClCompile Include="wsh_panel_window_cui.cpp" />
+    <ClCompile Include="wsh_panel_window_dui.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="com_tools.h" />
@@ -183,6 +188,9 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     <ClInclude Include="host.h" />
     <ClInclude Include="IDropTargetImpl.h" />
     <ClInclude Include="host_droptarget.h" />
+    <ClInclude Include="wsh_panel_window.h" />
+    <ClInclude Include="wsh_panel_window_dui.h" />
+    <ClInclude Include="wsh_panel_window_cui.h" />
     <ClInclude Include="panel_manager.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="script_interface.h" />
