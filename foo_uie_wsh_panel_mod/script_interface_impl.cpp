@@ -1335,7 +1335,7 @@ STDMETHODIMP FbMetadbHandle::UpdateFileInfo(IFbFileInfo * fileinfo)
     fileinfo->get__ptr((void**)&info_ptr);
     if (!info_ptr) return E_INVALIDARG;
 
-    print_obsolete_message("UpdateFileInfo() is now obsolete, please use UpdateFileInfoSimple() instead.");
+    PRINT_OBSOLETE_MESSAGE_ONCE("UpdateFileInfo() is now obsolete, please use UpdateFileInfoSimple() instead.");
 
     io->update_info_async_simple(pfc::list_single_ref_t<metadb_handle_ptr>(m_handle),
         pfc::list_single_ref_t<const file_info *>(info_ptr),
@@ -2539,7 +2539,7 @@ STDMETHODIMP MenuObj::AppendMenuItem(UINT flags, UINT item_id, BSTR text)
 
     if (flags & MF_POPUP)
     {
-        print_obsolete_message("Use AppendTo() method to create sub menu instead.");
+        PRINT_OBSOLETE_MESSAGE_ONCE("Use AppendTo() method to create sub menu instead.");
     }
 
     ::AppendMenu(m_hMenu, flags, item_id, text);

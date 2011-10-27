@@ -392,7 +392,7 @@ STDMETHODIMP FbWindow::CreateTimerTimeout(UINT timeout, ITimerObj ** pp)
 {
 	TRACK_FUNCTION();
 	if (!pp) return E_POINTER;
-    print_obsolete_message("window.CreateTimerTimeout() is now obsolete, please use window.SetTimeout() in new script.");
+    PRINT_OBSOLETE_MESSAGE_ONCE("window.CreateTimerTimeout() is now obsolete, please use window.SetTimeout() in new script.");
 	(*pp) = m_host->CreateTimerTimeout(timeout);
 	return S_OK;
 }
@@ -401,7 +401,7 @@ STDMETHODIMP FbWindow::CreateTimerInterval(UINT delay, ITimerObj ** pp)
 {
 	TRACK_FUNCTION();
 	if (!pp) return E_POINTER;
-    print_obsolete_message("window.CreateTimerInterval() is now obsolete, please use window.SetInterval() in new script.");
+    PRINT_OBSOLETE_MESSAGE_ONCE("window.CreateTimerInterval() is now obsolete, please use window.SetInterval() in new script.");
 	(*pp)= m_host->CreateTimerInterval(delay);
 	return S_OK;
 }
