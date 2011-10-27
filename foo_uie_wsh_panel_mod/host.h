@@ -10,6 +10,7 @@
 #include "IDropSourceImpl.h"
 #include "host_droptarget.h"
 #include "host_timer_dispatcher.h"
+#include "script_callback_invoker.h"
 
 
 // Smart pointers for Active Scripting
@@ -173,6 +174,8 @@ private:
     contextToPathMap m_contextToPathMap;
     DWORD m_lastSourceContext;
 
+    ScriptCallbackInvoker   m_callback_invoker;
+
 	BEGIN_COM_QI_IMPL()
 		COM_QI_ENTRY_MULTI(IUnknown, IActiveScriptSite)
 		COM_QI_ENTRY(IActiveScriptSite)
@@ -229,7 +232,7 @@ public:
 			}
 		}
 	}
-	HRESULT InvokeV(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);
+    HRESULT InvokeCallback(int callbackId, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);
 	HRESULT GenerateSourceContext(const wchar_t * path, const wchar_t * code, DWORD & source_context);
 	void ReportError(IActiveScriptError* err);
     void CallDebugManager(IActiveScriptError* err, _bstr_t &name, ULONG line, _bstr_t &sourceline);

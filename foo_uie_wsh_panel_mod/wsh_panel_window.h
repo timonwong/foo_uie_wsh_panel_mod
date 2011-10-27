@@ -36,9 +36,9 @@ public:
     wsh_panel_window();
     virtual ~wsh_panel_window();
     void update_script(const char * name = NULL, const char * code = NULL);
-    inline HRESULT script_invoke_v(LPOLESTR name, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL)
+    inline HRESULT script_invoke_v(int callbackId, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL)
     {
-        return m_script_host->InvokeV(name, argv, argc, ret);
+        return m_script_host->InvokeCallback(callbackId, argv, argc, ret);
     }
 
 private:

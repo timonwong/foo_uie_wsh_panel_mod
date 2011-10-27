@@ -1,6 +1,7 @@
 v1.5.0 Beta 4
 - ADD: Add new timer methods: window.SetInterval(), window.SetTimeout(), window.ClearInterval() and window.ClearTimeout().
 - CHG: Mark old timer methods as obsolete: window.CreateTimerInterval(), window.CreateTimerTimeout(), window.KillTimer(), please use the new ones.
+- CHG: [Breaking Change] Callback functions now must be defined in global scope on script initialization (This change should not affect most scripts).
 
 v1.5.0 Beta 3
 - ADD: Add AppendTo() method to IMenuObj interface.

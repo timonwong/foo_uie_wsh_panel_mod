@@ -983,6 +983,7 @@ HRESULT ScriptHost::Initialize()
     if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"plman", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->SetScriptState(SCRIPTSTATE_CONNECTED);
 	if (SUCCEEDED(hr)) hr = m_script_engine->GetScriptDispatch(NULL, &m_script_root);
+    // Parse imported scripts
     if (SUCCEEDED(hr)) hr = ProcessImportedScripts(preprocessor, parser);
 
 	// Parse main script
@@ -994,6 +995,7 @@ HRESULT ScriptHost::Initialize()
 		source_context, 0, SCRIPTTEXT_HOSTMANAGESSOURCE | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
 
 	if (SUCCEEDED(hr)) m_engine_inited = true;
+    m_callback_invoker.init(m_script_root);
 	return hr;
 }
 
@@ -1080,7 +1082,7 @@ HRESULT ScriptHost::InitScriptEngineByName(const wchar_t * engineName)
 
 void ScriptHost::Finalize()
 {
-	InvokeV(L"on_script_unload");
+	InvokeCallback(CallbackIds::on_script_unload);
 
 	if (m_script_engine && m_engine_inited)
 	{
@@ -1110,6 +1112,7 @@ void ScriptHost::Finalize()
 
 	m_debug_docs.remove_all();
     m_contextToPathMap.remove_all();
+    m_callback_invoker.reset();
 
 	if (m_script_engine)
 	{
@@ -1123,23 +1126,16 @@ void ScriptHost::Finalize()
 	}
 }
 
-HRESULT ScriptHost::InvokeV(LPOLESTR name, VARIANTARG * argv /*= NULL*/, UINT argc /*= 0*/, VARIANT * ret /*= NULL*/)
+HRESULT ScriptHost::InvokeCallback(int callbackId, VARIANTARG * argv /*= NULL*/, UINT argc /*= 0*/, VARIANT * ret /*= NULL*/)
 {
 	if (HasError()) return E_FAIL;
 	if (!m_script_root || !Ready()) return E_FAIL;
-	if (!name) return E_INVALIDARG;
-
-	DISPID dispid = 0;
-	DISPPARAMS param = { argv, NULL, argc, 0 };
-	IDispatchPtr disp = m_script_root;
 	
-	HRESULT hr = disp->GetIDsOfNames(IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
-
-	if (FAILED(hr)) return hr;
+    HRESULT hr = E_FAIL;
 
 	try
 	{
-		hr = disp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &param, ret, NULL, NULL);
+		hr = m_callback_invoker.invoke(callbackId, argv, argc, ret);
 	}
 	catch (std::exception & e)
 	{

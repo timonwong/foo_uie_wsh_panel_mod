@@ -361,7 +361,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             args[0].vt = VT_UI4;
             args[0].ulVal = (ULONG)wp;
 
-            script_invoke_v(L"on_key_down", args, _countof(args));
+            script_invoke_v(CallbackIds::on_key_down, args, _countof(args));
         }
         return 0;
 
@@ -372,7 +372,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             args[0].vt = VT_UI4;
             args[0].ulVal = (ULONG)wp;
 
-            script_invoke_v(L"on_key_up", args, _countof(args));
+            script_invoke_v(CallbackIds::on_key_up, args, _countof(args));
         }
         return 0;
 
@@ -382,7 +382,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
             args[0].vt = VT_UI4;
             args[0].ulVal = (ULONG)wp;
-            script_invoke_v(L"on_char", args, _countof(args));
+            script_invoke_v(CallbackIds::on_char, args, _countof(args));
         }
         return 0;
 
@@ -394,7 +394,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
             args[0].vt = VT_BOOL;
             args[0].boolVal = VARIANT_TRUE;
-            script_invoke_v(L"on_focus", args, _countof(args));
+            script_invoke_v(CallbackIds::on_focus, args, _countof(args));
         }
         break;
 
@@ -406,7 +406,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
             args[0].vt = VT_BOOL;
             args[0].boolVal = VARIANT_FALSE;
-            script_invoke_v(L"on_focus", args, _countof(args));
+            script_invoke_v(CallbackIds::on_focus, args, _countof(args));
         }
         break;
 
@@ -609,7 +609,7 @@ void wsh_panel_window::on_size(int w, int h)
     delete_context();
     create_context();
 
-    script_invoke_v(L"on_size");
+    script_invoke_v(CallbackIds::on_size);
 }
 
 void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
@@ -661,7 +661,7 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
 
                 args[0].vt = VT_DISPATCH;
                 args[0].pdispVal = m_gr_wrap;
-                script_invoke_v(L"on_paint", args, _countof(args));
+                script_invoke_v(CallbackIds::on_paint, args, _countof(args));
             }
 
             m_gr_wrap->put__ptr(NULL);
@@ -709,7 +709,7 @@ void wsh_panel_window::on_timer(UINT timer_id)
 
     args[0].vt = VT_UI4;
     args[0].ulVal = timer_id;
-    script_invoke_v(L"on_timer", args, _countof(args));
+    script_invoke_v(CallbackIds::on_timer, args, _countof(args));
 }
 
 void wsh_panel_window::on_context_menu(int x, int y)
@@ -732,7 +732,7 @@ void wsh_panel_window::on_mouse_wheel(WPARAM wp)
 
     args[0].vt = VT_I4;
     args[0].lVal = GET_WHEEL_DELTA_WPARAM(wp) / WHEEL_DELTA;
-    script_invoke_v(L"on_mouse_wheel", args, _countof(args));
+    script_invoke_v(CallbackIds::on_mouse_wheel, args, _countof(args));
 }
 
 void wsh_panel_window::on_mouse_leave()
@@ -741,7 +741,7 @@ void wsh_panel_window::on_mouse_leave()
 
     m_is_mouse_tracked = false;
 
-    script_invoke_v(L"on_mouse_leave");
+    script_invoke_v(CallbackIds::on_mouse_leave);
     // Restore default cursor
     SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW)));
 }
@@ -772,7 +772,7 @@ void wsh_panel_window::on_mouse_move(WPARAM wp, LPARAM lp)
     args[1].lVal = GET_Y_LPARAM(lp);
     args[2].vt = VT_I4;
     args[2].lVal = GET_X_LPARAM(lp);	
-    script_invoke_v(L"on_mouse_move", args, _countof(args));
+    script_invoke_v(CallbackIds::on_mouse_move, args, _countof(args));
 }
 
 void wsh_panel_window::on_mouse_button_dblclk(UINT msg, WPARAM wp, LPARAM lp)
@@ -791,15 +791,15 @@ void wsh_panel_window::on_mouse_button_dblclk(UINT msg, WPARAM wp, LPARAM lp)
     switch (msg)
     {
     case WM_LBUTTONDBLCLK:
-        script_invoke_v(L"on_mouse_lbtn_dblclk", args, _countof(args));
+        script_invoke_v(CallbackIds::on_mouse_lbtn_dblclk, args, _countof(args));
         break;
 
     case WM_MBUTTONDBLCLK:
-        script_invoke_v(L"on_mouse_mbtn_dblclk", args, _countof(args));
+        script_invoke_v(CallbackIds::on_mouse_mbtn_dblclk, args, _countof(args));
         break;
 
     case WM_RBUTTONDBLCLK:
-        script_invoke_v(L"on_mouse_rbtn_dblclk", args, _countof(args));
+        script_invoke_v(CallbackIds::on_mouse_rbtn_dblclk, args, _countof(args));
         break;
     }
 }
@@ -820,11 +820,11 @@ bool wsh_panel_window::on_mouse_button_up(UINT msg, WPARAM wp, LPARAM lp)
     switch (msg)
     {
     case WM_LBUTTONUP:
-        script_invoke_v(L"on_mouse_lbtn_up", args, _countof(args));
+        script_invoke_v(CallbackIds::on_mouse_lbtn_up, args, _countof(args));
         break;
 
     case WM_MBUTTONUP:
-        script_invoke_v(L"on_mouse_mbtn_up", args, _countof(args));
+        script_invoke_v(CallbackIds::on_mouse_mbtn_up, args, _countof(args));
         break;
 
     case WM_RBUTTONUP:
@@ -842,7 +842,7 @@ bool wsh_panel_window::on_mouse_button_up(UINT msg, WPARAM wp, LPARAM lp)
                 break;
             }
 
-            if (SUCCEEDED(script_invoke_v(L"on_mouse_rbtn_up", args, _countof(args), &result)))
+            if (SUCCEEDED(script_invoke_v(CallbackIds::on_mouse_rbtn_up, args, _countof(args), &result)))
             {
                 result.ChangeType(VT_BOOL);
                 if ((result.boolVal != VARIANT_FALSE))
@@ -877,15 +877,15 @@ void wsh_panel_window::on_mouse_button_down(UINT msg, WPARAM wp, LPARAM lp)
     switch (msg)
     {
     case WM_LBUTTONDOWN:
-        script_invoke_v(L"on_mouse_lbtn_down", args, _countof(args));
+        script_invoke_v(CallbackIds::on_mouse_lbtn_down, args, _countof(args));
         break;
 
     case WM_MBUTTONDOWN:
-        script_invoke_v(L"on_mouse_mbtn_down", args, _countof(args));
+        script_invoke_v(CallbackIds::on_mouse_mbtn_down, args, _countof(args));
         break;
 
     case WM_RBUTTONDOWN:
-        script_invoke_v(L"on_mouse_rbtn_down", args, _countof(args));
+        script_invoke_v(CallbackIds::on_mouse_rbtn_down, args, _countof(args));
         break;
     }
 }
@@ -988,7 +988,7 @@ bool wsh_panel_window::on_tooltip_custom_paint(LPNMTTCUSTOMDRAW lpnmcd, LRESULT 
     VARIANTARG args[1];
     args[0].vt = VT_DISPATCH;
     args[0].pdispVal = m_gr_wrap;
-    if (SUCCEEDED(script_invoke_v(L"on_tooltip_custom_paint", args, _countof(args))))
+    if (SUCCEEDED(script_invoke_v(CallbackIds::on_tooltip_custom_paint, args, _countof(args))))
         succeeded = true;
 
     m_gr_wrap->put__ptr(NULL);
@@ -1003,7 +1003,7 @@ void wsh_panel_window::on_refresh_background_done()
 {
     TRACK_FUNCTION();
 
-    script_invoke_v(L"on_refresh_background_done");
+    script_invoke_v(CallbackIds::on_refresh_background_done);
 }
 
 void wsh_panel_window::build_context_menu(HMENU menu, int x, int y, int id_base)
@@ -1037,7 +1037,7 @@ void wsh_panel_window::on_item_played(WPARAM wp)
 
     args[0].vt = VT_DISPATCH;
     args[0].pdispVal = handle;
-    script_invoke_v(L"on_item_played", args, _countof(args));
+    script_invoke_v(CallbackIds::on_item_played, args, _countof(args));
 
     if (handle)
         handle->Release();
@@ -1059,7 +1059,7 @@ void wsh_panel_window::on_get_album_art_done(LPARAM lp)
     args[2].lVal = param->art_id;
     args[3].vt = VT_DISPATCH;
     args[3].pdispVal = param->handle;
-    script_invoke_v(L"on_get_album_art_done", args, _countof(args));
+    script_invoke_v(CallbackIds::on_get_album_art_done, args, _countof(args));
 }
 
 void wsh_panel_window::on_load_image_done(LPARAM lp)
@@ -1076,7 +1076,7 @@ void wsh_panel_window::on_load_image_done(LPARAM lp)
     args[1].pdispVal = param->bitmap;
     args[2].vt = VT_I4;
     args[2].lVal = param->cookie;
-    script_invoke_v(L"on_load_image_done", args, _countof(args));
+    script_invoke_v(CallbackIds::on_load_image_done, args, _countof(args));
 }
 
 void wsh_panel_window::on_playlist_stop_after_current_changed(WPARAM wp)
@@ -1087,7 +1087,7 @@ void wsh_panel_window::on_playlist_stop_after_current_changed(WPARAM wp)
 
     args[0].vt = VT_BOOL;
     args[0].boolVal = TO_VARIANT_BOOL(wp);
-    script_invoke_v(L"on_playlist_stop_after_current_changed", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playlist_stop_after_current_changed, args, _countof(args));
 }
 
 void wsh_panel_window::on_cursor_follow_playback_changed(WPARAM wp)
@@ -1098,7 +1098,7 @@ void wsh_panel_window::on_cursor_follow_playback_changed(WPARAM wp)
 
     args[0].vt = VT_BOOL;
     args[0].boolVal = TO_VARIANT_BOOL(wp);
-    script_invoke_v(L"on_cursor_follow_playback_changed", args, _countof(args));
+    script_invoke_v(CallbackIds::on_cursor_follow_playback_changed, args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_follow_cursor_changed(WPARAM wp)
@@ -1109,7 +1109,7 @@ void wsh_panel_window::on_playback_follow_cursor_changed(WPARAM wp)
 
     args[0].vt = VT_BOOL;
     args[0].boolVal = TO_VARIANT_BOOL(wp);
-    script_invoke_v(L"on_playback_follow_cursor_changed", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playback_follow_cursor_changed, args, _countof(args));
 }
 
 void wsh_panel_window::on_notify_data(WPARAM wp)
@@ -1122,21 +1122,21 @@ void wsh_panel_window::on_notify_data(WPARAM wp)
     args[0] = data->m_item2;
     args[1].vt = VT_BSTR;
     args[1].bstrVal = data->m_item1;
-    script_invoke_v(L"on_notify_data", args, _countof(args));
+    script_invoke_v(CallbackIds::on_notify_data, args, _countof(args));
 }
 
 void wsh_panel_window::on_font_changed()
 {
     TRACK_FUNCTION();
 
-    script_invoke_v(L"on_font_changed");
+    script_invoke_v(CallbackIds::on_font_changed);
 }
 
 void wsh_panel_window::on_colors_changed()
 {
     TRACK_FUNCTION();
 
-    script_invoke_v(L"on_colors_changed");
+    script_invoke_v(CallbackIds::on_colors_changed);
 }
 
 void wsh_panel_window::on_playback_starting(play_control::t_track_command cmd, bool paused)
@@ -1149,7 +1149,7 @@ void wsh_panel_window::on_playback_starting(play_control::t_track_command cmd, b
     args[0].boolVal = TO_VARIANT_BOOL(paused);
     args[1].vt = VT_I4;
     args[1].lVal = cmd;
-    script_invoke_v(L"on_playback_starting", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playback_starting, args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_new_track(WPARAM wp)
@@ -1162,7 +1162,7 @@ void wsh_panel_window::on_playback_new_track(WPARAM wp)
 
     args[0].vt = VT_DISPATCH;
     args[0].pdispVal = handle;
-    script_invoke_v(L"on_playback_new_track", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playback_new_track, args, _countof(args));
 
     if (handle)
         handle->Release();
@@ -1176,7 +1176,7 @@ void wsh_panel_window::on_playback_stop(play_control::t_stop_reason reason)
 
     args[0].vt = VT_I4;
     args[0].lVal = reason;
-    script_invoke_v(L"on_playback_stop", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playback_stop, args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_seek(WPARAM wp)
@@ -1189,7 +1189,7 @@ void wsh_panel_window::on_playback_seek(WPARAM wp)
 
     args[0].vt = VT_R8;
     args[0].dblVal = data->m_item;
-    script_invoke_v(L"on_playback_seek", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playback_seek, args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_pause(bool state)
@@ -1200,7 +1200,7 @@ void wsh_panel_window::on_playback_pause(bool state)
 
     args[0].vt = VT_BOOL;
     args[0].boolVal = TO_VARIANT_BOOL(state);
-    script_invoke_v(L"on_playback_pause", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playback_pause, args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_edited(WPARAM wp)
@@ -1214,7 +1214,7 @@ void wsh_panel_window::on_playback_edited(WPARAM wp)
     args[0].vt = VT_DISPATCH;
     args[0].pdispVal = handle;
 
-    script_invoke_v(L"on_playback_edited");
+    script_invoke_v(CallbackIds::on_playback_edited);
 
     if (handle)
     {
@@ -1226,14 +1226,14 @@ void wsh_panel_window::on_playback_dynamic_info()
 {
     TRACK_FUNCTION();
 
-    script_invoke_v(L"on_playback_dynamic_info");
+    script_invoke_v(CallbackIds::on_playback_dynamic_info);
 }
 
 void wsh_panel_window::on_playback_dynamic_info_track()
 {
     TRACK_FUNCTION();
 
-    script_invoke_v(L"on_playback_dynamic_info_track");
+    script_invoke_v(CallbackIds::on_playback_dynamic_info_track);
 }
 
 void wsh_panel_window::on_playback_time(WPARAM wp)
@@ -1246,7 +1246,7 @@ void wsh_panel_window::on_playback_time(WPARAM wp)
 
     args[0].vt = VT_R8;
     args[0].dblVal = data->m_item;
-    script_invoke_v(L"on_playback_time", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playback_time, args, _countof(args));
 }
 
 void wsh_panel_window::on_volume_change(WPARAM wp)
@@ -1259,7 +1259,7 @@ void wsh_panel_window::on_volume_change(WPARAM wp)
 
     args[0].vt = VT_R4;
     args[0].fltVal = data->m_item;
-    script_invoke_v(L"on_volume_change", args, _countof(args));
+    script_invoke_v(CallbackIds::on_volume_change, args, _countof(args));
 }
 
 void wsh_panel_window::on_item_focus_change(WPARAM wp)
@@ -1275,7 +1275,7 @@ void wsh_panel_window::on_item_focus_change(WPARAM wp)
     args[1].lVal = data->m_item2;
     args[2].vt = VT_I4;
     args[2].lVal = data->m_item1;
-    script_invoke_v(L"on_item_focus_change", args, _countof(args));
+    script_invoke_v(CallbackIds::on_item_focus_change, args, _countof(args));
 }
 
 void wsh_panel_window::on_playback_order_changed(t_size p_new_index)
@@ -1286,21 +1286,21 @@ void wsh_panel_window::on_playback_order_changed(t_size p_new_index)
 
     args[0].vt = VT_I4;
     args[0].lVal = p_new_index;
-    script_invoke_v(L"on_playback_order_changed", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playback_order_changed, args, _countof(args));
 }
 
 void wsh_panel_window::on_playlist_switch()
 {
     TRACK_FUNCTION();
 
-    script_invoke_v(L"on_playlist_switch");
+    script_invoke_v(CallbackIds::on_playlist_switch);
 }
 
 void wsh_panel_window::on_playlists_changed()
 {
     TRACK_FUNCTION();
 
-    script_invoke_v(L"on_playlists_changed");
+    script_invoke_v(CallbackIds::on_playlists_changed);
 }
 
 void wsh_panel_window::on_playlist_items_added(WPARAM wp)
@@ -1310,7 +1310,7 @@ void wsh_panel_window::on_playlist_items_added(WPARAM wp)
     VARIANTARG args[1];
     args[0].vt = VT_UI4;
     args[0].ulVal = wp;
-    script_invoke_v(L"on_playlist_items_added", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playlist_items_added, args, _countof(args));
 }
 
 void wsh_panel_window::on_playlist_items_reordered(WPARAM wp)
@@ -1320,7 +1320,7 @@ void wsh_panel_window::on_playlist_items_reordered(WPARAM wp)
     VARIANTARG args[1];
     args[0].vt = VT_UI4;
     args[0].ulVal = wp;
-    script_invoke_v(L"on_playlist_items_reordered", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playlist_items_reordered, args, _countof(args));
 }
 
 void wsh_panel_window::on_playlist_items_removed(WPARAM wp, LPARAM lp)
@@ -1332,14 +1332,14 @@ void wsh_panel_window::on_playlist_items_removed(WPARAM wp, LPARAM lp)
     args[0].ulVal = lp;
     args[1].vt = VT_UI4;
     args[1].ulVal = wp;
-    script_invoke_v(L"on_playlist_items_removed", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playlist_items_removed, args, _countof(args));
 }
 
 void wsh_panel_window::on_playlist_items_selection_change()
 {
     TRACK_FUNCTION();
 
-    script_invoke_v(L"on_playlist_items_selection_change");
+    script_invoke_v(CallbackIds::on_playlist_items_selection_change);
 }
 
 void wsh_panel_window::on_playlist_item_ensure_visible(WPARAM wp, LPARAM lp)
@@ -1351,7 +1351,7 @@ void wsh_panel_window::on_playlist_item_ensure_visible(WPARAM wp, LPARAM lp)
     args[0].ulVal = lp;
     args[1].vt = VT_UI4;
     args[1].ulVal = wp;
-    script_invoke_v(L"on_playlist_item_ensure_visible", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playlist_item_ensure_visible, args, _countof(args));
 }
 
 void wsh_panel_window::on_changed_sorted(WPARAM wp)
@@ -1384,7 +1384,7 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
     args[0].boolVal = TO_VARIANT_BOOL(data->m_fromhook);
     args[1].vt = VT_DISPATCH;
     args[1].pdispVal = handle;
-    script_invoke_v(L"on_metadb_changed", args, _countof(args));
+    script_invoke_v(CallbackIds::on_metadb_changed, args, _countof(args));
 
     if (handle)
         handle->Release();
@@ -1398,7 +1398,7 @@ void wsh_panel_window::on_selection_changed(WPARAM wp)
     {
         if (GetScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
         {
-            script_invoke_v(L"on_selection_changed");
+            script_invoke_v(CallbackIds::on_selection_changed);
         }
         else
         {
@@ -1410,7 +1410,7 @@ void wsh_panel_window::on_selection_changed(WPARAM wp)
 
             args[0].vt = VT_DISPATCH;
             args[0].pdispVal = handle;
-            script_invoke_v(L"on_selection_changed", args, _countof(args));
+            script_invoke_v(CallbackIds::on_selection_changed, args, _countof(args));
 
             if (handle)
                 handle->Release();
@@ -1425,5 +1425,5 @@ void wsh_panel_window::on_playback_queue_changed(WPARAM wp)
     VARIANTARG args[1];
     args[0].vt = VT_I4;
     args[0].lVal = wp;
-    script_invoke_v(L"on_playback_queue_changed", args, _countof(args));
+    script_invoke_v(CallbackIds::on_playback_queue_changed, args, _countof(args));
 }
