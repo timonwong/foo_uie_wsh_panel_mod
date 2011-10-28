@@ -138,6 +138,7 @@ copy $(SolutionDir)extras\*.api "F:\foobar2000\components\"
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="com_tools.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="foo_uie_wsh_panel_mod.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>

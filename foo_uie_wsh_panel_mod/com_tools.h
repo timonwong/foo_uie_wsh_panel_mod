@@ -32,18 +32,72 @@
 	private:
 
 
+class name_to_id_cache 
+{
+public:
+    typedef ULONG hash_type;
+
+    bool lookup(hash_type hash, DISPID* p_dispid) const;
+    void add(hash_type hash, DISPID dispid);
+    static hash_type g_hash(const wchar_t* name);
+
+protected:
+    typedef pfc::map_t<hash_type, DISPID> name_to_id_map;
+    name_to_id_map m_map;
+};
+
+class type_info_cache_holder
+{
+public:
+    type_info_cache_holder() : m_type_info(NULL)
+    {
+    }
+
+    inline void set_type_info(ITypeInfo * type_info)
+    {
+        m_type_info = type_info;
+    }
+
+    inline bool valid() throw()
+    {
+        return m_type_info != NULL;
+    }
+
+    inline bool empty() throw()
+    {
+        return m_type_info == NULL;
+    }
+
+    inline ITypeInfo * get_ptr() throw()
+    {
+        return m_type_info;
+    }
+
+    void init_from_typelib(ITypeLib * p_typeLib, const GUID & guid);
+
+public:
+    // "Expose" some ITypeInfo related methods here
+    HRESULT GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
+    HRESULT GetIDsOfNames(LPOLESTR *rgszNames, UINT cNames, MEMBERID *pMemId);
+    HRESULT Invoke(PVOID pvInstance, MEMBERID memid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+
+protected:
+    name_to_id_cache m_cache;
+    ITypeInfoPtr m_type_info;
+};
+
 //-- IDispatch --
 template<class T>
 class MyIDispatchImpl: public T
 {
 protected:
-	static ITypeInfoPtr g_typeinfo;
+	static type_info_cache_holder g_type_info_cache_holder;
 
 	MyIDispatchImpl<T>()
 	{
-		if (!g_typeinfo && g_typelib)
+		if (g_type_info_cache_holder.empty() && g_typelib)
 		{
-			g_typelib->GetTypeInfoOfGuid(__uuidof(T), &g_typeinfo);
+            g_type_info_cache_holder.init_from_typelib(g_typelib, __uuidof(T));	
 		}
 	}
 
@@ -59,42 +113,31 @@ public:
 	STDMETHOD(GetTypeInfoCount)(unsigned int * n)
 	{
 		if (!n) return E_INVALIDARG;
-
 		*n = 1;
 		return S_OK;
 	}
 
 	STDMETHOD(GetTypeInfo)(unsigned int i, LCID lcid, ITypeInfo** pp)
 	{
-		if (!g_typeinfo) return E_NOINTERFACE;
-		if (!pp) return E_POINTER;
-		if (i != 0) return DISP_E_BADINDEX;
-
-		g_typeinfo->AddRef();
-		(*pp) = g_typeinfo;
-		return S_OK;
+        return g_type_info_cache_holder.GetTypeInfo(i, lcid, pp);
 	}
 
 	STDMETHOD(GetIDsOfNames)(REFIID riid, OLECHAR** names, unsigned int cnames, LCID lcid, DISPID* dispids)
 	{
-		if (!IsEqualIID(riid, IID_NULL)) return DISP_E_UNKNOWNINTERFACE;
-		if (!g_typeinfo) return E_NOINTERFACE;
-
-		return g_typeinfo->GetIDsOfNames(names, cnames, dispids);
+		if (g_type_info_cache_holder.empty()) return E_UNEXPECTED;
+		return g_type_info_cache_holder.GetIDsOfNames(names, cnames, dispids);
 	}
 
 	STDMETHOD(Invoke)(DISPID dispid, REFIID riid, LCID lcid, WORD flag, DISPPARAMS* params, VARIANT* result, EXCEPINFO* excep, unsigned int* err)
 	{
-		if (!IsEqualIID(riid, IID_NULL)) return DISP_E_UNKNOWNINTERFACE;
-		if (!g_typeinfo) return E_POINTER;
-
-		TRACK_THIS_DISPATCH_CALL(g_typeinfo, dispid, flag);
-		return g_typeinfo->Invoke(this, dispid, flag, params, result, excep, err);
+		if (g_type_info_cache_holder.empty()) return E_UNEXPECTED;
+		TRACK_THIS_DISPATCH_CALL(g_type_info_cache_holder.get_ptr(), dispid, flag);
+		return g_type_info_cache_holder.Invoke(this, dispid, flag, params, result, excep, err);
 	}
 };
 
 template<class T>
-FOOGUIDDECL ITypeInfoPtr MyIDispatchImpl<T>::g_typeinfo;
+FOOGUIDDECL type_info_cache_holder MyIDispatchImpl<T>::g_type_info_cache_holder;
 
 
 //-- IDispatch impl -- [T] [IDispatch] [IUnknown]
