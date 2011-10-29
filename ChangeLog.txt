@@ -1,5 +1,6 @@
 v1.5.0 Beta 5
 - FIX: Fix a bug that that alpha channel will be lost while converting to RawBitmap.
+- FIX: gdi.Image() will not lock files any more.
 
 v1.5.0 Beta 4
 - ADD: Add new timer methods: window.SetInterval(), window.SetTimeout(), window.ClearInterval() and window.ClearTimeout().

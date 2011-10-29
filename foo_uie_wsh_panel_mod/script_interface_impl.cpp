@@ -982,13 +982,17 @@ STDMETHODIMP GdiUtils::Image(BSTR path, IGdiBitmap** pp)
 
     if (!path) return E_INVALIDARG;
     if (!pp) return E_POINTER;
+    (*pp) = NULL;
 
-    Gdiplus::Bitmap * img = new Gdiplus::Bitmap(path);
+    // Since using Gdiplus::Bitmap(path) will result locking file, so use IStream instead to prevent it.
+    IStreamPtr pStream;
+    HRESULT hr = SHCreateStreamOnFileEx(path, STGM_READ | STGM_SHARE_DENY_WRITE, GENERIC_READ, FALSE, NULL, &pStream);
+    if (FAILED(hr)) return S_OK;
+    Gdiplus::Bitmap * img = new Gdiplus::Bitmap(pStream);
 
     if (!helpers::ensure_gdiplus_object(img))
     {
         if (img) delete img;
-        (*pp) = NULL;
         return S_OK;
     }
 
