@@ -4,6 +4,7 @@
 #include "script_interface_playlist_impl.h"
 #include "helpers.h"
 #include "com_array.h"
+#include "gdiplus_helpers.h"
 #include "boxblurfilter.h"
 #include "user_message.h"
 #include "popup_msg.h"
@@ -76,7 +77,7 @@ STDMETHODIMP GdiFont::get_Height(UINT* p)
 
     if (!p || !m_ptr) return E_POINTER;
 
-    Gdiplus::Bitmap img(1, 1, PixelFormat32bppARGB);
+    Gdiplus::Bitmap img(1, 1, PixelFormat32bppPARGB);
     Gdiplus::Graphics g(&img);
 
     *p = (UINT)m_ptr->GetHeight(&g);
@@ -178,7 +179,7 @@ STDMETHODIMP GdiBitmap::ApplyAlpha(BYTE alpha, IGdiBitmap ** pp)
 
     UINT width = m_ptr->GetWidth();
     UINT height = m_ptr->GetHeight();
-    Gdiplus::Bitmap * out = new Gdiplus::Bitmap(width, height, PixelFormat32bppARGB);
+    Gdiplus::Bitmap * out = new Gdiplus::Bitmap(width, height, PixelFormat32bppPARGB);
     Gdiplus::Graphics g(out);
     Gdiplus::ImageAttributes ia;
     Gdiplus::ColorMatrix cm = { 0.0 };
@@ -218,12 +219,12 @@ STDMETHODIMP GdiBitmap::ApplyMask(IGdiBitmap * mask, VARIANT_BOOL * p)
     Gdiplus::Rect rect(0, 0, m_ptr->GetWidth(), m_ptr->GetHeight());
     Gdiplus::BitmapData bmpdata_mask = { 0 }, bmpdata_dst = { 0 };
 
-    if (bitmap_mask->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &bmpdata_mask) != Gdiplus::Ok)
+    if (bitmap_mask->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppPARGB, &bmpdata_mask) != Gdiplus::Ok)
     {
         return S_OK;
     }
 
-    if (m_ptr->LockBits(&rect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpdata_dst) != Gdiplus::Ok)
+    if (m_ptr->LockBits(&rect, Gdiplus::ImageLockModeWrite, PixelFormat32bppPARGB, &bmpdata_dst) != Gdiplus::Ok)
     {
         bitmap_mask->UnlockBits(&bmpdata_mask);
         return S_OK;
@@ -1003,7 +1004,7 @@ STDMETHODIMP GdiUtils::CreateImage(int w, int h, IGdiBitmap ** pp)
 
     if (!pp) return E_POINTER;
 
-    Gdiplus::Bitmap * img = new Gdiplus::Bitmap(w, h, PixelFormat32bppARGB);
+    Gdiplus::Bitmap * img = new Gdiplus::Bitmap(w, h, PixelFormat32bppPARGB);
 
     if (!helpers::ensure_gdiplus_object(img))
     {
@@ -2539,7 +2540,7 @@ STDMETHODIMP MenuObj::AppendMenuItem(UINT flags, UINT item_id, BSTR text)
 
     if (flags & MF_POPUP)
     {
-        PRINT_OBSOLETE_MESSAGE_ONCE("Use AppendTo() method to create sub menu instead.");
+        PRINT_OBSOLETE_MESSAGE_ONCE("Please use AppendTo() method to create sub menu instead of AppendMenuItem()");
     }
 
     ::AppendMenu(m_hMenu, flags, item_id, text);
@@ -2921,12 +2922,13 @@ STDMETHODIMP GdiRawBitmap::get__Handle(HDC * p)
 
 GdiRawBitmap::GdiRawBitmap(Gdiplus::Bitmap * p_bmp)
 {
-    m_hdc = CreateCompatibleDC(NULL);
-    p_bmp->GetHBITMAP(Gdiplus::Color(0, 0, 0), &m_hbmp);
-    m_hbmpold = SelectBitmap(m_hdc, m_hbmp);
-
+    PFC_ASSERT(p_bmp != NULL);
     m_width = p_bmp->GetWidth();
     m_height = p_bmp->GetHeight();
+
+    m_hdc = CreateCompatibleDC(NULL);
+    m_hbmp = gdiplus_helpers::create_hbitmap_from_gdiplus_bitmap(p_bmp);
+    m_hbmpold = SelectBitmap(m_hdc, m_hbmp);
 }
 
 //STDMETHODIMP GdiRawBitmap::GetBitmap(IGdiBitmap ** pp)
