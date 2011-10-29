@@ -20,21 +20,26 @@ HRESULT script_preprocessor::process_import(const t_script_info & info, t_script
 			expand_var(val.value);
 
 			pfc::array_t<wchar_t> code;
-			bool is_file_read = helpers::read_file_wide(CP_ACP, val.value.get_ptr(), code);
+			bool success = helpers::read_file_wide(CP_ACP, val.value.get_ptr(), code);
 			pfc::string_formatter msg;
+
+            if (!success)
+            {
+                msg << "Error: ";
+            }
 
 			msg << WSPM_NAME " (" << info.build_info_string() << "): "
 				<< "Parsing file \"" << pfc::stringcvt::string_utf8_from_wide(val.value.get_ptr())
 				<< "\"";
 
-			if (!is_file_read)
+			if (!success)
 			{
 				msg << ": Failed to load";
 			}
 
 			console::formatter() << msg;
 
-			if (is_file_read)
+			if (success)
 			{
 				t_script_code script;
 				script.path = val.value;

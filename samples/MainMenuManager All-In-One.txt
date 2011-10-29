@@ -39,13 +39,13 @@ function on_mouse_lbtn_up(x, y) {
     var menuman5 = fb.CreateMainMenuManager();
     var menuman6 = fb.CreateMainMenuManager();
 
-    basemenu.AppendMenuItem(MF_STRING | MF_POPUP, child1.ID, "File");
-    basemenu.AppendMenuItem(MF_STRING | MF_POPUP, child2.ID, "Edit");
-    basemenu.AppendMenuItem(MF_STRING | MF_POPUP, child3.ID, "View");
-    basemenu.AppendMenuItem(MF_STRING | MF_POPUP, child4.ID, "Playback");
-    basemenu.AppendMenuItem(MF_STRING | MF_POPUP, child5.ID, "Library");
-    basemenu.AppendMenuItem(MF_STRING | MF_POPUP, child6.ID, "Help");
-    basemenu.AppendMenuItem(MF_STRING | MF_POPUP, child7.ID, "Now Playing");
+    child1.AppendTo(basemenu, MF_STRING, "File");
+    child2.AppendTo(basemenu, MF_STRING, "Edit");
+    child3.AppendTo(basemenu, MF_STRING, "View");
+    child4.AppendTo(basemenu, MF_STRING, "Playback");
+    child5.AppendTo(basemenu, MF_STRING, "Library");
+    child6.AppendTo(basemenu, MF_STRING, "Help");
+    child7.AppendTo(basemenu, MF_STRING, "Now Playing");
 
     menuman1.Init("file");
     menuman2.Init("edit");

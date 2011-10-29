@@ -992,8 +992,6 @@ STDMETHODIMP GdiUtils::Image(BSTR path, IGdiBitmap** pp)
         return S_OK;
     }
 
-    pfc::string8 tmp = pfc::stringcvt::string_utf8_from_wide(path);
-
     (*pp) = new com_object_impl_t<GdiBitmap>(img);
     return S_OK;
 }

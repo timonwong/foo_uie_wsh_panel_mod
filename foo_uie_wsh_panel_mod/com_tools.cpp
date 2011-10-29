@@ -46,7 +46,8 @@ HRESULT type_info_cache_holder::GetIDsOfNames(LPOLESTR *rgszNames, UINT cNames, 
         if (!m_cache.lookup(hash, &pMemId[i])) 
         {
             hr = m_type_info->GetIDsOfNames(&rgszNames[i], 1, &pMemId[i]);
-            if (SUCCEEDED(hr)) {
+            if (SUCCEEDED(hr)) 
+            {
                 m_cache.add(hash, pMemId[i]);
             }
         }
