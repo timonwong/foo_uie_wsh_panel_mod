@@ -335,7 +335,7 @@ STDMETHODIMP GdiBitmap::BoxBlur(int radius, int iteration)
     return S_OK;
 }
 
-STDMETHODIMP GdiBitmap::Resize(UINT w, UINT h, IGdiBitmap ** pp)
+STDMETHODIMP GdiBitmap::Resize(UINT w, UINT h, INT interpolationMode, IGdiBitmap ** pp)
 {
     TRACK_FUNCTION();
 
@@ -345,6 +345,7 @@ STDMETHODIMP GdiBitmap::Resize(UINT w, UINT h, IGdiBitmap ** pp)
     Gdiplus::Bitmap * bitmap = new Gdiplus::Bitmap(w, h); 
     Gdiplus::Graphics g(bitmap);
 
+    g.SetInterpolationMode((Gdiplus::InterpolationMode)interpolationMode);
     g.DrawImage(m_ptr, 0, 0, w, h);
 
     (*pp) = new com_object_impl_t<GdiBitmap>(bitmap);

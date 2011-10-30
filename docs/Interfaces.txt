@@ -37,7 +37,9 @@ Methods:
     IGdiGraphics GetGraphics();
     void ReleaseGraphics(IGdiGraphics);
     void BoxBlur(radius, iteration = 1);
-    IGdiBitmap Resize(w, h);
+    // [1.5.0 Beta 5]: Changed: Add parameter "interpolationMode".
+    // See Flags.txt meanings of modes.
+    IGdiBitmap Resize(w, h, interpolationMode = 0);
     void Dispose();
 }
     

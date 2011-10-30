@@ -84,7 +84,7 @@ public:
 	STDMETHODIMP GetGraphics(IGdiGraphics ** pp);
 	STDMETHODIMP ReleaseGraphics(IGdiGraphics * p);
 	STDMETHODIMP BoxBlur(int radius, int iteration);
-	STDMETHODIMP Resize(UINT w, UINT h, IGdiBitmap ** pp);
+    STDMETHODIMP Resize(UINT w, UINT h, INT interpolationMode, IGdiBitmap ** pp);
 };
 
 class GdiGraphics : public GdiObj<IGdiGraphics, Gdiplus::Graphics>
