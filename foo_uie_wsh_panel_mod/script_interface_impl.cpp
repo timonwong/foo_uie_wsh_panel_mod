@@ -234,45 +234,23 @@ STDMETHODIMP GdiBitmap::ApplyMask(IGdiBitmap * mask, VARIANT_BOOL * p)
     const int height = rect.Height;
     const int size = width * height;
     //const int size_threshold = 512;
+    t_uint32 * p_mask = reinterpret_cast<t_uint32 *>(bmpdata_mask.Scan0);
+    t_uint32 * p_dst = reinterpret_cast<t_uint32 *>(bmpdata_dst.Scan0);
+    const t_uint32 * p_mask_end = p_mask + rect.Width * rect.Height;
+    t_uint32 alpha;
 
-#if 1 /* Plain */
-        t_uint32 * p_mask = reinterpret_cast<t_uint32 *>(bmpdata_mask.Scan0);
-        t_uint32 * p_dst = reinterpret_cast<t_uint32 *>(bmpdata_dst.Scan0);
-        const t_uint32 * p_mask_end = p_mask + rect.Width * rect.Height;
-        t_uint32 alpha;
+    while (p_mask < p_mask_end)
+    {
+        // Method 1:
+        //alpha = (~*p_mask & 0xff) * (*p_dst >> 24) + 0x80;
+        //*p_dst = ((((alpha >> 8) + alpha) & 0xff00) << 16) | (*p_dst & 0xffffff);
+        // Method 2
+        alpha = (((~*p_mask & 0xff) * (*p_dst >> 24)) << 16) & 0xff000000;
+        *p_dst = alpha | (*p_dst & 0xffffff);
 
-        while (p_mask < p_mask_end)
-        {
-            // Method 1:
-            //alpha = (~*p_mask & 0xff) * (*p_dst >> 24) + 0x80;
-            //*p_dst = ((((alpha >> 8) + alpha) & 0xff00) << 16) | (*p_dst & 0xffffff);
-            // Method 2
-            alpha = (((~*p_mask & 0xff) * (*p_dst >> 24)) << 16) & 0xff000000;
-            *p_dst = alpha | (*p_dst & 0xffffff);
-
-            ++p_mask;
-            ++p_dst;
-        }
-#endif
-
-#if 0 /* Parallel Patterns Library */
-        t_uint32 * p_mask = reinterpret_cast<t_uint32 *>(bmpdata_mask.Scan0);
-        t_uint32 * p_dst = reinterpret_cast<t_uint32 *>(bmpdata_dst.Scan0);
-        const int height = rect.Height;
-
-        Concurrency::parallel_for(0, height, [&width, &p_mask, &p_dst] (int y)
-        {
-            t_uint32 alpha;
-            int i;
-
-            for (int x = 0; x < width; ++x)
-            {
-                i = y * width + x;
-                alpha = (((~p_mask[i] & 0xff) * (p_dst[i] >> 24)) << 16) & 0xff000000;
-                p_dst[i] = alpha | (p_dst[i] & 0xffffff);
-            }
-        });
-#endif
+        ++p_mask;
+        ++p_dst;
+    }
 
     bitmap_mask->UnlockBits(&bmpdata_mask);
     m_ptr->UnlockBits(&bmpdata_dst);

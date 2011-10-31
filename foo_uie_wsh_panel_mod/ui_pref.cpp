@@ -14,15 +14,8 @@ namespace
 
 BOOL CDialogPref::OnInitDialog(HWND hwndFocus, LPARAM lParam)
 {
-	// Set Spin	
-	SendDlgItemMessage(IDC_SPIN_TIMEOUT, UDM_SETRANGE, 0, MAKELONG(180, 0));
-
 	// Check "Safe mode"
 	uButton_SetCheck(m_hWnd, IDC_CHECK_SAFE_MODE, g_cfg_safe_mode);
-
-	// Check "Debug mode"
-	uButton_SetCheck(m_hWnd, IDC_CHECK_DEBUG_MODE, g_cfg_debug_mode);
-
 	DoDataExchange();
 
 	// Enable Visual Style
@@ -145,8 +138,7 @@ void CDialogPref::OnChanged()
 
 bool CDialogPref::HasChanged()
 {
-    return (uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE) != g_cfg_safe_mode) ||
-        (uButton_GetCheck(m_hWnd, IDC_CHECK_DEBUG_MODE) != g_cfg_debug_mode);
+    return (uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE) != g_cfg_safe_mode);
 }
 
 HWND CDialogPref::get_wnd()
@@ -162,8 +154,7 @@ t_uint32 CDialogPref::get_state()
 	{
 		state |= preferences_state::changed;
 
-		if ((uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE) != g_cfg_safe_mode) || 
-			(uButton_GetCheck(m_hWnd, IDC_CHECK_DEBUG_MODE) != g_cfg_debug_mode))
+		if ((uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE) != g_cfg_safe_mode))
 			state |= preferences_state::needs_restart;
 	}
 	
@@ -173,7 +164,6 @@ t_uint32 CDialogPref::get_state()
 void CDialogPref::apply()
 {
 	g_cfg_safe_mode = uButton_GetCheck(m_hWnd, IDC_CHECK_SAFE_MODE);
-	g_cfg_debug_mode = uButton_GetCheck(m_hWnd, IDC_CHECK_DEBUG_MODE);
 	OnChanged();
 }
 

@@ -34,11 +34,6 @@ extern const GUID g_guid_cfg_safe_mode;
 FOOGUIDDECL const GUID g_guid_cfg_safe_mode = 
 { 0x8826d886, 0x6e34, 0x4796, { 0x9b, 0x61, 0x1f, 0xea, 0x99, 0x67, 0x30, 0xf0 } };
 
-// {571A60E2-6E22-4292-9557-5688C6C1733C}
-extern const GUID g_guid_cfg_debug_mode;
-FOOGUIDDECL const GUID g_guid_cfg_debug_mode = 
-{ 0x571a60e2, 0x6e22, 0x4292, { 0x95, 0x57, 0x56, 0x88, 0xc6, 0xc1, 0x73, 0x3c } };
-
 // {E0521E81-C2A4-4a3e-A5FC-A1E62B187053}
 extern const GUID g_guid_cfg_cui_warning_reported;
 FOOGUIDDECL const GUID g_guid_cfg_cui_warning_reported = 

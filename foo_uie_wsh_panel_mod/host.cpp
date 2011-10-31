@@ -727,38 +727,10 @@ ScriptHost::ScriptHost(HostComm * host)
 	, m_has_error(false)
     , m_lastSourceContext(0)
 {
-	if (g_cfg_debug_mode)
-	{
-		HRESULT hr = S_OK;
-
-		if (SUCCEEDED(hr)) hr = m_debug_manager.CreateInstance(CLSID_ProcessDebugManager, NULL, CLSCTX_INPROC_SERVER);
-		if (SUCCEEDED(hr)) hr = m_debug_manager->CreateApplication(&m_debug_application);
-        if (SUCCEEDED(hr)) hr = m_debug_application->SetName( _T(WSPM_NAME) );
-		if (SUCCEEDED(hr)) hr = m_debug_manager->AddApplication(m_debug_application, &m_app_cookie);
-
-		if (FAILED(hr))
-		{
-			g_cfg_debug_mode = false;
-
-			popup_msg::g_show("Debug mod is enabled but it seems that there is no valid script debugger "
-				"associated with your system, so this option will be disabled.", WSPM_NAME);
-		}
-	}
 }
 
 ScriptHost::~ScriptHost()
 {
-	if (m_debug_manager)
-	{
-		m_debug_manager->RemoveApplication(m_app_cookie);
-		m_debug_manager.Release();
-	}
-
-	if (m_debug_application)
-	{
-		m_debug_application->Close();
-		m_debug_application.Release();
-	}
 }
 
 STDMETHODIMP_(ULONG) ScriptHost::AddRef()
@@ -862,83 +834,6 @@ STDMETHODIMP ScriptHost::OnEnterScript()
 
 STDMETHODIMP ScriptHost::OnLeaveScript()
 {
-	return S_OK;
-}
-
-STDMETHODIMP ScriptHost::GetDocumentContextFromPosition(DWORD dwSourceContext, ULONG uCharacterOffset, ULONG uNumChars, IDebugDocumentContext **ppsc)
-{
-	if (g_cfg_debug_mode)
-	{
-		t_debug_doc_map::iterator iter = m_debug_docs.find(dwSourceContext);
-
-		if (iter.is_valid())
-		{
-			IDebugDocumentHelper * helper = iter->m_value;
-			ULONG ulStartPos = 0;
-			HRESULT hr = helper->GetScriptBlockInfo(dwSourceContext, NULL, &ulStartPos, NULL);
-
-			if (SUCCEEDED(hr)) 
-			{
-				hr = helper->CreateDebugDocumentContext(ulStartPos + uCharacterOffset, uNumChars, ppsc);
-			}
-
-			return hr;
-		}
-	}
-
-	return E_FAIL;
-}
-
-STDMETHODIMP ScriptHost::GetApplication(IDebugApplication **ppda)
-{
-	if (!ppda) return E_POINTER;
-
-	if (m_debug_application)
-	{
-		// FIXME: Should AddRef() first?
-		m_debug_application.AddRef();
-		*ppda = m_debug_application;
-	}
-	else
-	{
-		return E_NOTIMPL;
-	}
-
-	return S_OK;
-}
-
-STDMETHODIMP ScriptHost::GetRootApplicationNode(IDebugApplicationNode **ppdanRoot)
-{
-	if (!ppdanRoot) return E_POINTER;
-
-	if (m_debug_application)
-		return m_debug_application->GetRootNode(ppdanRoot);
-	else
-		*ppdanRoot = NULL;
-
-	return S_OK;
-}
-
-STDMETHODIMP ScriptHost::OnScriptErrorDebug(IActiveScriptErrorDebug *pErrorDebug, BOOL *pfEnterDebugger, BOOL *pfCallOnScriptErrorWhenContinuing)
-{
-	m_has_error = true;
-
-	if (!pErrorDebug || !pfEnterDebugger || !pfCallOnScriptErrorWhenContinuing)
-		return E_POINTER;
-
-	int ret = ::uMessageBox(core_api::get_main_window(), 
-		"A script error occured. Do you want to debug?",
-		WSPM_NAME,
-		MB_ICONQUESTION | MB_SETFOREGROUND | MB_YESNO);
-
-	*pfEnterDebugger = (ret == IDYES);
-	*pfCallOnScriptErrorWhenContinuing = FALSE;
-
-	if (ret == IDNO)
-		ReportError(pErrorDebug);
-	else
-		SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, 0);
-
 	return S_OK;
 }
 
@@ -1082,7 +977,8 @@ HRESULT ScriptHost::InitScriptEngineByName(const wchar_t * engineName)
 
 void ScriptHost::Finalize()
 {
-	InvokeCallback(CallbackIds::on_script_unload);
+    if (!m_has_error)
+	    InvokeCallback(CallbackIds::on_script_unload);
 
 	if (m_script_engine && m_engine_inited)
 	{
@@ -1095,22 +991,11 @@ void ScriptHost::Finalize()
  		}
 
 		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
-		m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
+        m_script_engine->SetScriptState(SCRIPTSTATE_CLOSED);
+		//m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
 		m_engine_inited = false;
 	}
 
-	for (t_debug_doc_map::iterator iter = m_debug_docs.first(); iter.is_valid(); ++iter)
-	{
-		IDebugDocumentHelperPtr & helper = iter->m_value;
-
-		if (helper)
-		{
-			helper->Detach();
-			helper.Release();
-		}
-	}
-
-	m_debug_docs.remove_all();
     m_contextToPathMap.remove_all();
     m_callback_invoker.reset();
 
@@ -1179,25 +1064,7 @@ HRESULT ScriptHost::GenerateSourceContext(const wchar_t * path, const wchar_t * 
 		guidString.convert(pfc::print_guid(m_host->GetGUID()));
 	}	
 
-	if (m_debug_manager) 
-	{
-		IDebugDocumentHelperPtr docHelper;
-
-		if (SUCCEEDED(hr)) hr = m_debug_manager->CreateDebugDocumentHelper(NULL, &docHelper);
-		if (SUCCEEDED(hr)) hr = docHelper->Init(m_debug_application, 
-			(!path) ? name.get_ptr() : path, 
-			(!path) ? guidString.get_ptr() : path,
-			TEXT_DOC_ATTR_READONLY);
-		if (SUCCEEDED(hr)) hr = docHelper->Attach(NULL);
-		if (SUCCEEDED(hr)) hr = docHelper->AddUnicodeText(code);
-		if (SUCCEEDED(hr)) hr = docHelper->DefineScriptBlock(0, len, m_script_engine, FALSE, &source_context);
-		if (SUCCEEDED(hr)) m_debug_docs.find_or_add(source_context) = docHelper;
-	}
-	else
-	{
-		source_context = m_lastSourceContext++;
-	}
-
+    source_context = m_lastSourceContext++;
 	return hr;
 }
 
@@ -1223,9 +1090,6 @@ void ScriptHost::ReportError(IActiveScriptError* err)
 	{
 		sourceline = L"<source text only available at compile time>";
 	}
-
-	// HACK: Try to retrieve additional infomation from Debug Manger Interface
-    CallDebugManager(err, name, line, sourceline);
 
 	if (FAILED(err->GetExceptionInfo(&excep)))
         return;
@@ -1269,69 +1133,3 @@ void ScriptHost::ReportError(IActiveScriptError* err)
     if (excep.bstrHelpFile)    SysFreeString(excep.bstrHelpFile);
 }
 
-void ScriptHost::CallDebugManager(IActiveScriptError* err, _bstr_t &name, ULONG line, _bstr_t &sourceline)
-{
-    if (m_debug_manager)
-    {
-        _COM_SMARTPTR_TYPEDEF(IActiveScriptErrorDebug, IID_IActiveScriptErrorDebug);
-        _COM_SMARTPTR_TYPEDEF(IDebugDocumentContext, IID_IDebugDocumentContext);
-        _COM_SMARTPTR_TYPEDEF(IDebugDocumentText, IID_IDebugDocumentText);
-        _COM_SMARTPTR_TYPEDEF(IDebugDocument, IID_IDebugDocument);
-
-        HRESULT hr;
-        IActiveScriptErrorDebugPtr  pErrorDebug;
-        IDebugDocumentContextPtr    context;
-        IDebugDocumentTextPtr       text;
-        IDebugDocumentPtr           document;
-
-        hr = err->QueryInterface(IID_IActiveScriptErrorDebug, (void **)&pErrorDebug);
-
-        if (SUCCEEDED(hr)) hr = pErrorDebug ? pErrorDebug->GetDocumentContext(&context) : E_FAIL;
-        if (SUCCEEDED(hr)) hr = context ? context->GetDocument(&document) : E_FAIL;
-        if (SUCCEEDED(hr)) hr = document ? document->QueryInterface(IID_IDebugDocumentText, (void **)&text) : E_FAIL;
-
-        if (SUCCEEDED(hr))
-        {
-            ULONG charPosLine = 0;
-            ULONG linePos = 0;
-            ULONG lines = 0;
-            ULONG numChars = 0;
-            ULONG charsToRead;
-            // Must be set to 0 first
-            ULONG charsRead = 0;
-
-            text->GetName(DOCUMENTNAMETYPE_TITLE, name.GetAddress());
-            text->GetPositionOfLine(line, &charPosLine);
-            text->GetSize(&lines, &numChars);
-
-            if (lines > line)
-            {
-                // Has next line?
-                ULONG charPosNextLine;
-
-                text->GetPositionOfLine(line + 1, &charPosNextLine);
-                charsToRead = charPosNextLine - 1 - charPosLine;
-            }
-            else
-            {
-                // Read to the end of current line.
-                charsToRead = numChars - charPosLine;
-            }
-
-            pfc::array_t<wchar_t> code;
-            code.set_size(charsToRead + 1);
-            text->GetText(charPosLine, code.get_ptr(), NULL, &charsRead, charsToRead);
-            code[charsRead] = 0;
-            --charsRead;
-
-            while (charsRead && (code[charsRead] == '\r' || code[charsRead] == '\n'))
-            {
-                code[charsRead] = 0;
-                --charsRead;
-            }
-
-            if (*code.get_ptr())
-                sourceline = code.get_ptr();
-        }
-    }
-}

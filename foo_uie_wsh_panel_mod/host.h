@@ -140,7 +140,6 @@ public:
 
 class ScriptHost : 
 	public IActiveScriptSite,
-	public IActiveScriptSiteDebug,
 	public IActiveScriptSiteWindow
 {
 private:
@@ -157,16 +156,6 @@ private:
 	IActiveScriptPtr        m_script_engine;
 	IDispatchPtr            m_script_root;
 
-	// Debugger
-	IProcessDebugManagerPtr m_debug_manager;
-	IDebugApplicationPtr    m_debug_application;
-	DWORD                   m_app_cookie;
-
-	// debugging helper
-	// cookie => IDebugDocumentHelper map
-	typedef pfc::map_t<DWORD, IDebugDocumentHelperPtr> t_debug_doc_map;
-	t_debug_doc_map   m_debug_docs;
-
 	bool  m_engine_inited;
 	bool  m_has_error;
 
@@ -179,7 +168,6 @@ private:
 	BEGIN_COM_QI_IMPL()
 		COM_QI_ENTRY_MULTI(IUnknown, IActiveScriptSite)
 		COM_QI_ENTRY(IActiveScriptSite)
-		COM_QI_ENTRY_COND(IActiveScriptSiteDebug, g_cfg_debug_mode)
 		COM_QI_ENTRY(IActiveScriptSiteWindow)
 	END_COM_QI_IMPL()
 
@@ -202,12 +190,6 @@ public:
 	STDMETHODIMP OnEnterScript();
 	STDMETHODIMP OnLeaveScript();
 
-	// IActiveScriptSiteDebug
-	STDMETHODIMP GetDocumentContextFromPosition(DWORD dwSourceContext, ULONG uCharacterOffset, ULONG uNumChars, IDebugDocumentContext **ppsc);
-	STDMETHODIMP GetApplication(IDebugApplication **ppda);
-	STDMETHODIMP GetRootApplicationNode(IDebugApplicationNode **ppdanRoot);
-	STDMETHODIMP OnScriptErrorDebug(IActiveScriptErrorDebug *pErrorDebug, BOOL *pfEnterDebugger, BOOL *pfCallOnScriptErrorWhenContinuing);
-
 	// IActiveScriptSiteWindow
 	STDMETHODIMP GetWindow(HWND *phwnd);
 	STDMETHODIMP EnableModeless(BOOL fEnable);
@@ -219,21 +201,10 @@ public:
     void EnableSafeModeToScriptEngine(bool enable);
     void Finalize();
 
-	inline void Stop() { m_engine_inited = false; m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED); }
+	inline void Stop() { m_engine_inited = false; if (m_script_engine) m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED); }
 	inline bool Ready() { return m_engine_inited; }
 	inline bool HasError() { return m_has_error; }
-	inline void StartDebugger()
-	{
-		if (m_debug_application && m_debug_application->FCanJitDebug())
-		{
-			if (FAILED(m_debug_application->StartDebugSession()))
-			{
-				console::error(WSPM_NAME ": StartDebugger(): Cannot start debugger session.");
-			}
-		}
-	}
     HRESULT InvokeCallback(int callbackId, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);
 	HRESULT GenerateSourceContext(const wchar_t * path, const wchar_t * code, DWORD & source_context);
 	void ReportError(IActiveScriptError* err);
-    void CallDebugManager(IActiveScriptError* err, _bstr_t &name, ULONG line, _bstr_t &sourceline);
 };

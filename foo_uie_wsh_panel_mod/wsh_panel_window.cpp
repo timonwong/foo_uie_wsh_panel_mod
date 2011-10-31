@@ -417,30 +417,14 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         break;
 
-    case UWM_SCRIPT_ERROR_TIMEOUT:
-        get_disabled_before() = true;
-        //script_unload();
-        m_script_host->Stop();
-
-        popup_msg::g_show(pfc::string_formatter() << "Script terminated due to the panel (" 
-            << GetScriptInfo().build_info_string()
-            << ") seems to be unresponsive, "
-            << "please check your script (usually infinite loop).", 
-            WSPM_NAME, popup_message::icon_error);
-
-        Repaint();
-        return 0;
-
     case UWM_SCRIPT_ERROR:
-        //script_unload();
         m_script_host->Stop();
-
+        script_unload();
         if (lp)
         {
             console::error(reinterpret_cast<const char *>(lp));
             MessageBeep(MB_ICONASTERISK);
         }
-
         Repaint();
         return 0;
 
@@ -622,7 +606,11 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
     HDC memdc = CreateCompatibleDC(dc);
     HBITMAP oldbmp = SelectBitmap(memdc, m_gr_bmp);
 
-    if (!m_script_host->HasError())
+    if (m_script_host->HasError())
+    {
+        on_paint_error(memdc);
+    }
+    else
     {
         if (get_pseudo_transparent())
         {
@@ -643,62 +631,68 @@ void wsh_panel_window::on_paint(HDC dc, LPRECT lpUpdateRect)
             FillRect(memdc, &rc, (HBRUSH)(COLOR_WINDOW + 1));
         }
 
-        if (m_script_host->Ready())
-        {
-            // Prepare graphics object to the script.
-            Gdiplus::Graphics gr(memdc);
-            Gdiplus::Rect rect(lpUpdateRect->left, lpUpdateRect->top,
-                lpUpdateRect->right - lpUpdateRect->left,
-                lpUpdateRect->bottom - lpUpdateRect->top);
-
-            // SetClip() may improve performance slightly
-            gr.SetClip(rect);
-
-            m_gr_wrap->put__ptr(&gr);
-
-            {
-                VARIANTARG args[1];
-
-                args[0].vt = VT_DISPATCH;
-                args[0].pdispVal = m_gr_wrap;
-                script_invoke_v(CallbackIds::on_paint, args, _countof(args));
-            }
-
-            m_gr_wrap->put__ptr(NULL);
-        }
-    }
-    else
-    {
-        const TCHAR errmsg[] = _T("Aw, crashed :(");
-        RECT rc = {0, 0, m_width, m_height};
-        SIZE sz = {0};
-
-        // Font chosing
-        HFONT newfont = CreateFont(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, 
-            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-            DEFAULT_PITCH | FF_DONTCARE, _T("Tahoma"));
-        HFONT oldfont = (HFONT)SelectObject(memdc, newfont);
-
-        // Font drawing
-        {
-            LOGBRUSH lbBack = {BS_SOLID, RGB(35, 48, 64), 0};
-            HBRUSH hBack = CreateBrushIndirect(&lbBack);
-
-            FillRect(memdc, &rc, hBack);
-            SetBkMode(memdc, TRANSPARENT);
-
-            SetTextColor(memdc, RGB(255, 255, 255));
-            DrawText(memdc, errmsg, -1, &rc, DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE);
-
-            DeleteObject(hBack);
-        }
-
-        SelectObject(memdc, oldfont);
+        on_paint_user(memdc, lpUpdateRect);
     }
 
     BitBlt(dc, 0, 0, m_width, m_height, memdc, 0, 0, SRCCOPY);
     SelectBitmap(memdc, oldbmp);
     DeleteDC(memdc);
+}
+
+void wsh_panel_window::on_paint_user(HDC memdc, LPRECT lpUpdateRect)
+{
+    if (m_script_host->Ready())
+    {
+        // Prepare graphics object to the script.
+        Gdiplus::Graphics gr(memdc);
+        Gdiplus::Rect rect(lpUpdateRect->left, lpUpdateRect->top,
+            lpUpdateRect->right - lpUpdateRect->left,
+            lpUpdateRect->bottom - lpUpdateRect->top);
+
+        // SetClip() may improve performance slightly
+        gr.SetClip(rect);
+
+        m_gr_wrap->put__ptr(&gr);
+
+        {
+            VARIANTARG args[1];
+
+            args[0].vt = VT_DISPATCH;
+            args[0].pdispVal = m_gr_wrap;
+            script_invoke_v(CallbackIds::on_paint, args, _countof(args));
+        }
+
+        m_gr_wrap->put__ptr(NULL);
+    }
+}
+
+void wsh_panel_window::on_paint_error(HDC memdc)
+{
+    const TCHAR errmsg[] = _T("Aw, crashed :(");
+    RECT rc = {0, 0, m_width, m_height};
+    SIZE sz = {0};
+
+    // Font chosing
+    HFONT newfont = CreateFont(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, 
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+        DEFAULT_PITCH | FF_DONTCARE, _T("Tahoma"));
+    HFONT oldfont = (HFONT)SelectObject(memdc, newfont);
+
+    // Font drawing
+    {
+        LOGBRUSH lbBack = {BS_SOLID, RGB(35, 48, 64), 0};
+        HBRUSH hBack = CreateBrushIndirect(&lbBack);
+
+        FillRect(memdc, &rc, hBack);
+        SetBkMode(memdc, TRANSPARENT);
+
+        SetTextColor(memdc, RGB(255, 255, 255));
+        DrawText(memdc, errmsg, -1, &rc, DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE);
+
+        DeleteObject(hBack);
+    }
+
+    SelectObject(memdc, oldfont);
 }
 
 void wsh_panel_window::on_timer(UINT timer_id)
@@ -831,14 +825,9 @@ bool wsh_panel_window::on_mouse_button_up(UINT msg, WPARAM wp, LPARAM lp)
         {
             _variant_t result;
 
+            // Bypass the user code.
             if (IsKeyPressed(VK_LSHIFT) && IsKeyPressed(VK_LWIN))
             {
-                // HACK: Start debugger manually
-                if (IsKeyPressed(VK_LCONTROL) && IsKeyPressed(VK_LMENU))
-                {
-                    m_script_host->StartDebugger();
-                }
-
                 break;
             }
 
