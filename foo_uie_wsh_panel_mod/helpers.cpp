@@ -4,6 +4,8 @@
 #include "host.h"
 #include "user_message.h"
 
+#include <MLang.h>
+
 namespace helpers
 {
 	static bool match_menu_command(const pfc::string_base & path, const char * command, t_size command_len = ~0)
@@ -223,6 +225,89 @@ namespace helpers
 
 		return false;
 	}
+
+    unsigned detect_charset(const char * fileName)
+    {
+        _COM_SMARTPTR_TYPEDEF(IMultiLanguage2, IID_IMultiLanguage2);
+        IMultiLanguage2Ptr lang;
+        HRESULT hr;
+
+        hr = lang.CreateInstance(CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER);
+        // mlang is not working...
+        if (FAILED(hr)) return 0;
+
+        const int maxEncodings = 2;
+        int encodingCount = maxEncodings;
+        DetectEncodingInfo encodings[maxEncodings];
+        pfc::string8_fast text;
+        int textSize = 0;
+
+        try
+        {
+            file_ptr io;
+            abort_callback_dummy dummy;
+            filesystem::g_open_read(io, fileName, dummy);
+            io->read_string_raw(text, dummy);
+            textSize = text.get_length();
+        }
+        catch (...)
+        {
+            return 0;
+        }
+
+        hr = lang->DetectInputCodepage(MLDETECTCP_NONE, 0, const_cast<char *>(text.get_ptr()), 
+            &textSize, encodings, &encodingCount);
+
+        if (FAILED(hr)) return 0;
+
+        unsigned codepage = 0;
+        bool found = false;
+
+        // MLang fine tunes
+        if (encodingCount == 2 && encodings[0].nCodePage == 1252)
+        {
+            switch (encodings[1].nCodePage)
+            {
+            case 850:
+            case 65001:
+                found = true;
+                codepage = 65001;
+                break;
+                // DBCS
+            case 932: // shift-jis
+            case 936: // gbk
+            case 949: // korean
+            case 950: // big5
+                {
+                    // '¡¯', <= special char
+                    // "ve" "d" "ll" "m" 't' 're'
+                    bool fallback = true;
+                    t_size index;
+                    if (index = text.find_first("\x92") != pfc_infinite)
+                    {
+                        if ((index < text.get_length() - 1) &&
+                            (strchr("vldmtr ", text[index + 1])))
+                        {
+                            codepage = encodings[0].nCodePage;
+                            fallback = false;
+                        }
+                    }
+                    if (fallback)
+                        codepage = encodings[1].nCodePage;
+                    found = true;
+                }
+                break;
+            }
+        }
+
+        if (!found)
+            codepage = encodings[0].nCodePage;
+        // ASCII?
+        if (codepage == 20127) 
+            codepage = 0;
+
+        return codepage;
+    }
 
     void estimate_line_wrap_recur(HDC hdc, const wchar_t * text, int len, int width, pfc::list_t<wrapped_item> & out)
     {

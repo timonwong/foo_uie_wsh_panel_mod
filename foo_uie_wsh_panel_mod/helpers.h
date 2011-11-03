@@ -7,8 +7,9 @@
 
 namespace helpers
 {
-    extern bool execute_context_command_by_name(const char * p_name, metadb_handle_list_cref p_handles, unsigned flags);
-	extern bool execute_mainmenu_command_by_name(const char * p_name);
+    bool execute_context_command_by_name(const char * p_name, metadb_handle_list_cref p_handles, unsigned flags);
+	bool execute_mainmenu_command_by_name(const char * p_name);
+    unsigned detect_charset(const char * fileName);
 
 	inline int get_text_width(HDC hdc, LPCTSTR text, int len)
 	{

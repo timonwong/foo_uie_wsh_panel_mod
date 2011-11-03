@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <MLang.h>
 #include "script_interface_impl.h"
 #include "script_interface_playlist_impl.h"
 #include "helpers.h"
@@ -3312,119 +3311,7 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
     else if (wcscmp(mode, L"chardet") == 0)
     {
         p->vt = VT_UI4;
-        p->ulVal = 0;
-
-        _COM_SMARTPTR_TYPEDEF(IMultiLanguage2, IID_IMultiLanguage2);
-        IMultiLanguage2Ptr lang;
-        HRESULT hr;
-
-        hr = lang.CreateInstance(CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER);
-        // mlang is not working...
-        if (FAILED(hr)) return S_OK;
-
-        const int max_encodings = 5;
-        int encodings_count = max_encodings;
-        DetectEncodingInfo encodings[max_encodings];
-        pfc::string8_fast text;
-        int text_size = 0;
-
-        try
-        {
-            file_ptr io;
-            abort_callback_dummy abort;
-
-            filesystem::g_open_read(io, pfc::stringcvt::string_utf8_from_wide(path), abort);
-            io->read_string_raw(text, abort);
-            text_size = text.get_length();
-        }
-        catch (...)
-        {
-            return S_OK;
-        }
-
-        hr = lang->DetectInputCodepage(MLDETECTCP_NONE, 0, const_cast<char *>(text.get_ptr()), 
-            &text_size, encodings, &encodings_count);
-
-        if (FAILED(hr)) return S_OK;
-
-        unsigned codepage = 0;
-        bool findbest = false;
-
-        // MLang fine tunes
-        if (encodings_count == 2 && encodings[0].nCodePage == 1252)
-        {
-            switch (encodings[1].nCodePage)
-            {
-            case 850:
-            case 65001:
-                codepage = 65001;
-                break;
-
-                // DBCS
-            case 932: // shift-jis
-            case 936: // gbk
-            case 949: // korean
-            case 950: // big5
-                {
-                    // '¡¯', <= special char
-                    // "ve" "d" "ll" "m" 't' 're'
-                    bool fallback = true;
-                    t_size index;
-
-                    if (index = text.find_first("\x92") != pfc_infinite)
-                    {
-                        if (index < text.get_length() - 1) 
-                        {
-                            switch (text[index + 1])
-                            {
-                            case 'v':
-                            case 'l':
-                            case 'd':
-                            case 'm':
-                            case 't':
-                            case 'r':
-                            case ' ':
-                                codepage = encodings[0].nCodePage;
-                                fallback = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (fallback)
-                        codepage = encodings[1].nCodePage;
-                }
-                break;
-
-            default:
-                findbest = true;
-            }
-        }
-        else
-        {
-            findbest = true;
-        }
-
-        if (findbest)
-        {
-            // Find the best match
-            int max_confidence = 0;
-
-            for (int i = 0; i < encodings_count; ++i) 
-            {
-                if (encodings[i].nConfidence > max_confidence) 
-                {
-                    max_confidence = encodings[i].nConfidence;
-                    codepage = encodings[i].nCodePage;
-                }
-            }
-        }
-
-        // ASCII?
-        if (codepage == 20127)
-            codepage = 0;
-
-        p->ulVal = codepage;
+        p->ulVal = helpers::detect_charset(pfc::stringcvt::string_utf8_from_wide(path));
     }
     else
     {

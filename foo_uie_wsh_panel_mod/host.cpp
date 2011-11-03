@@ -931,29 +931,38 @@ HRESULT ScriptHost::ProcessImportedScripts(script_preprocessor &preprocessor, IA
 
 HRESULT ScriptHost::InitScriptEngineByName(const wchar_t * engineName)
 {
-    HRESULT hr;
+    HRESULT hr = E_FAIL;
+    const DWORD classContext = CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER;
+    const wchar_t jscriptName[] = L"JScript";
+    bool isJScript = wcsncmp(engineName, jscriptName, _countof(jscriptName) - 1) == 0;
+    bool isJScript9 = wcscmp(engineName, L"JScript9") == 0;
 
-    if (wcscmp(engineName, L"JScript9") == 0) 
+    if (isJScript9) 
     {
         // Try using JScript9 from IE9
         // {16d51579-a30b-4c8b-a276-0ff4dc41e755}
-        static const CLSID clsid = 
+        static const CLSID jscript9clsid = 
         {0x16d51579, 0xa30b, 0x4c8b, {0xa2, 0x76, 0x0f, 0xf4, 0xdc, 0x41, 0xe7, 0x55 } };
 
-        if (FAILED(hr = m_script_engine.CreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER)))
+        if (FAILED(hr = m_script_engine.CreateInstance(jscript9clsid, NULL, classContext)))
         {
             // fallback to default JScript engine.
-            hr = m_script_engine.CreateInstance(L"JScript", NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER);
+            engineName = L"JScript";
         }
     }
-    else
+
+    if (FAILED(hr)) 
     {
-        hr = m_script_engine.CreateInstance(engineName, NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER);
+        hr = m_script_engine.CreateInstance(engineName, NULL, classContext);
+    }
+
+    if (FAILED(hr)) 
+    {
+        return hr;
     }
 
     // In order to support new features after JScript 5.8
-    const wchar_t jscriptName[] = L"JScript";
-    if (wcsncmp(engineName, jscriptName, _countof(jscriptName) - 1) == 0)
+    if (isJScript)
     {
         IActiveScriptProperty *pActScriProp = NULL;
         
@@ -962,12 +971,7 @@ HRESULT ScriptHost::InitScriptEngineByName(const wchar_t * engineName)
             VARIANT scriptLangVersion;
             scriptLangVersion.vt = VT_I4;
             scriptLangVersion.lVal = SCRIPTLANGUAGEVERSION_5_8;
-            if (FAILED(pActScriProp->SetProperty(SCRIPTPROP_INVOKEVERSIONING, NULL, &scriptLangVersion)))
-            {
-                // Reset to default
-                scriptLangVersion.lVal = SCRIPTLANGUAGEVERSION_DEFAULT;
-                pActScriProp->SetProperty(SCRIPTPROP_INVOKEVERSIONING, NULL, &scriptLangVersion);
-            }
+            pActScriProp->SetProperty(SCRIPTPROP_INVOKEVERSIONING, NULL, &scriptLangVersion);
             pActScriProp->Release();
         }
     }
