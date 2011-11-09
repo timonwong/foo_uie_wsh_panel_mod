@@ -1,3 +1,6 @@
+v1.5.0
+- FIX: Fix a bug that the timers continue running after script error.
+
 v1.5.0 Beta 5
 - FIX: Fix a bug that that alpha channel will be lost while converting to RawBitmap.
 - FIX: gdi.Image() will not lock files any more.

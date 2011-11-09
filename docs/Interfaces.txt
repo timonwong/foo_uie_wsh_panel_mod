@@ -597,7 +597,7 @@ Methods:
     uint SetInterval(func, delay);
     // [1.5.0 Beta 4] New:
     // returns the id or newly created timer
-    uint SetInterval(func, delay);
+    uint SetTimeout(func, delay);
     // [1.5.0 Beta 4] New;
     void ClearTimeout(timerID);
     // [1.5.0 Beta 4] New:
