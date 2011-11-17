@@ -218,12 +218,12 @@ STDMETHODIMP GdiBitmap::ApplyMask(IGdiBitmap * mask, VARIANT_BOOL * p)
     Gdiplus::Rect rect(0, 0, m_ptr->GetWidth(), m_ptr->GetHeight());
     Gdiplus::BitmapData bmpdata_mask = { 0 }, bmpdata_dst = { 0 };
 
-    if (bitmap_mask->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppPARGB, &bmpdata_mask) != Gdiplus::Ok)
+    if (bitmap_mask->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &bmpdata_mask) != Gdiplus::Ok)
     {
         return S_OK;
     }
 
-    if (m_ptr->LockBits(&rect, Gdiplus::ImageLockModeWrite, PixelFormat32bppPARGB, &bmpdata_dst) != Gdiplus::Ok)
+    if (m_ptr->LockBits(&rect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpdata_dst) != Gdiplus::Ok)
     {
         bitmap_mask->UnlockBits(&bmpdata_mask);
         return S_OK;
