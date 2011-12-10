@@ -8,7 +8,7 @@ LRESULT CDialogReplace::OnFindNext(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 	if (m_text.is_empty())
 		return 0;
 
-    CDialogConf::FindNext(m_hedit, m_flags, m_text.get_ptr());
+    m_havefound = CDialogConf::FindNext(m_hWnd, m_hedit, m_flags, m_text.get_ptr());
 	return 0;
 }
 
@@ -80,8 +80,8 @@ LRESULT CDialogReplace::OnEditReplaceEnChange(WORD wNotifyCode, WORD wID, HWND h
 
 LRESULT CDialogReplace::OnReplace(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 {
-	if (m_havefound)
-	{
+	if (m_havefound) 
+    {
 		CHARRANGE cr = GetSelection();
 
 		SendMessage(m_hedit, SCI_SETTARGETSTART, cr.cpMin, 0);
@@ -105,37 +105,35 @@ LRESULT CDialogReplace::OnReplaceall(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 
 	while (true)
 	{
+		int start_pos = SendMessage(m_hedit, SCI_GETSELECTIONEND, 0, 0);
+		int end_pos = SendMessage(m_hedit, SCI_GETLENGTH, 0, 0);
+
+		SendMessage(m_hedit, SCI_SETTARGETSTART, start_pos, 0);
+		SendMessage(m_hedit, SCI_SETTARGETEND, end_pos, 0);
+		SendMessage(m_hedit, SCI_SETSEARCHFLAGS, m_flags, 0);
+
+		int pos_find = SendMessage(m_hedit, SCI_SEARCHINTARGET, m_text.get_length(), (LPARAM)m_text.get_ptr());
+
+		if (pos_find == -1)
 		{
-			int start_pos = SendMessage(m_hedit, SCI_GETSELECTIONEND, 0, 0);
-			int end_pos = SendMessage(m_hedit, SCI_GETLENGTH, 0, 0);
-
-			SendMessage(m_hedit, SCI_SETTARGETSTART, start_pos, 0);
-			SendMessage(m_hedit, SCI_SETTARGETEND, end_pos, 0);
-			SendMessage(m_hedit, SCI_SETSEARCHFLAGS, m_flags, 0);
-
-			int pos_find = SendMessage(m_hedit, SCI_SEARCHINTARGET, m_text.get_length(), (LPARAM)m_text.get_ptr());
-
-			if (pos_find == -1)
-			{
-				MessageBeep(MB_ICONASTERISK);
-				break;
-			}
-			else
-			{
-				int start = SendMessage(m_hedit, SCI_GETTARGETSTART, 0, 0);
-				int end = SendMessage(m_hedit, SCI_GETTARGETEND, 0, 0);
-
-				SendMessage(m_hedit, SCI_SETSEL, start, end);
-			}
+			MessageBeep(MB_ICONASTERISK);
+			break;
 		}
+		else
+		{
+			int start = SendMessage(m_hedit, SCI_GETTARGETSTART, 0, 0);
+			int end = SendMessage(m_hedit, SCI_GETTARGETEND, 0, 0);
 
-		CHARRANGE cr = GetSelection();
-
-		SendMessage(m_hedit, SCI_SETTARGETSTART, cr.cpMin, 0);
-		SendMessage(m_hedit, SCI_SETTARGETEND, cr.cpMax, 0);
-		SendMessage(m_hedit, SCI_REPLACETARGET, m_reptext.get_length(), (LPARAM)m_reptext.get_ptr());
-		SendMessage(m_hedit, SCI_SETSEL, cr.cpMin + m_reptext.get_length(), cr.cpMin);
+			SendMessage(m_hedit, SCI_SETSEL, start, end);
+		}
 	}
+
+	CHARRANGE cr = GetSelection();
+
+	SendMessage(m_hedit, SCI_SETTARGETSTART, cr.cpMin, 0);
+	SendMessage(m_hedit, SCI_SETTARGETEND, cr.cpMax, 0);
+	SendMessage(m_hedit, SCI_REPLACETARGET, m_reptext.get_length(), (LPARAM)m_reptext.get_ptr());
+	SendMessage(m_hedit, SCI_SETSEL, cr.cpMin + m_reptext.get_length(), cr.cpMin);
 
 	SendMessage(m_hedit, SCI_ENDUNDOACTION, 0, 0);
 	return 0;

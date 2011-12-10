@@ -335,7 +335,7 @@ bool CDialogConf::MatchShortcuts(unsigned vk)
             // Find next one
             if (!m_lastSearchText.is_empty()) 
             {
-                FindNext(m_editorctrl.m_hWnd, m_lastFlags, m_lastSearchText);
+                FindNext(m_hWnd, m_editorctrl.m_hWnd, m_lastFlags, m_lastSearchText);
             }
             else
             {
@@ -350,7 +350,7 @@ bool CDialogConf::MatchShortcuts(unsigned vk)
             // Find previous one
             if (!m_lastSearchText.is_empty()) 
             {
-                FindPrevious(m_editorctrl.m_hWnd, m_lastFlags, m_lastSearchText);
+                FindPrevious(m_hWnd, m_editorctrl.m_hWnd, m_lastFlags, m_lastSearchText);
             }
             else
             {
@@ -374,40 +374,39 @@ LRESULT CDialogConf::OnUwmFindTextChanged(UINT uMsg, WPARAM wParam, LPARAM lPara
     return 0;
 }
 
-void CDialogConf::FindNext(HWND hWndEdit, unsigned flags, const char *which)
+bool CDialogConf::FindNext(HWND hWnd, HWND hWndEdit, unsigned flags, const char *which)
 {
     ::SendMessage(::GetAncestor(hWndEdit, GA_PARENT), UWM_FINDTEXTCHANGED, flags, reinterpret_cast<LPARAM>(which));
 
     SendMessage(hWndEdit, SCI_CHARRIGHT, 0, 0);
     SendMessage(hWndEdit, SCI_SEARCHANCHOR, 0, 0);
     int pos = ::SendMessage(hWndEdit, SCI_SEARCHNEXT, flags, reinterpret_cast<LPARAM>(which));
-    FindResult(hWndEdit, pos, which);
+    return FindResult(hWnd, hWndEdit, pos, which);
 }
 
-void CDialogConf::FindPrevious(HWND hWndEdit, unsigned flags, const char *which)
+bool CDialogConf::FindPrevious(HWND hWnd, HWND hWndEdit, unsigned flags, const char *which)
 {
     ::SendMessage(::GetAncestor(hWndEdit, GA_PARENT), UWM_FINDTEXTCHANGED, flags, reinterpret_cast<LPARAM>(which));
 
     SendMessage(hWndEdit, SCI_SEARCHANCHOR, 0, 0);
     int pos = ::SendMessage(hWndEdit, SCI_SEARCHPREV, flags, reinterpret_cast<LPARAM>(which));
-    FindResult(hWndEdit, pos, which);
+    return FindResult(hWnd, hWndEdit, pos, which);
 }
 
-void CDialogConf::FindResult(HWND hWndEdit, int pos, const char *which)
+bool CDialogConf::FindResult(HWND hWnd, HWND hWndEdit, int pos, const char *which)
 {
     if (pos != -1)
     {
         // Scroll to view
         ::SendMessage(hWndEdit, SCI_SCROLLCARET, 0, 0);
+        return true;
     }
-    else
-    {
-        pfc::string8 temp = "Cannot find \"";
 
-        temp += which;
-        temp += "\"";
-        uMessageBox(hWndEdit, temp.get_ptr(), WSPM_NAME, MB_ICONINFORMATION | MB_SETFOREGROUND);
-    }
+    pfc::string8 buff = "Cannot find \"";
+    buff += which;
+    buff += "\"";
+    uMessageBox(hWnd, buff.get_ptr(), WSPM_NAME, MB_ICONINFORMATION | MB_SETFOREGROUND);
+    return false;
 }
 
 void CDialogConf::OpenFindDialog()

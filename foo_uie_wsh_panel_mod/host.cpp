@@ -579,7 +579,7 @@ STDMETHODIMP FbWindow::SetCursor(UINT id)
 	return S_OK;
 }
 
-STDMETHODIMP FbWindow::GetColorCUI(UINT type, BSTR guidstr, DWORD * p)
+STDMETHODIMP FbWindow::GetColorCUI(UINT type, BSTR guidstr, int * p)
 {
 	TRACK_FUNCTION();
 
@@ -648,7 +648,7 @@ STDMETHODIMP FbWindow::GetFontCUI(UINT type, BSTR guidstr, IGdiFont ** pp)
 	return S_OK;
 }
 
-STDMETHODIMP FbWindow::GetColorDUI(UINT type, DWORD * p)
+STDMETHODIMP FbWindow::GetColorDUI(UINT type, int * p)
 {
 	TRACK_FUNCTION();
 

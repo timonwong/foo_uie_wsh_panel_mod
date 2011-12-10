@@ -365,7 +365,7 @@ STDMETHODIMP GdiGraphics::put__ptr(void * p)
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillSolidRect(float x, float y, float w, float h, DWORD color)
+STDMETHODIMP GdiGraphics::FillSolidRect(float x, float y, float w, float h, int color)
 {
     TRACK_FUNCTION();
 
@@ -377,7 +377,7 @@ STDMETHODIMP GdiGraphics::FillSolidRect(float x, float y, float w, float h, DWOR
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2, float focus)
+STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float angle, int color1, int color2, float focus)
 {
     TRACK_FUNCTION();
 
@@ -393,7 +393,7 @@ STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, DWORD color)
+STDMETHODIMP GdiGraphics::FillRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, int color)
 {
     TRACK_FUNCTION();
 
@@ -413,7 +413,7 @@ STDMETHODIMP GdiGraphics::FillRoundRect(float x, float y, float w, float h, floa
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillEllipse(float x, float y, float w, float h, DWORD color)
+STDMETHODIMP GdiGraphics::FillEllipse(float x, float y, float w, float h, int color)
 {
     TRACK_FUNCTION();
 
@@ -425,7 +425,7 @@ STDMETHODIMP GdiGraphics::FillEllipse(float x, float y, float w, float h, DWORD 
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillPolygon(DWORD color, INT fillmode, VARIANT points)
+STDMETHODIMP GdiGraphics::FillPolygon(int color, INT fillmode, VARIANT points)
 {
     TRACK_FUNCTION();
 
@@ -458,7 +458,7 @@ STDMETHODIMP GdiGraphics::FillPolygon(DWORD color, INT fillmode, VARIANT points)
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawLine(float x1, float y1, float x2, float y2, float line_width, DWORD color)
+STDMETHODIMP GdiGraphics::DrawLine(float x1, float y1, float x2, float y2, float line_width, int color)
 {
     TRACK_FUNCTION();
 
@@ -470,7 +470,7 @@ STDMETHODIMP GdiGraphics::DrawLine(float x1, float y1, float x2, float y2, float
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawRect(float x, float y, float w, float h, float line_width, DWORD color)
+STDMETHODIMP GdiGraphics::DrawRect(float x, float y, float w, float h, float line_width, int color)
 {
     TRACK_FUNCTION();
 
@@ -482,7 +482,7 @@ STDMETHODIMP GdiGraphics::DrawRect(float x, float y, float w, float h, float lin
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, DWORD color)
+STDMETHODIMP GdiGraphics::DrawRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, int color)
 {
     TRACK_FUNCTION();
 
@@ -504,7 +504,7 @@ STDMETHODIMP GdiGraphics::DrawRoundRect(float x, float y, float w, float h, floa
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawEllipse(float x, float y, float w, float h, float line_width, DWORD color)
+STDMETHODIMP GdiGraphics::DrawEllipse(float x, float y, float w, float h, float line_width, int color)
 {
     TRACK_FUNCTION();
 
@@ -516,7 +516,7 @@ STDMETHODIMP GdiGraphics::DrawEllipse(float x, float y, float w, float h, float 
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawPolygon(DWORD color, float line_width, VARIANT points)
+STDMETHODIMP GdiGraphics::DrawPolygon(int color, float line_width, VARIANT points)
 {
     TRACK_FUNCTION();
 
@@ -551,7 +551,7 @@ STDMETHODIMP GdiGraphics::DrawPolygon(DWORD color, float line_width, VARIANT poi
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawString(BSTR str, IGdiFont* font, DWORD color, float x, float y, float w, float h, DWORD flags)
+STDMETHODIMP GdiGraphics::DrawString(BSTR str, IGdiFont* font, int color, float x, float y, float w, float h, int flags)
 {
     TRACK_FUNCTION();
 
@@ -675,7 +675,7 @@ STDMETHODIMP GdiGraphics::GdiAlphaBlend(IGdiRawBitmap * bitmap, int dstX, int ds
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, DWORD format, VARIANT * p)
+STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, int color, int x, int y, int w, int h, int format, VARIANT * p)
 {
     TRACK_FUNCTION();
 
@@ -768,7 +768,7 @@ STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, DWORD color, in
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::MeasureString(BSTR str, IGdiFont * font, float x, float y, float w, float h, DWORD flags, IMeasureStringInfo ** pp)
+STDMETHODIMP GdiGraphics::MeasureString(BSTR str, IGdiFont * font, float x, float y, float w, float h, int flags, IMeasureStringInfo ** pp)
 {
     TRACK_FUNCTION();
 
@@ -3142,13 +3142,13 @@ STDMETHODIMP WSHUtils::ReadTextFile(BSTR filename, UINT codepage, BSTR * pp)
     return S_OK;
 }
 
-STDMETHODIMP WSHUtils::GetSysColor(UINT index, DWORD * p)
+STDMETHODIMP WSHUtils::GetSysColor(UINT index, int * p)
 {
     TRACK_FUNCTION();
 
     if (!p) return E_POINTER;
 
-    DWORD ret = ::GetSysColor(index);
+    int ret = ::GetSysColor(index);
 
     if (!ret)
     {
@@ -3338,7 +3338,7 @@ void StyleTextRender::FinalRelease()
     }
 }
 
-STDMETHODIMP StyleTextRender::OutLineText(DWORD text_color, DWORD outline_color, int outline_width)
+STDMETHODIMP StyleTextRender::OutLineText(int text_color, int outline_color, int outline_width)
 {
     TRACK_FUNCTION();
 
@@ -3348,7 +3348,7 @@ STDMETHODIMP StyleTextRender::OutLineText(DWORD text_color, DWORD outline_color,
     return S_OK;
 }
 
-STDMETHODIMP StyleTextRender::DoubleOutLineText(DWORD text_color, DWORD outline_color1, DWORD outline_color2, int outline_width1, int outline_width2)
+STDMETHODIMP StyleTextRender::DoubleOutLineText(int text_color, int outline_color1, int outline_color2, int outline_width1, int outline_width2)
 {
     TRACK_FUNCTION();
 
@@ -3358,7 +3358,7 @@ STDMETHODIMP StyleTextRender::DoubleOutLineText(DWORD text_color, DWORD outline_
     return S_OK;
 }
 
-STDMETHODIMP StyleTextRender::GlowText(DWORD text_color, DWORD glow_color, int glow_width)
+STDMETHODIMP StyleTextRender::GlowText(int text_color, int glow_color, int glow_width)
 {
     TRACK_FUNCTION();
 
@@ -3388,7 +3388,7 @@ STDMETHODIMP StyleTextRender::ResetShadow()
     return S_OK;
 }
 
-STDMETHODIMP StyleTextRender::Shadow(DWORD color, int thickness, int offset_x, int offset_y)
+STDMETHODIMP StyleTextRender::Shadow(int color, int thickness, int offset_x, int offset_y)
 {
     TRACK_FUNCTION();
 
@@ -3398,7 +3398,7 @@ STDMETHODIMP StyleTextRender::Shadow(DWORD color, int thickness, int offset_x, i
     return S_OK;
 }
 
-STDMETHODIMP StyleTextRender::DiffusedShadow(DWORD color, int thickness, int offset_x, int offset_y)
+STDMETHODIMP StyleTextRender::DiffusedShadow(int color, int thickness, int offset_x, int offset_y)
 {
     TRACK_FUNCTION();
 
@@ -3408,7 +3408,7 @@ STDMETHODIMP StyleTextRender::DiffusedShadow(DWORD color, int thickness, int off
     return S_OK;
 }
 
-STDMETHODIMP StyleTextRender::SetShadowBackgroundColor(DWORD color, int width, int height)
+STDMETHODIMP StyleTextRender::SetShadowBackgroundColor(int color, int width, int height)
 {
     TRACK_FUNCTION();
 
@@ -3432,7 +3432,7 @@ STDMETHODIMP StyleTextRender::SetShadowBackgroundImage(IGdiBitmap * img)
     return S_OK;
 }
 
-STDMETHODIMP StyleTextRender::RenderStringPoint(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, DWORD flags, VARIANT_BOOL * p)
+STDMETHODIMP StyleTextRender::RenderStringPoint(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int flags, VARIANT_BOOL * p)
 {
     TRACK_FUNCTION();
 
@@ -3466,7 +3466,7 @@ STDMETHODIMP StyleTextRender::RenderStringPoint(IGdiGraphics * g, BSTR str, IGdi
     return S_OK;
 }
 
-STDMETHODIMP StyleTextRender::RenderStringRect(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int w, int h, DWORD flags, VARIANT_BOOL * p)
+STDMETHODIMP StyleTextRender::RenderStringRect(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int w, int h, int flags, VARIANT_BOOL * p)
 {
     TRACK_FUNCTION();
 

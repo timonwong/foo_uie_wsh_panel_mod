@@ -9,7 +9,7 @@ function RGB(r, g, b) {
     return (0xff000000 | (r << 16) | (g << 8) | (b));
 }
 
-// gdi.Font is changed, the last paramter is style flags
+// gdi.Font is changed, the last parameter is style flags
 // FontStyleRegular = 0,
 // FontStyleBold = 1,
 // FontStyleItalic = 2,

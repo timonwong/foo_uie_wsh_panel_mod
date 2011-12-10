@@ -1,3 +1,9 @@
+v1.5.1
+- FIX: Fix a bug that ApplyMask() doesn't work correctly.
+- FIX: Fix a bug that synchronous calls such as NotifyOthers() are in fact asynchronous.
+- FIX: Fix a problem that the replace function of script editor doesn't work anymore.
+- FIX: While using JScript9, calling methods with color value which is less than zero, will cause weird JScript runtime overflow error.
+
 v1.5.0
 - FIX: Fix a bug that the timers continue running after script error.
 

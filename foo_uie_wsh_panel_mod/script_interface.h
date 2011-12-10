@@ -113,25 +113,25 @@ __interface IMeasureStringInfo
 __interface IGdiGraphics: IGdiObj
 {
 	[propput] STDMETHOD(_ptr)(void * p);
-	STDMETHOD(FillSolidRect)(float x, float y, float w, float h, DWORD color);
-	STDMETHOD(FillGradRect)(float x, float y, float w, float h, float angle, DWORD color1, DWORD color2, [defaultvalue(1.0)] float focus);
-	STDMETHOD(FillRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, DWORD color);
-	STDMETHOD(FillEllipse)(float x, float y, float w, float h, DWORD color);
-	STDMETHOD(FillPolygon)(DWORD color, [range(0, 1)]INT fillmode, VARIANT points);
+	STDMETHOD(FillSolidRect)(float x, float y, float w, float h, int color);
+	STDMETHOD(FillGradRect)(float x, float y, float w, float h, float angle, int color1, int color2, [defaultvalue(1.0)] float focus);
+	STDMETHOD(FillRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, int color);
+	STDMETHOD(FillEllipse)(float x, float y, float w, float h, int color);
+	STDMETHOD(FillPolygon)(int color, [range(0, 1)]INT fillmode, VARIANT points);
 
-	STDMETHOD(DrawLine)(float x1, float y1, float x2, float y2, float line_width, DWORD color);
-	STDMETHOD(DrawRect)(float x, float y, float w, float h, float line_width, DWORD color);
-	STDMETHOD(DrawRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, DWORD color);
-	STDMETHOD(DrawEllipse)(float x, float y, float w, float h, float line_width, DWORD color);
-	STDMETHOD(DrawPolygon)(DWORD color, float line_width, VARIANT points);
+	STDMETHOD(DrawLine)(float x1, float y1, float x2, float y2, float line_width, int color);
+	STDMETHOD(DrawRect)(float x, float y, float w, float h, float line_width, int color);
+	STDMETHOD(DrawRoundRect)(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, int color);
+	STDMETHOD(DrawEllipse)(float x, float y, float w, float h, float line_width, int color);
+	STDMETHOD(DrawPolygon)(int color, float line_width, VARIANT points);
 
-	STDMETHOD(DrawString)(BSTR str, IGdiFont* font, DWORD color, float x, float y, float w, float h, [defaultvalue(0)] DWORD flags);
-	STDMETHOD(GdiDrawText)(BSTR str, IGdiFont * font, DWORD color, int x, int y, int w, int h, [defaultvalue(0)] DWORD format, [out,retval] VARIANT * p);
+	STDMETHOD(DrawString)(BSTR str, IGdiFont* font, int color, float x, float y, float w, float h, [defaultvalue(0)] int flags);
+	STDMETHOD(GdiDrawText)(BSTR str, IGdiFont * font, int color, int x, int y, int w, int h, [defaultvalue(0)] int format, [out,retval] VARIANT * p);
 	STDMETHOD(DrawImage)(IGdiBitmap* image, float dstX, float dstY, float dstW, float dstH, float srcX, float srcY, float srcW, float srcH, [defaultvalue(0.0)]float angle, [defaultvalue(255)]BYTE alpha);
 	STDMETHOD(GdiDrawBitmap)(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH);
 	STDMETHOD(GdiAlphaBlend)(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, [defaultvalue(255)]BYTE alpha);
-	//STDMETHOD(GdiTransparentBlt)(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, DWORD color);
-	STDMETHOD(MeasureString)(BSTR str, IGdiFont * font, float x, float y, float w, float h, [defaultvalue(0)] DWORD flags, [out,retval] IMeasureStringInfo ** pp);
+	//STDMETHOD(GdiTransparentBlt)(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, int color);
+	STDMETHOD(MeasureString)(BSTR str, IGdiFont * font, float x, float y, float w, float h, [defaultvalue(0)] int flags, [out,retval] IMeasureStringInfo ** pp);
 	STDMETHOD(CalcTextWidth)(BSTR str, IGdiFont * font, [out,retval] UINT * p);
 	STDMETHOD(CalcTextHeight)(BSTR str, IGdiFont * font, [out,retval] UINT * p);
 	STDMETHOD(EstimateLineWrap)(BSTR str, IGdiFont * font, int max_width, [out,retval] VARIANT * p);
@@ -172,19 +172,19 @@ _COM_SMARTPTR_TYPEDEF(IGdiUtils, __uuidof(IGdiUtils));
 __interface IStyleTextRender: IDisposable
 {
 	// Outline
-	STDMETHOD(OutLineText)(DWORD text_color, DWORD outline_color, int outline_width);
-	STDMETHOD(DoubleOutLineText)(DWORD text_color, DWORD outline_color1, DWORD outline_color2, int outline_width1, int outline_width2);
-	STDMETHOD(GlowText)(DWORD text_color, DWORD glow_color, int glow_width);
+	STDMETHOD(OutLineText)(int text_color, int outline_color, int outline_width);
+	STDMETHOD(DoubleOutLineText)(int text_color, int outline_color1, int outline_color2, int outline_width1, int outline_width2);
+	STDMETHOD(GlowText)(int text_color, int glow_color, int glow_width);
 	// Shadow
 	STDMETHOD(EnableShadow)(VARIANT_BOOL enable);
 	STDMETHOD(ResetShadow)();
-	STDMETHOD(Shadow)(DWORD color, int thickness, int offset_x, int offset_y);
-	STDMETHOD(DiffusedShadow)(DWORD color, int thickness, int offset_x, int offset_y);
-	STDMETHOD(SetShadowBackgroundColor)(DWORD color, int width, int height);
+	STDMETHOD(Shadow)(int color, int thickness, int offset_x, int offset_y);
+	STDMETHOD(DiffusedShadow)(int color, int thickness, int offset_x, int offset_y);
+	STDMETHOD(SetShadowBackgroundColor)(int color, int width, int height);
 	STDMETHOD(SetShadowBackgroundImage)(IGdiBitmap * img);
 	// Render 
-	STDMETHOD(RenderStringPoint)(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, [defaultvalue(0)] DWORD flags, [out,retval] VARIANT_BOOL * p);
-	STDMETHOD(RenderStringRect)(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int w, int h, [defaultvalue(0)] DWORD flags, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(RenderStringPoint)(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, [defaultvalue(0)] int flags, [out,retval] VARIANT_BOOL * p);
+	STDMETHOD(RenderStringRect)(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int w, int h, [defaultvalue(0)] int flags, [out,retval] VARIANT_BOOL * p);
 	// PNG Mode Only
 	STDMETHOD(SetPngImage)(IGdiBitmap * img);
 };
@@ -471,7 +471,7 @@ __interface IThemeManager: IDisposable
 	STDMETHOD(IsThemePartDefined)(int partid, [defaultvalue(0)] int stateid, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(DrawThemeBackground)(IGdiGraphics * gr, int x, int y, int w, int h, [defaultvalue(0)] int clip_x, [defaultvalue(0)] int clip_y, [defaultvalue(0)] int clip_w, [defaultvalue(0)] int clip_h);
 	// Vista+
-	//STDMETHOD(DrawThemeTextEx)(IGdiGraphics * gr, BSTR text, int x, int y, int w, int h, [defaultvalue(0)] DWORD format, [out,retval] VARIANT * p);
+	//STDMETHOD(DrawThemeTextEx)(IGdiGraphics * gr, BSTR text, int x, int y, int w, int h, [defaultvalue(0)] int format, [out,retval] VARIANT * p);
 };
 
 [
@@ -539,9 +539,9 @@ __interface IFbWindow: IDispatch
 	STDMETHOD(SetProperty)(BSTR name, VARIANT val);
 	STDMETHOD(GetBackgroundImage)([out,retval] IGdiBitmap ** pp);
 	STDMETHOD(SetCursor)(UINT id);
-	STDMETHOD(GetColorCUI)(UINT type, [defaultvalue("")] BSTR guidstr, [out,retval] DWORD * p);
+	STDMETHOD(GetColorCUI)(UINT type, [defaultvalue("")] BSTR guidstr, [out,retval] int * p);
 	STDMETHOD(GetFontCUI)(UINT type, [defaultvalue("")] BSTR guidstr, [out,retval] IGdiFont ** pp);
-	STDMETHOD(GetColorDUI)(UINT type, [out,retval] DWORD * p);
+	STDMETHOD(GetColorDUI)(UINT type, [out,retval] int * p);
 	STDMETHOD(GetFontDUI)(UINT type, [out,retval] IGdiFont ** pp);
 	STDMETHOD(CreateThemeManager)(BSTR classid, [out,retval] IThemeManager ** pp);
 };
@@ -569,7 +569,7 @@ __interface IWSHUtils: IDispatch
 	STDMETHOD(IsKeyPressed)(UINT vkey, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(PathWildcardMatch)(BSTR pattern, BSTR str, [out,retval] VARIANT_BOOL * p);
 	STDMETHOD(ReadTextFile)(BSTR filename, [defaultvalue(0)] UINT codepage, [out,retval] BSTR * pp);
-	STDMETHOD(GetSysColor)(UINT index, [out,retval] DWORD * p);
+	STDMETHOD(GetSysColor)(UINT index, [out,retval] int * p);
 	STDMETHOD(GetSystemMetrics)(UINT index, [out,retval] int * p);
 	STDMETHOD(Glob)(BSTR pattern, [defaultvalue(FILE_ATTRIBUTE_DIRECTORY)] UINT exc_mask, [defaultvalue(0xffffffff)] UINT inc_mask, [out,retval] VARIANT * p);
 	STDMETHOD(FileTest)(BSTR path, BSTR mode, [out,retval] VARIANT * p);

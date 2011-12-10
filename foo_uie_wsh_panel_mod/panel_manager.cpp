@@ -38,7 +38,7 @@ void panel_manager::send_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pf
     {
         if (hWnd != p_wnd_except) 
         {
-            PostMessage(hWnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0); 
+            SendMessage(hWnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0); 
         }
     });
 }

@@ -83,7 +83,7 @@ public:
 	LRESULT OnNCDestroy();
 	LRESULT OnUwmKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnUwmFindTextChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    static void FindNext(HWND hWndEdit, unsigned flags, const char *which);
-    static void FindPrevious(HWND hWndEdit, unsigned flags, const char *which);
-    static void FindResult(HWND hWndEdit, int pos, const char *which);
+    static bool FindNext(HWND hWnd, HWND hWndEdit, unsigned flags, const char *which);
+    static bool FindPrevious(HWND hWnd, HWND hWndEdit, unsigned flags, const char *which);
+    static bool FindResult(HWND hWnd, HWND hWndEdit, int pos, const char *which);
 };

@@ -8,7 +8,7 @@ LRESULT CDialogFind::OnFindUp(WORD wNotifyCode, WORD wID, HWND hWndCtl)
     if (m_text.is_empty())
         return 0;
 
-    CDialogConf::FindPrevious(m_hedit, m_flags, m_text.get_ptr());
+    CDialogConf::FindPrevious(m_hWnd, m_hedit, m_flags, m_text.get_ptr());
     return 0;
 }
 
@@ -17,7 +17,7 @@ LRESULT CDialogFind::OnFindDown(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 	if (m_text.is_empty())
 		return 0;
 
-    CDialogConf::FindNext(m_hedit, m_flags, m_text.get_ptr());
+    CDialogConf::FindNext(m_hWnd, m_hedit, m_flags, m_text.get_ptr());
 	return 0;
 }
 

@@ -131,9 +131,9 @@ public:
 	STDMETHODIMP SetProperty(BSTR name, VARIANT val);
 	STDMETHODIMP GetBackgroundImage(IGdiBitmap ** pp);
 	STDMETHODIMP SetCursor(UINT id);
-	STDMETHODIMP GetColorCUI(UINT type, BSTR guidstr, DWORD * p);
+	STDMETHODIMP GetColorCUI(UINT type, BSTR guidstr, int * p);
 	STDMETHODIMP GetFontCUI(UINT type, BSTR guidstr, IGdiFont ** pp);
-	STDMETHODIMP GetColorDUI(UINT type, DWORD * p);
+	STDMETHODIMP GetColorDUI(UINT type, int * p);
 	STDMETHODIMP GetFontDUI(UINT type, IGdiFont ** pp);
 	STDMETHODIMP CreateThemeManager(BSTR classid, IThemeManager ** pp);
 };
