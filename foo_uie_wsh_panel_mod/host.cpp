@@ -869,7 +869,7 @@ HRESULT ScriptHost::Initialize()
 	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
 	if (SUCCEEDED(hr)) hr = parser->InitNew();
 
-    EnableSafeModeToScriptEngine(g_cfg_safe_mode);
+    EnableSafeModeToScriptEngine(m_script_engine, g_cfg_safe_mode);
 
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"window", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
@@ -894,15 +894,14 @@ HRESULT ScriptHost::Initialize()
 	return hr;
 }
 
-void ScriptHost::EnableSafeModeToScriptEngine(bool enable)
+void ScriptHost::EnableSafeModeToScriptEngine(IActiveScript * engine, bool enable)
 {
-    if (!enable)
-        return;
+    if (Ready() || !enable) return;
 
     _COM_SMARTPTR_TYPEDEF(IObjectSafety, IID_IObjectSafety);
     IObjectSafetyPtr psafe;
 
-    if (SUCCEEDED(m_script_engine->QueryInterface(&psafe)))
+    if (SUCCEEDED(engine->QueryInterface(&psafe)))
     {
         psafe->SetInterfaceSafetyOptions(IID_IDispatch, 
             INTERFACE_USES_SECURITY_MANAGER, INTERFACE_USES_SECURITY_MANAGER);
@@ -911,6 +910,8 @@ void ScriptHost::EnableSafeModeToScriptEngine(bool enable)
 
 HRESULT ScriptHost::ProcessImportedScripts(script_preprocessor &preprocessor, IActiveScriptParsePtr &parser)
 {
+    if (!Ready()) return E_POINTER;
+
     // processing "@import"
     script_preprocessor::t_script_list scripts;
     HRESULT hr = preprocessor.process_import(m_host->GetScriptInfo(), scripts);
@@ -981,10 +982,9 @@ HRESULT ScriptHost::InitScriptEngineByName(const wchar_t * engineName)
 
 void ScriptHost::Finalize()
 {
-    if (!m_has_error)
-	    InvokeCallback(CallbackIds::on_script_unload);
+	InvokeCallback(CallbackIds::on_script_unload);
 
-	if (m_script_engine && m_engine_inited)
+	if (Ready())
 	{
 		// Call GC explicitly 
  		IActiveScriptGarbageCollector * gc = NULL;
@@ -1018,7 +1018,7 @@ void ScriptHost::Finalize()
 HRESULT ScriptHost::InvokeCallback(int callbackId, VARIANTARG * argv /*= NULL*/, UINT argc /*= 0*/, VARIANT * ret /*= NULL*/)
 {
 	if (HasError()) return E_FAIL;
-	if (!m_script_root || !Ready()) return E_FAIL;
+	if (!Ready()) return E_FAIL;
 	
     HRESULT hr = E_FAIL;
 
@@ -1130,10 +1130,10 @@ void ScriptHost::ReportError(IActiveScriptError* err)
     formatter << string_utf8_from_wide(sourceline);
     if (name.length() > 0) formatter << "\nAt: " << name;
 
-    SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, (LPARAM)formatter.get_ptr());
-
     if (excep.bstrSource)      SysFreeString(excep.bstrSource);
     if (excep.bstrDescription) SysFreeString(excep.bstrDescription);
     if (excep.bstrHelpFile)    SysFreeString(excep.bstrHelpFile);
+
+    SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, (LPARAM)formatter.get_ptr());
 }
 

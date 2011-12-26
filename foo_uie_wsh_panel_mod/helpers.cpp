@@ -456,7 +456,7 @@ namespace helpers
 
 			if (SUCCEEDED(hr) && bytes_written == data->get_size())
 			{
-				bmp = new Gdiplus::Bitmap(is);
+				bmp = new Gdiplus::Bitmap(is, PixelFormat32bppPARGB);
 
 				if (!ensure_gdiplus_object(bmp))
 				{
@@ -913,7 +913,7 @@ namespace helpers
 	void load_image_async::run()
 	{
 		IGdiBitmap * bitmap = NULL;
-		Gdiplus::Bitmap * img = new Gdiplus::Bitmap(m_path);
+		Gdiplus::Bitmap * img = new Gdiplus::Bitmap(m_path, PixelFormat32bppPARGB);
 
 		if (!helpers::ensure_gdiplus_object(img))
 		{

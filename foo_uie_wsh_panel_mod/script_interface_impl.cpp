@@ -146,7 +146,7 @@ STDMETHODIMP GdiBitmap::Clone(float x, float y, float w, float h, IGdiBitmap** p
     if (!pp) return E_POINTER;
     if (!m_ptr) return E_POINTER;
 
-    Gdiplus::Bitmap * img = m_ptr->Clone(x, y, w, h, PixelFormatDontCare);
+    Gdiplus::Bitmap * img = m_ptr->Clone(x, y, w, h, PixelFormat32bppPARGB);
 
     if (!helpers::ensure_gdiplus_object(img))
     {
@@ -223,7 +223,7 @@ STDMETHODIMP GdiBitmap::ApplyMask(IGdiBitmap * mask, VARIANT_BOOL * p)
         return S_OK;
     }
 
-    if (m_ptr->LockBits(&rect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpdata_dst) != Gdiplus::Ok)
+    if (m_ptr->LockBits(&rect, Gdiplus::ImageLockModeRead | Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpdata_dst) != Gdiplus::Ok)
     {
         bitmap_mask->UnlockBits(&bmpdata_mask);
         return S_OK;
@@ -251,8 +251,8 @@ STDMETHODIMP GdiBitmap::ApplyMask(IGdiBitmap * mask, VARIANT_BOOL * p)
         ++p_dst;
     }
 
-    bitmap_mask->UnlockBits(&bmpdata_mask);
     m_ptr->UnlockBits(&bmpdata_dst);
+    bitmap_mask->UnlockBits(&bmpdata_mask);
 
     *p = VARIANT_TRUE;
     return S_OK;
@@ -319,7 +319,7 @@ STDMETHODIMP GdiBitmap::Resize(UINT w, UINT h, INT interpolationMode, IGdiBitmap
     if (!m_ptr) return E_POINTER;
     if (!pp) return E_POINTER;
 
-    Gdiplus::Bitmap * bitmap = new Gdiplus::Bitmap(w, h); 
+    Gdiplus::Bitmap * bitmap = new Gdiplus::Bitmap(w, h, PixelFormat32bppPARGB); 
     Gdiplus::Graphics g(bitmap);
 
     g.SetInterpolationMode((Gdiplus::InterpolationMode)interpolationMode);
@@ -966,7 +966,7 @@ STDMETHODIMP GdiUtils::Image(BSTR path, IGdiBitmap** pp)
     IStreamPtr pStream;
     HRESULT hr = SHCreateStreamOnFileEx(path, STGM_READ | STGM_SHARE_DENY_WRITE, GENERIC_READ, FALSE, NULL, &pStream);
     if (FAILED(hr)) return S_OK;
-    Gdiplus::Bitmap * img = new Gdiplus::Bitmap(pStream);
+    Gdiplus::Bitmap * img = new Gdiplus::Bitmap(pStream, PixelFormat32bppPARGB);
 
     if (!helpers::ensure_gdiplus_object(img))
     {

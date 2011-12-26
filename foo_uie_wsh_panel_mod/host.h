@@ -198,11 +198,11 @@ public:
 	HRESULT Initialize();
     HRESULT ProcessImportedScripts(script_preprocessor &preprocessor, IActiveScriptParsePtr& parser);
     HRESULT InitScriptEngineByName(const wchar_t * engineName);
-    void EnableSafeModeToScriptEngine(bool enable);
+    static void EnableSafeModeToScriptEngine(IActiveScript * engine, bool enable);
     void Finalize();
 
 	inline void Stop() { m_engine_inited = false; if (m_script_engine) m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED); }
-	inline bool Ready() { return m_engine_inited; }
+	inline bool Ready() { return m_engine_inited && m_script_engine; }
 	inline bool HasError() { return m_has_error; }
     HRESULT InvokeCallback(int callbackId, VARIANTARG * argv = NULL, UINT argc = 0, VARIANT * ret = NULL);
 	HRESULT GenerateSourceContext(const wchar_t * path, const wchar_t * code, DWORD & source_context);
