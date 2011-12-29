@@ -198,7 +198,7 @@ public:
 	HRESULT Initialize();
     HRESULT ProcessImportedScripts(script_preprocessor &preprocessor, IActiveScriptParsePtr& parser);
     HRESULT InitScriptEngineByName(const wchar_t * engineName);
-    static void EnableSafeModeToScriptEngine(IActiveScript * engine, bool enable);
+    void EnableSafeModeToScriptEngine(bool enable);
     void Finalize();
 
 	inline void Stop() { m_engine_inited = false; if (m_script_engine) m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED); }

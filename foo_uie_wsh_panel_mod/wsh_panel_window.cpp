@@ -418,11 +418,6 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         break;
 
     case UWM_SCRIPT_ERROR:
-        if (lp)
-        {
-            console::error(reinterpret_cast<const char *>(lp));
-            MessageBeep(MB_ICONASTERISK);
-        }
         Repaint();
         m_script_host->Stop();
         script_unload();

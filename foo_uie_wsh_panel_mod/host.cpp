@@ -869,7 +869,7 @@ HRESULT ScriptHost::Initialize()
 	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
 	if (SUCCEEDED(hr)) hr = parser->InitNew();
 
-    EnableSafeModeToScriptEngine(m_script_engine, g_cfg_safe_mode);
+    EnableSafeModeToScriptEngine(g_cfg_safe_mode);
 
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"window", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
@@ -889,19 +889,28 @@ HRESULT ScriptHost::Initialize()
 	if (SUCCEEDED(hr)) hr = parser->ParseScriptText(wcode.get_ptr(), NULL, NULL, NULL, 
 		source_context, 0, SCRIPTTEXT_HOSTMANAGESSOURCE | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
 
-	if (SUCCEEDED(hr)) m_engine_inited = true;
+	if (SUCCEEDED(hr))
+    {
+        m_engine_inited = true;
+    }
+    else
+    {
+        m_engine_inited = false;
+        m_has_error = true;
+    }
+
     m_callback_invoker.init(m_script_root);
 	return hr;
 }
 
-void ScriptHost::EnableSafeModeToScriptEngine(IActiveScript * engine, bool enable)
+void ScriptHost::EnableSafeModeToScriptEngine(bool enable)
 {
-    if (Ready() || !enable) return;
+    if (!enable) return;
 
     _COM_SMARTPTR_TYPEDEF(IObjectSafety, IID_IObjectSafety);
     IObjectSafetyPtr psafe;
 
-    if (SUCCEEDED(engine->QueryInterface(&psafe)))
+    if (SUCCEEDED(m_script_engine->QueryInterface(&psafe)))
     {
         psafe->SetInterfaceSafetyOptions(IID_IDispatch, 
             INTERFACE_USES_SECURITY_MANAGER, INTERFACE_USES_SECURITY_MANAGER);
@@ -910,8 +919,6 @@ void ScriptHost::EnableSafeModeToScriptEngine(IActiveScript * engine, bool enabl
 
 HRESULT ScriptHost::ProcessImportedScripts(script_preprocessor &preprocessor, IActiveScriptParsePtr &parser)
 {
-    if (!Ready()) return E_POINTER;
-
     // processing "@import"
     script_preprocessor::t_script_list scripts;
     HRESULT hr = preprocessor.process_import(m_host->GetScriptInfo(), scripts);
@@ -922,6 +929,7 @@ HRESULT ScriptHost::ProcessImportedScripts(script_preprocessor &preprocessor, IA
 
         if (SUCCEEDED(hr)) hr = GenerateSourceContext(scripts[i].path.get_ptr(), scripts[i].code.get_ptr(), source_context);
         if (FAILED(hr)) break;
+
         m_contextToPathMap[source_context] = pfc::stringcvt::string_utf8_from_wide(scripts[i].path.get_ptr());
         hr = parser->ParseScriptText(scripts[i].code.get_ptr(), NULL, NULL, NULL, 
             source_context, 0, SCRIPTTEXT_HOSTMANAGESSOURCE | SCRIPTTEXT_ISVISIBLE, NULL, NULL);
@@ -996,6 +1004,7 @@ void ScriptHost::Finalize()
 
 		m_script_engine->SetScriptState(SCRIPTSTATE_DISCONNECTED);
         m_script_engine->SetScriptState(SCRIPTSTATE_CLOSED);
+        m_script_engine->Close();
 		//m_script_engine->InterruptScriptThread(SCRIPTTHREADID_ALL, NULL, 0);
 		m_engine_inited = false;
 	}
@@ -1005,13 +1014,12 @@ void ScriptHost::Finalize()
 
 	if (m_script_engine)
 	{
-		m_script_engine->Close();
 		m_script_engine.Release();
 	}
 
 	if (m_script_root)
 	{
-		m_script_root.Release();
+	    m_script_root.Release();
 	}
 }
 
@@ -1134,6 +1142,8 @@ void ScriptHost::ReportError(IActiveScriptError* err)
     if (excep.bstrDescription) SysFreeString(excep.bstrDescription);
     if (excep.bstrHelpFile)    SysFreeString(excep.bstrHelpFile);
 
-    SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, (LPARAM)formatter.get_ptr());
+    console::error(formatter);
+    MessageBeep(MB_ICONASTERISK);
+    SendMessage(m_host->GetHWND(), UWM_SCRIPT_ERROR, 0, 0);
 }
 
