@@ -101,20 +101,20 @@ public:
 	}
 
 	STDMETHODIMP put__ptr(void * p);
-	STDMETHODIMP FillSolidRect(float x, float y, float w, float h, int color);
-	STDMETHODIMP FillGradRect(float x, float y, float w, float h, float angle, int color1, int color2, float focus);
-	STDMETHODIMP FillRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, int color);
-	STDMETHODIMP FillEllipse(float x, float y, float w, float h, int color);
-	STDMETHODIMP FillPolygon(int color, INT fillmode, VARIANT points);
+	STDMETHODIMP FillSolidRect(float x, float y, float w, float h, VARIANT color);
+	STDMETHODIMP FillGradRect(float x, float y, float w, float h, float angle, VARIANT color1, VARIANT color2, float focus);
+	STDMETHODIMP FillRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, VARIANT color);
+	STDMETHODIMP FillEllipse(float x, float y, float w, float h, VARIANT color);
+	STDMETHODIMP FillPolygon(VARIANT color, INT fillmode, VARIANT points);
 
-	STDMETHODIMP DrawLine(float x1, float y1, float x2, float y2, float line_width, int color);
-	STDMETHODIMP DrawRect(float x, float y, float w, float h, float line_width, int color);
-	STDMETHODIMP DrawRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, int color);
-	STDMETHODIMP DrawEllipse(float x, float y, float w, float h, float line_width, int color);
-	STDMETHODIMP DrawPolygon(int color, float line_width, VARIANT points);
+	STDMETHODIMP DrawLine(float x1, float y1, float x2, float y2, float line_width, VARIANT color);
+	STDMETHODIMP DrawRect(float x, float y, float w, float h, float line_width, VARIANT color);
+    STDMETHODIMP DrawRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, VARIANT color);
+	STDMETHODIMP DrawEllipse(float x, float y, float w, float h, float line_width, VARIANT color);
+	STDMETHODIMP DrawPolygon(VARIANT color, float line_width, VARIANT points);
 
-	STDMETHODIMP DrawString(BSTR str, IGdiFont* font, int color, float x, float y, float w, float h, int flags);
-	STDMETHODIMP GdiDrawText(BSTR str, IGdiFont * font, int color, int x, int y, int w, int h, int format, VARIANT * p);
+	STDMETHODIMP DrawString(BSTR str, IGdiFont* font, VARIANT color, float x, float y, float w, float h, int flags);
+	STDMETHODIMP GdiDrawText(BSTR str, IGdiFont * font, VARIANT color, int x, int y, int w, int h, int format, VARIANT * p);
 	STDMETHODIMP DrawImage(IGdiBitmap* image, float dstX, float dstY, float dstW, float dstH, float srcX, float srcY, float srcW, float srcH, float angle, BYTE alpha);
 	STDMETHODIMP GdiDrawBitmap(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH);
 	STDMETHODIMP GdiAlphaBlend(IGdiRawBitmap * bitmap, int dstX, int dstY, int dstW, int dstH, int srcX, int srcY, int srcW, int srcH, BYTE alpha);
@@ -582,9 +582,9 @@ public:
 	// Shadow
 	STDMETHODIMP EnableShadow(VARIANT_BOOL enable);
 	STDMETHODIMP ResetShadow();
-	STDMETHODIMP Shadow(int color, int thickness, int offset_x, int offset_y);
-	STDMETHODIMP DiffusedShadow(int color, int thickness, int offset_x, int offset_y);
-	STDMETHODIMP SetShadowBackgroundColor(int color, int width, int height);
+	STDMETHODIMP Shadow(VARIANT color, int thickness, int offset_x, int offset_y);
+	STDMETHODIMP DiffusedShadow(VARIANT color, int thickness, int offset_x, int offset_y);
+	STDMETHODIMP SetShadowBackgroundColor(VARIANT color, int width, int height);
 	STDMETHODIMP SetShadowBackgroundImage(IGdiBitmap * img);
 	// Render 
 	STDMETHODIMP RenderStringPoint(IGdiGraphics * g, BSTR str, IGdiFont* font, int x, int y, int flags, VARIANT_BOOL * p);

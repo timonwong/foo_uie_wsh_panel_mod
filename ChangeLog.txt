@@ -1,5 +1,6 @@
 v1.5.2
-- FIX: Fix a problem that change the "Parsable" property of IDropAction had no effect.
+- FIX: Fix a bug that change the "Parsable" property of IDropAction had no effect.
+- FIX: Runtime overflow error while passing literal number to color is now fixed.
 
 v1.5.1
 - FIX: Fix a bug that ApplyMask() doesn't work correctly.

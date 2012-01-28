@@ -18,12 +18,11 @@
 // -1: not a valid metadb interface
 //  0: metadb interface
 //  1: metadb handles interface
-int TryGetMetadbHandleFromVariant(const VARIANT & obj, IDispatch ** ppuk)
+static int TryGetMetadbHandleFromVariant(const VARIANT & obj, IDispatch ** ppuk)
 {
     if (obj.vt != VT_DISPATCH || !obj.pdispVal)
         return -1;
 
-    // try:
     IDispatch * temp = NULL;
 
     if (SUCCEEDED(obj.pdispVal->QueryInterface(__uuidof(IFbMetadbHandle), (void **)&temp)))
@@ -37,10 +36,14 @@ int TryGetMetadbHandleFromVariant(const VARIANT & obj, IDispatch ** ppuk)
         return 1;
     }
 
-    // failed
     return -1;
 }
 
+static inline unsigned ExtractColorFromVariant(VARIANT v)
+{
+    console::formatter() << "Color Type: " << v.vt;
+    return (v.vt == VT_R8) ? static_cast<unsigned>(v.dblVal) : v.lVal;
+}
 
 GdiFont::GdiFont(Gdiplus::Font* p, HFONT hFont, bool managed /*= true*/) : GdiObj<IGdiFont, Gdiplus::Font>(p), 
     m_hFont(hFont), m_managed(managed)
@@ -365,19 +368,18 @@ STDMETHODIMP GdiGraphics::put__ptr(void * p)
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillSolidRect(float x, float y, float w, float h, int color)
+STDMETHODIMP GdiGraphics::FillSolidRect(float x, float y, float w, float h, VARIANT color)
 {
     TRACK_FUNCTION();
 
     if (!m_ptr) return E_POINTER;
 
-    Gdiplus::SolidBrush brush(color);
-
+    Gdiplus::SolidBrush brush(ExtractColorFromVariant(color));
     m_ptr->FillRectangle(&brush, x, y, w, h);
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float angle, int color1, int color2, float focus)
+STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float angle, VARIANT color1, VARIANT color2, float focus)
 {
     TRACK_FUNCTION();
 
@@ -386,14 +388,14 @@ STDMETHODIMP GdiGraphics::FillGradRect(float x, float y, float w, float h, float
     Gdiplus::RectF rect(x, y, w, h);
     // HACK: Workaround for one pixel black line problem.
     //rect.Inflate(0.1f, 0.1f);
-    Gdiplus::LinearGradientBrush brush(rect, color1, color2, angle, TRUE);
+    Gdiplus::LinearGradientBrush brush(rect, ExtractColorFromVariant(color1), ExtractColorFromVariant(color2), angle, TRUE);
 
     brush.SetBlendTriangularShape(focus);
     m_ptr->FillRectangle(&brush, rect);
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, int color)
+STDMETHODIMP GdiGraphics::FillRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, VARIANT color)
 {
     TRACK_FUNCTION();
 
@@ -403,35 +405,32 @@ STDMETHODIMP GdiGraphics::FillRoundRect(float x, float y, float w, float h, floa
     if (2 * arc_width > w || 2 * arc_height > h)
         return E_INVALIDARG;
 
-    Gdiplus::SolidBrush br(color);
+    Gdiplus::SolidBrush br(ExtractColorFromVariant(color));
     Gdiplus::GraphicsPath gp;
     Gdiplus::RectF rect(x, y, w, h);
-
     GetRoundRectPath(gp, rect, arc_width, arc_height);
-
     m_ptr->FillPath(&br, &gp);
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillEllipse(float x, float y, float w, float h, int color)
+STDMETHODIMP GdiGraphics::FillEllipse(float x, float y, float w, float h, VARIANT color)
 {
     TRACK_FUNCTION();
 
     if (!m_ptr) return E_POINTER;
 
-    Gdiplus::SolidBrush br(color);
-
+    Gdiplus::SolidBrush br(ExtractColorFromVariant(color));
     m_ptr->FillEllipse(&br, x, y, w, h);
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::FillPolygon(int color, INT fillmode, VARIANT points)
+STDMETHODIMP GdiGraphics::FillPolygon(VARIANT color, INT fillmode, VARIANT points)
 {
     TRACK_FUNCTION();
 
     if (!m_ptr) return E_POINTER;
 
-    Gdiplus::SolidBrush br(color);
+    Gdiplus::SolidBrush br(ExtractColorFromVariant(color));
     helpers::com_array_reader helper;
     pfc::array_t<Gdiplus::PointF> point_array;
 
@@ -458,31 +457,29 @@ STDMETHODIMP GdiGraphics::FillPolygon(int color, INT fillmode, VARIANT points)
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawLine(float x1, float y1, float x2, float y2, float line_width, int color)
+STDMETHODIMP GdiGraphics::DrawLine(float x1, float y1, float x2, float y2, float line_width, VARIANT color)
 {
     TRACK_FUNCTION();
 
     if (!m_ptr) return E_POINTER;
 
-    Gdiplus::Pen pen(color, line_width);
-
+    Gdiplus::Pen pen(ExtractColorFromVariant(color), line_width);
     m_ptr->DrawLine(&pen, x1, y1, x2, y2);
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawRect(float x, float y, float w, float h, float line_width, int color)
+STDMETHODIMP GdiGraphics::DrawRect(float x, float y, float w, float h, float line_width, VARIANT color)
 {
     TRACK_FUNCTION();
 
     if (!m_ptr) return E_POINTER;
 
-    Gdiplus::Pen pen(color, line_width);
-
+    Gdiplus::Pen pen(ExtractColorFromVariant(color), line_width);
     m_ptr->DrawRectangle(&pen, x, y, w, h);
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, int color)
+STDMETHODIMP GdiGraphics::DrawRoundRect(float x, float y, float w, float h, float arc_width, float arc_height, float line_width, VARIANT color)
 {
     TRACK_FUNCTION();
 
@@ -492,37 +489,34 @@ STDMETHODIMP GdiGraphics::DrawRoundRect(float x, float y, float w, float h, floa
     if (2 * arc_width > w || 2 * arc_height > h)
         return E_INVALIDARG;
 
-    Gdiplus::Pen pen(color, line_width);
+    Gdiplus::Pen pen(ExtractColorFromVariant(color), line_width);
     Gdiplus::GraphicsPath gp;
     Gdiplus::RectF rect(x, y, w, h);
-
     GetRoundRectPath(gp, rect, arc_width, arc_height);
-
     pen.SetStartCap(Gdiplus::LineCapRound);
     pen.SetEndCap(Gdiplus::LineCapRound);
     m_ptr->DrawPath(&pen, &gp);
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawEllipse(float x, float y, float w, float h, float line_width, int color)
+STDMETHODIMP GdiGraphics::DrawEllipse(float x, float y, float w, float h, float line_width, VARIANT color)
 {
     TRACK_FUNCTION();
 
     if (!m_ptr) return E_POINTER;
 
-    Gdiplus::Pen pen(color, line_width);
-
+    Gdiplus::Pen pen(ExtractColorFromVariant(color), line_width);
     m_ptr->DrawEllipse(&pen, x, y, w, h);
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawPolygon(int color, float line_width, VARIANT points)
+STDMETHODIMP GdiGraphics::DrawPolygon(VARIANT color, float line_width, VARIANT points)
 {
     TRACK_FUNCTION();
 
     if (!m_ptr) return E_POINTER;
 
-    Gdiplus::SolidBrush br(color);
+    Gdiplus::SolidBrush br(ExtractColorFromVariant(color));
     helpers::com_array_reader helper;
     pfc::array_t<Gdiplus::PointF> point_array;
 
@@ -545,13 +539,12 @@ STDMETHODIMP GdiGraphics::DrawPolygon(int color, float line_width, VARIANT point
         point_array[i].Y = varY.fltVal;
     }
 
-    Gdiplus::Pen pen(color, line_width);
-
+    Gdiplus::Pen pen(ExtractColorFromVariant(color), line_width);
     m_ptr->DrawPolygon(&pen, point_array.get_ptr(), point_array.get_count());
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::DrawString(BSTR str, IGdiFont* font, int color, float x, float y, float w, float h, int flags)
+STDMETHODIMP GdiGraphics::DrawString(BSTR str, IGdiFont* font, VARIANT color, float x, float y, float w, float h, int flags)
 {
     TRACK_FUNCTION();
 
@@ -562,7 +555,7 @@ STDMETHODIMP GdiGraphics::DrawString(BSTR str, IGdiFont* font, int color, float 
     font->get__ptr((void**)&fn);
     if (!fn) return E_INVALIDARG;
 
-    Gdiplus::SolidBrush br(color);
+    Gdiplus::SolidBrush br(ExtractColorFromVariant(color));
     Gdiplus::StringFormat fmt(Gdiplus::StringFormat::GenericTypographic());
 
     if (flags != 0)
@@ -675,7 +668,7 @@ STDMETHODIMP GdiGraphics::GdiAlphaBlend(IGdiRawBitmap * bitmap, int dstX, int ds
     return S_OK;
 }
 
-STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, int color, int x, int y, int w, int h, int format, VARIANT * p)
+STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, VARIANT color, int x, int y, int w, int h, int format, VARIANT * p)
 {
     TRACK_FUNCTION();
 
@@ -693,7 +686,7 @@ STDMETHODIMP GdiGraphics::GdiDrawText(BSTR str, IGdiFont * font, int color, int 
     DRAWTEXTPARAMS dpt = { sizeof(DRAWTEXTPARAMS), 4, 0, 0, -1 };
 
     oldfont = SelectFont(dc, hFont);
-    SetTextColor(dc, helpers::convert_argb_to_colorref(color));
+    SetTextColor(dc, helpers::convert_argb_to_colorref(ExtractColorFromVariant(color)));
     SetBkMode(dc, TRANSPARENT);
     SetTextAlign(dc, TA_LEFT | TA_TOP | TA_NOUPDATECP);
 
@@ -3388,33 +3381,30 @@ STDMETHODIMP StyleTextRender::ResetShadow()
     return S_OK;
 }
 
-STDMETHODIMP StyleTextRender::Shadow(int color, int thickness, int offset_x, int offset_y)
+STDMETHODIMP StyleTextRender::Shadow(VARIANT color, int thickness, int offset_x, int offset_y)
 {
     TRACK_FUNCTION();
 
     if (!m_pOutLineText) return E_POINTER;
-
-    m_pOutLineText->Shadow(color, thickness, Gdiplus::Point(offset_x, offset_y));
+    m_pOutLineText->Shadow(ExtractColorFromVariant(color), thickness, Gdiplus::Point(offset_x, offset_y));
     return S_OK;
 }
 
-STDMETHODIMP StyleTextRender::DiffusedShadow(int color, int thickness, int offset_x, int offset_y)
+STDMETHODIMP StyleTextRender::DiffusedShadow(VARIANT color, int thickness, int offset_x, int offset_y)
 {
     TRACK_FUNCTION();
 
     if (!m_pOutLineText) return E_POINTER;
-
-    m_pOutLineText->DiffusedShadow(color, thickness, Gdiplus::Point(offset_x, offset_y));
+    m_pOutLineText->DiffusedShadow(ExtractColorFromVariant(color), thickness, Gdiplus::Point(offset_x, offset_y));
     return S_OK;
 }
 
-STDMETHODIMP StyleTextRender::SetShadowBackgroundColor(int color, int width, int height)
+STDMETHODIMP StyleTextRender::SetShadowBackgroundColor(VARIANT color, int width, int height)
 {
     TRACK_FUNCTION();
 
     if (!m_pOutLineText) return E_POINTER;
-
-    m_pOutLineText->SetShadowBkgd(color, width, height);
+    m_pOutLineText->SetShadowBkgd(ExtractColorFromVariant(color), width, height);
     return S_OK;
 }
 
