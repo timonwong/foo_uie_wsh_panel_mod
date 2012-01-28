@@ -9,10 +9,6 @@
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Template|Win32">
-      <Configuration>Template</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{43DF6037-DBE4-4468-9A50-4311495F3C86}</ProjectGuid>
@@ -55,12 +51,8 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" />
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">F:\Develop\Library\wtl\Include;..\scintilla\include;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">F:\Develop\Library\wtl\Include;..\scintilla\include;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">F:\Develop\Library\wtl\Include;..\scintilla\include;$(IncludePath)</IncludePath>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">foo_uie_wsh_panel_mod</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">foo_uie_wsh_panel_mod</TargetName>
   </PropertyGroup>
@@ -86,13 +78,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <IgnoreSpecificDefaultLibraries>libcmtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetPath) "%APPDATA%\foobar2000\user-components\foo_uie_wsh_panel_mod"
-copy $(SolutionDir)extras\*.api "%APPDATA%\foobar2000\user-components\foo_uie_wsh_panel_mod"
-</Command>
+      <Command>copy "$(TargetPath)" "%APPDATA%\foobar2000\user-components\foo_uie_wsh_panel_mod"
+copy "$(SolutionDir)extras\*.api" "%APPDATA%\foobar2000\user-components\foo_uie_wsh_panel_mod"
+copy "$(TargetPath)" F:\foobar2000\components
+copy "$(SolutionDir)extras\*.api" F:\foobar2000\components</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -131,11 +122,6 @@ copy $(SolutionDir)extras\*.api "%APPDATA%\foobar2000\user-components\foo_uie_ws
       <Command>
       </Command>
     </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
-    <PreBuildEvent>
-      <Command>"$(SolutionDir)common\preBuild.cmd" "$(ProjectDir)"</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="com_tools.cpp" />

@@ -58,12 +58,11 @@ HRESULT HostDropTarget::OnDragEnter(IDataObject *pDataObj, DWORD grfKeyState, PO
     if (!pdwEffect) return E_POINTER;
 
     m_action->Reset();
+    // Default state of parsable
+    m_action->Parsable() = static_api_ptr_t<playlist_incoming_item_filter>()->process_dropped_files_check_ex(pDataObj, &m_effect);
 
     ScreenToClient(m_hWnd, reinterpret_cast<LPPOINT>(&pt));
     on_drag_enter(grfKeyState, pt, m_action);
-
-    // Parsable?
-    m_action->Parsable() = m_action->Parsable() || static_api_ptr_t<playlist_incoming_item_filter>()->process_dropped_files_check_ex(pDataObj, &m_effect);
 
     if (!m_action->Parsable())
         *pdwEffect = DROPEFFECT_NONE;
