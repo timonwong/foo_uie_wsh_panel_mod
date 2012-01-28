@@ -1,16 +1,10 @@
 #pragma once
 
 
-struct panel_store
-{
-    pfc::rcptr_t<HWND> tooltip_hwnd_rcptr;
-    SIZE tooltip_size;
-};
-
 class panel_manager
 {
 public:
-    typedef pfc::map_t<HWND, panel_store> t_hwnd_map;
+    typedef pfc::list_t<HWND> t_hwnd_list;
 
 	panel_manager()
 	{
@@ -23,22 +17,20 @@ public:
 
 	inline void add_window(HWND p_wnd)
 	{
-        m_hwnd_map.find_or_add(p_wnd);
+        if (m_hwnds.find_item(p_wnd) == pfc_infinite)
+        {
+            m_hwnds.add_item(p_wnd);
+        }
 	}
 
 	inline void remove_window(HWND p_wnd)
 	{
-		m_hwnd_map.remove(p_wnd);
+		m_hwnds.remove_item(p_wnd);
 	}
-
-    inline panel_store & query_store_by_window(HWND p_wnd)
-    {
-        return m_hwnd_map[p_wnd];
-    }
 
 	inline t_size get_count()
 	{
-		return m_hwnd_map.get_count();
+		return m_hwnds.get_count();
 	}
 
 	void send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp);
@@ -50,7 +42,7 @@ public:
 	void post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_root * p_param);
 
 private:
-	t_hwnd_map m_hwnd_map;
+	t_hwnd_list m_hwnds;
 	static panel_manager sm_instance;
 
 	PFC_CLASS_NOT_COPYABLE_EX(panel_manager)

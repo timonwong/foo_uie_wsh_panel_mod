@@ -2,6 +2,8 @@
 
 #include "host.h"
 #include "delay_loader.h"
+#include "panel_tooltip_param.h"
+
 
 class ScriptHost;
 class CDialogConf;

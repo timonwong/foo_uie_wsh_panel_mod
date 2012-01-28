@@ -76,7 +76,7 @@ bool wsh_panel_window::script_load()
         pfc::string_formatter msg_formatter;
 
         msg_formatter << "Scripting Engine Initialization Failed ("
-            << GetScriptInfo().build_info_string() << ", CODE: 0x" 
+            << ScriptInfo().build_info_string() << ", CODE: 0x" 
             << pfc::format_hex_lowercase((unsigned)hr);
 
         if (hr != E_UNEXPECTED && hr != _HRESULT_TYPEDEF_(0x80020101L) && hr != _HRESULT_TYPEDEF_(0x86664004L))
@@ -94,7 +94,7 @@ bool wsh_panel_window::script_load()
     }
     else
     {
-        if (GetScriptInfo().feature_mask & t_script_info::kFeatureDragDrop)
+        if (ScriptInfo().feature_mask & t_script_info::kFeatureDragDrop)
         {
             // Ole Drag and Drop support
             m_drop_target.Attach(new com_object_impl_t<HostDropTarget>(this));
@@ -107,7 +107,7 @@ bool wsh_panel_window::script_load()
 
         // Show init message
         console::formatter() << WSPM_NAME " (" 
-            << GetScriptInfo().build_info_string()
+            << ScriptInfo().build_info_string()
             << "): initialized in "
             << (int)(timer.query() * 1000)
             << " ms";
@@ -303,13 +303,13 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     case WM_GETMINMAXINFO:
         {
             LPMINMAXINFO pmmi = reinterpret_cast<LPMINMAXINFO>(lp);
-            memcpy(&pmmi->ptMaxTrackSize, &GetMaxSize(), sizeof(POINT));
-            memcpy(&pmmi->ptMinTrackSize, &GetMinSize(), sizeof(POINT));
+            memcpy(&pmmi->ptMaxTrackSize, &MaxSize(), sizeof(POINT));
+            memcpy(&pmmi->ptMinTrackSize, &MinSize(), sizeof(POINT));
         }
         return 0;
 
     case WM_GETDLGCODE:
-        return GetDlgCode();
+        return DlgCode();
 
     case WM_LBUTTONDOWN:
     case WM_MBUTTONDOWN:
@@ -427,7 +427,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         // Show error message
         popup_msg::g_show(pfc::string_formatter() 
             << "Panel ("
-            << GetScriptInfo().build_info_string()
+            << ScriptInfo().build_info_string()
             << "): Refuse to load script due to critical error last run,"
             << " please check your script and apply it again.",
             WSPM_NAME, 
@@ -876,6 +876,9 @@ void wsh_panel_window::on_mouse_button_down(UINT msg, WPARAM wp, LPARAM lp)
 
 bool wsh_panel_window::on_notify(LPARAM lp, LRESULT *pResult)
 {
+    if (!PanelTooltipParam())
+        return false;
+
     LPNMHDR lpnmhdr = (LPNMHDR)lp;
 
     if (lpnmhdr->code == NM_CUSTOMDRAW) 
@@ -883,19 +886,16 @@ bool wsh_panel_window::on_notify(LPARAM lp, LRESULT *pResult)
         LPNMTTCUSTOMDRAW lpnmcd = (LPNMTTCUSTOMDRAW)lpnmhdr;
 
         // Check feature
-        t_uint32 mask = GetScriptInfo().tooltip_mask;
+        t_uint32 mask = ScriptInfo().tooltip_mask;
         if ((mask & t_script_info::kTooltipCustomPaint) == 0 &&
             (mask & t_script_info::kTooltipCustomPaintNoBackground) == 0)
             return false;
 
         // Check tooltip
-        panel_store & store = panel_manager::instance().query_store_by_window(m_hwnd);
-
-        if (store.tooltip_hwnd_rcptr.is_empty()) 
+        if (PanelTooltipParam()->tooltip_hwnd)
             return false;
-        if (lpnmhdr->hwndFrom != *store.tooltip_hwnd_rcptr)
+        if (lpnmhdr->hwndFrom != PanelTooltipParam()->tooltip_hwnd)
             return false;
-
         return on_tooltip_custom_draw(lpnmcd, mask, pResult);
     }
 
@@ -904,6 +904,9 @@ bool wsh_panel_window::on_notify(LPARAM lp, LRESULT *pResult)
 
 bool wsh_panel_window::on_tooltip_custom_draw(LPNMTTCUSTOMDRAW lpnmcd, t_uint32 mask, LRESULT * &pResult)
 {
+    if (!PanelTooltipParam()) 
+        return false;
+
     // From emule source code:
     // For each tooltip which is to be shown Windows invokes the draw function at least 2 times.
     //	1st invokation: to get the drawing rectangle
@@ -925,8 +928,7 @@ bool wsh_panel_window::on_tooltip_custom_draw(LPNMTTCUSTOMDRAW lpnmcd, t_uint32 
 
             try
             {
-                panel_store & store = panel_manager::instance().query_store_by_window(m_hwnd);
-                sz = store.tooltip_size;
+                sz = PanelTooltipParam()->tooltip_size;
             }
             catch (...) {}
 
@@ -1342,14 +1344,14 @@ void wsh_panel_window::on_changed_sorted(WPARAM wp)
 {
     TRACK_FUNCTION();
 
-    if (GetScriptInfo().feature_mask & t_script_info::kFeatureNoWatchMetadb)
+    if (ScriptInfo().feature_mask & t_script_info::kFeatureNoWatchMetadb)
         return;
 
     simple_callback_data_scope_releaser<nonautoregister_callbacks::t_on_changed_sorted_data> data(wp);
     VARIANTARG args[2];
     IDispatch * handle = NULL;
 
-    if (GetScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
+    if (ScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
     {
         handle = new com_object_impl_t<FbMetadbHandleList>(data->m_items_sorted);
     }
@@ -1380,7 +1382,7 @@ void wsh_panel_window::on_selection_changed(WPARAM wp)
 
     if (wp != 0)
     {
-        if (GetScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
+        if (ScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
         {
             script_invoke_v(CallbackIds::on_selection_changed);
         }

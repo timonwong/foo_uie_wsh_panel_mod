@@ -21,6 +21,7 @@ HostComm::HostComm()
 	, m_instance_type(KInstanceTypeCUI)
 	, m_dlg_code(0)
 	, m_script_info(get_config_guid())
+    , m_panel_tooltip_param_ptr(NULL)
 {
 	m_max_size.x = INT_MAX;
 	m_max_size.y = INT_MAX;
@@ -254,7 +255,7 @@ STDMETHODIMP FbWindow::get_MaxWidth(UINT* p)
 
 	if (!p) return E_POINTER;
 
-	*p = m_host->GetMaxSize().x;
+	*p = m_host->MaxSize().x;
 	return S_OK;
 }
 
@@ -262,7 +263,7 @@ STDMETHODIMP FbWindow::put_MaxWidth(UINT width)
 {
 	TRACK_FUNCTION();
 
-	m_host->GetMaxSize().x = width;
+	m_host->MaxSize().x = width;
 	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, uie::size_limit_maximum_width);
 	return S_OK;
 }
@@ -273,7 +274,7 @@ STDMETHODIMP FbWindow::get_MaxHeight(UINT* p)
 
 	if (!p) return E_POINTER;
 
-	*p = m_host->GetMaxSize().y;
+	*p = m_host->MaxSize().y;
 	return S_OK;
 }
 
@@ -281,7 +282,7 @@ STDMETHODIMP FbWindow::put_MaxHeight(UINT height)
 {
 	TRACK_FUNCTION();
 
-	m_host->GetMaxSize().y = height;
+	m_host->MaxSize().y = height;
 	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, uie::size_limit_maximum_height);
 	return S_OK;
 }
@@ -292,7 +293,7 @@ STDMETHODIMP FbWindow::get_MinWidth(UINT* p)
 
 	if (!p) return E_POINTER;
 
-	*p = m_host->GetMinSize().x;
+	*p = m_host->MinSize().x;
 	return S_OK;
 }
 
@@ -300,7 +301,7 @@ STDMETHODIMP FbWindow::put_MinWidth(UINT width)
 {
 	TRACK_FUNCTION();
 
-	m_host->GetMinSize().x = width;
+	m_host->MinSize().x = width;
 	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, uie::size_limit_minimum_width);
 	return S_OK;
 }
@@ -311,7 +312,7 @@ STDMETHODIMP FbWindow::get_MinHeight(UINT* p)
 
 	if (!p) return E_POINTER;
 
-	*p = m_host->GetMinSize().y;
+	*p = m_host->MinSize().y;
 	return S_OK;
 }
 
@@ -319,7 +320,7 @@ STDMETHODIMP FbWindow::put_MinHeight(UINT height)
 {
 	TRACK_FUNCTION();
 
-	m_host->GetMinSize().y = height;
+	m_host->MinSize().y = height;
 	PostMessage(m_host->GetHWND(), UWM_SIZELIMITECHANGED, 0, uie::size_limit_minimum_height);
 	return S_OK;
 }
@@ -330,7 +331,7 @@ STDMETHODIMP FbWindow::get_DlgCode(UINT* p)
 
 	if (!p) return E_POINTER;
 
-	*p = m_host->GetDlgCode();
+	*p = m_host->DlgCode();
 	return S_OK;
 }
 
@@ -338,7 +339,7 @@ STDMETHODIMP FbWindow::put_DlgCode(UINT code)
 {
 	TRACK_FUNCTION();
 
-	m_host->GetDlgCode() = code;
+	m_host->DlgCode() = code;
 	return S_OK;
 }
 
@@ -472,7 +473,7 @@ STDMETHODIMP FbWindow::WatchMetadb(IFbMetadbHandle * handle)
 {
 	TRACK_FUNCTION();
 
-	if (m_host->GetScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
+	if (m_host->ScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
 	{
 		return E_NOTIMPL;
 	}
@@ -489,7 +490,7 @@ STDMETHODIMP FbWindow::UnWatchMetadb()
 {
 	TRACK_FUNCTION();
 
-	if (m_host->GetScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
+	if (m_host->ScriptInfo().feature_mask & t_script_info::kFeatureMetadbHandleList0)
 	{
 		return E_NOTIMPL;
 	}
@@ -503,7 +504,7 @@ STDMETHODIMP FbWindow::CreateTooltip(IFbTooltip ** pp)
 	TRACK_FUNCTION();
 
 	if (!pp) return E_POINTER;
-    (*pp) = new com_object_impl_t<FbTooltip>(m_host->GetHWND());
+    (*pp) = new com_object_impl_t<FbTooltip>(m_host->GetHWND(), m_host->PanelTooltipParam());
 	return S_OK;
 }
 
@@ -861,7 +862,7 @@ HRESULT ScriptHost::Initialize()
 	pfc::stringcvt::string_wide_from_utf8_fast wcode(m_host->get_script_code());
 	// Load preprocessor module
 	script_preprocessor preprocessor(wcode.get_ptr());
-	preprocessor.process_script_info(m_host->GetScriptInfo());
+	preprocessor.process_script_info(m_host->ScriptInfo());
 
     hr = InitScriptEngineByName(wname);
 
@@ -921,7 +922,7 @@ HRESULT ScriptHost::ProcessImportedScripts(script_preprocessor &preprocessor, IA
 {
     // processing "@import"
     script_preprocessor::t_script_list scripts;
-    HRESULT hr = preprocessor.process_import(m_host->GetScriptInfo(), scripts);
+    HRESULT hr = preprocessor.process_import(m_host->ScriptInfo(), scripts);
 
     for (t_size i = 0; i < scripts.get_count(); ++i)
     {
@@ -1038,14 +1039,14 @@ HRESULT ScriptHost::InvokeCallback(int callbackId, VARIANTARG * argv /*= NULL*/,
 	{
 		pfc::print_guid guid(m_host->get_config_guid());
 		console::printf(WSPM_NAME " (%s): Unhandled C++ Exception: \"%s\", will crash now...", 
-			m_host->GetScriptInfo().build_info_string().get_ptr(), e.what());
+			m_host->ScriptInfo().build_info_string().get_ptr(), e.what());
 		PRINT_DISPATCH_TRACK_MESSAGE_AND_BREAK();
 	}
     catch (_com_error & e)
     {
         pfc::print_guid guid(m_host->get_config_guid());
         console::printf(WSPM_NAME " (%s): Unhandled COM Error: \"%s\", will crash now...", 
-            m_host->GetScriptInfo().build_info_string().get_ptr(), 
+            m_host->ScriptInfo().build_info_string().get_ptr(), 
             pfc::stringcvt::string_utf8_from_wide(e.ErrorMessage()).get_ptr());
         PRINT_DISPATCH_TRACK_MESSAGE_AND_BREAK();
     }
@@ -1053,7 +1054,7 @@ HRESULT ScriptHost::InvokeCallback(int callbackId, VARIANTARG * argv /*= NULL*/,
 	{
 		pfc::print_guid guid(m_host->get_config_guid());
 		console::printf(WSPM_NAME " (%s): Unhandled Unknown Exception, will crash now...", 
-			m_host->GetScriptInfo().build_info_string().get_ptr());
+			m_host->ScriptInfo().build_info_string().get_ptr());
         PRINT_DISPATCH_TRACK_MESSAGE_AND_BREAK();
 	}
 
@@ -1068,10 +1069,10 @@ HRESULT ScriptHost::GenerateSourceContext(const wchar_t * path, const wchar_t * 
 
 	if (!path) 
 	{
-		if (m_host->GetScriptInfo().name.is_empty())
+		if (m_host->ScriptInfo().name.is_empty())
 			name.convert(pfc::print_guid(m_host->GetGUID()));
 		else
-			name.convert(m_host->GetScriptInfo().name);
+			name.convert(m_host->ScriptInfo().name);
 
 		guidString.convert(pfc::print_guid(m_host->GetGUID()));
 	}	
@@ -1112,7 +1113,7 @@ void ScriptHost::ReportError(IActiveScriptError* err)
 
     using namespace pfc::stringcvt;
     pfc::string_formatter formatter;
-    formatter << WSPM_NAME << " (" << m_host->GetScriptInfo().build_info_string().get_ptr() << "): ";
+    formatter << WSPM_NAME << " (" << m_host->ScriptInfo().build_info_string().get_ptr() << "): ";
 
     if (excep.bstrSource && excep.bstrDescription) 
     {

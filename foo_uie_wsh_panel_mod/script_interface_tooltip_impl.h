@@ -2,6 +2,7 @@
 
 #include "script_interface_tooltip.h"
 #include "com_tools.h"
+#include "panel_tooltip_param.h"
 
 
 class FbTooltip : public IDisposableImpl4<IFbTooltip>
@@ -11,9 +12,9 @@ protected:
     HWND m_wndparent;
     BSTR m_tip_buffer;
     TOOLINFO m_ti;
-    pfc::rcptr_t<HWND> m_hwnd_rcptr;
+    panel_tooltip_param_ptr m_panel_tooltip_param_ptr;
 
-    FbTooltip(HWND p_wndparent);
+    FbTooltip(HWND p_wndparent, const panel_tooltip_param_ptr & p_param_ptr);
     virtual ~FbTooltip() { }
     virtual void FinalRelease();
 

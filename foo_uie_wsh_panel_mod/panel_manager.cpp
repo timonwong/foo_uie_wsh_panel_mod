@@ -18,7 +18,7 @@ namespace
 
 void panel_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 {
-    m_hwnd_map.enumerate([p_msg, p_wp, p_lp](const HWND & hWnd, panel_store & store) -> void 
+    m_hwnds.for_each([p_msg, p_wp, p_lp](const HWND & hWnd) -> void 
     { 
         SendMessage(hWnd, p_msg, p_wp, p_lp);
     });
@@ -26,7 +26,7 @@ void panel_manager::send_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 
 void panel_manager::send_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pfc::refcounted_object_root * p_param)
 {
-	t_size count = m_hwnd_map.get_count();
+	t_size count = m_hwnds.get_count();
 
 	if (count < 2 || !p_param)
 		return;
@@ -34,7 +34,7 @@ void panel_manager::send_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pf
 	for (t_size i = 0; i < count - 1; ++i)
 		p_param->refcount_add_ref();
 
-    m_hwnd_map.enumerate([p_msg, p_param, p_wnd_except] (const HWND & hWnd, panel_store & store) -> void 
+    m_hwnds.for_each([p_msg, p_param, p_wnd_except] (const HWND & hWnd) -> void 
     {
         if (hWnd != p_wnd_except) 
         {
@@ -45,7 +45,7 @@ void panel_manager::send_msg_to_others_pointer(HWND p_wnd_except, UINT p_msg, pf
 
 void panel_manager::post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 {
-    m_hwnd_map.enumerate([p_msg, p_wp, p_lp] (const HWND & hWnd, panel_store & store) -> void 
+    m_hwnds.for_each([p_msg, p_wp, p_lp] (const HWND & hWnd) -> void 
     {
         PostMessage(hWnd, p_msg, p_wp, p_lp); 
     });
@@ -53,7 +53,7 @@ void panel_manager::post_msg_to_all(UINT p_msg, WPARAM p_wp, LPARAM p_lp)
 
 void panel_manager::post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_root * p_param)
 {
-	t_size count = m_hwnd_map.get_count();
+	t_size count = m_hwnds.get_count();
 
 	if (count < 1 || !p_param)
 		return;
@@ -61,7 +61,7 @@ void panel_manager::post_msg_to_all_pointer(UINT p_msg, pfc::refcounted_object_r
 	for (t_size i = 0; i < count; ++i)
 		p_param->refcount_add_ref();
 
-    m_hwnd_map.enumerate([p_msg, p_param] (const HWND & hWnd, panel_store & store) -> void 
+    m_hwnds.for_each([p_msg, p_param] (const HWND & hWnd) -> void 
     { 
         PostMessage(hWnd, p_msg, reinterpret_cast<WPARAM>(p_param), 0); 
     });

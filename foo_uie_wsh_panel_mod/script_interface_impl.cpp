@@ -41,7 +41,6 @@ static int TryGetMetadbHandleFromVariant(const VARIANT & obj, IDispatch ** ppuk)
 
 static inline unsigned ExtractColorFromVariant(VARIANT v)
 {
-    console::formatter() << "Color Type: " << v.vt;
     return (v.vt == VT_R8) ? static_cast<unsigned>(v.dblVal) : v.lVal;
 }
 

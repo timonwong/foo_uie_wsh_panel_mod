@@ -6,8 +6,9 @@
 #include "panel_manager.h"
 
 
-FbTooltip::FbTooltip(HWND p_wndparent/*, bool p_want_multiline*/) 
+FbTooltip::FbTooltip(HWND p_wndparent, const panel_tooltip_param_ptr & p_param_ptr) 
     : m_wndparent(p_wndparent)
+    , m_panel_tooltip_param_ptr(p_param_ptr)
     , m_tip_buffer(SysAllocString(PFC_WIDESTRING(WSPM_NAME)))
 {
     m_wndtooltip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
@@ -32,16 +33,16 @@ FbTooltip::FbTooltip(HWND p_wndparent/*, bool p_want_multiline*/)
     SendMessage(m_wndtooltip, TTM_ADDTOOL, 0, (LPARAM)&m_ti);	
     SendMessage(m_wndtooltip, TTM_ACTIVATE, FALSE, 0);
 
-    panel_store & store = panel_manager::instance().query_store_by_window(p_wndparent);
-    m_hwnd_rcptr.new_t(m_wndtooltip);
-    store.tooltip_hwnd_rcptr = m_hwnd_rcptr;
-    store.tooltip_size.cx = store.tooltip_size.cy = -1;
+    if (!m_panel_tooltip_param_ptr)
+        m_panel_tooltip_param_ptr.reset(new panel_tooltip_param);
+
+    m_panel_tooltip_param_ptr->tooltip_hwnd = m_wndtooltip;
+    m_panel_tooltip_param_ptr->tooltip_size.cx = -1;
+    m_panel_tooltip_param_ptr->tooltip_size.cy = -1;
 }
 
 void FbTooltip::FinalRelease()
 {
-    m_hwnd_rcptr.release();
-
     if (m_wndtooltip && IsWindow(m_wndtooltip))
     {
         DestroyWindow(m_wndtooltip);
@@ -100,7 +101,7 @@ STDMETHODIMP FbTooltip::get_Width(int * outWidth)
     if (!outWidth) return E_POINTER;
     try
     {
-        (*outWidth) = panel_manager::instance().query_store_by_window(m_wndparent).tooltip_size.cx;
+        (*outWidth) = m_panel_tooltip_param_ptr->tooltip_size.cx;
     }
     catch (...)
     {
@@ -115,7 +116,7 @@ STDMETHODIMP FbTooltip::put_Width(int width)
 
     try
     {
-        panel_manager::instance().query_store_by_window(m_wndparent).tooltip_size.cx = width;
+        m_panel_tooltip_param_ptr->tooltip_size.cx = width;
     }
     catch (...)
     {
@@ -130,7 +131,7 @@ STDMETHODIMP FbTooltip::get_Height(int * outHeight)
     if (!outHeight) return E_POINTER;
     try
     {
-        (*outHeight) = panel_manager::instance().query_store_by_window(m_wndparent).tooltip_size.cy;
+        (*outHeight) = m_panel_tooltip_param_ptr->tooltip_size.cy;
     }
     catch (...)
     {
@@ -145,7 +146,7 @@ STDMETHODIMP FbTooltip::put_Height(int height)
 
     try
     {
-        panel_manager::instance().query_store_by_window(m_wndparent).tooltip_size.cy = height;
+        m_panel_tooltip_param_ptr->tooltip_size.cy = height;
     }
     catch (...)
     {

@@ -47,6 +47,7 @@ protected:
 	bool                        m_suppress_drawing;
 	bool                        m_paint_pending;
     HostTimerDispatcher         m_host_timer_dispatcher;
+    panel_tooltip_param_ptr     m_panel_tooltip_param_ptr;
 	
 	HostComm();
 	virtual ~HostComm();
@@ -58,13 +59,14 @@ public:
 	inline INT GetWidth() { return m_width; }
 	inline INT GetHeight() { return m_height; }
 	inline UINT GetInstanceType() { return m_instance_type; }
-	inline POINT & GetMaxSize() { return m_max_size; }
-	inline POINT & GetMinSize() { return m_min_size; }
-	inline UINT & GetDlgCode() { return m_dlg_code; }
+	inline POINT & MaxSize() { return m_max_size; }
+	inline POINT & MinSize() { return m_min_size; }
+	inline UINT & DlgCode() { return m_dlg_code; }
 	inline metadb_handle_ptr & GetWatchedMetadbHandle() { return m_watched_handle; }
 	IGdiBitmap * GetBackgroundImage();
 	inline void PreserveSelection() { m_selection_holder = static_api_ptr_t<ui_selection_manager>()->acquire(); }
-	inline t_script_info & GetScriptInfo() { return m_script_info; }
+	inline t_script_info & ScriptInfo() { return m_script_info; }
+    inline panel_tooltip_param_ptr & PanelTooltipParam() { return m_panel_tooltip_param_ptr; }
 
 	void Redraw();
 	void Repaint(bool force = false);

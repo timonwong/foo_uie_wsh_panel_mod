@@ -305,6 +305,9 @@
     <ClInclude Include="gdiplus_helpers.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="panel_tooltip_param.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\default.js">
