@@ -870,7 +870,7 @@ HRESULT ScriptHost::Initialize()
 	if (SUCCEEDED(hr)) hr = m_script_engine->QueryInterface(&parser);
 	if (SUCCEEDED(hr)) hr = parser->InitNew();
 
-    EnableSafeModeToScriptEngine(g_cfg_safe_mode);
+    EnableSafeModeToScriptEngine(m_script_engine, g_cfg_safe_mode);
 
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"window", SCRIPTITEM_ISVISIBLE);
 	if (SUCCEEDED(hr)) hr = m_script_engine->AddNamedItem(L"gdi", SCRIPTITEM_ISVISIBLE);
@@ -904,14 +904,14 @@ HRESULT ScriptHost::Initialize()
 	return hr;
 }
 
-void ScriptHost::EnableSafeModeToScriptEngine(bool enable)
+void ScriptHost::EnableSafeModeToScriptEngine(IActiveScript * engine, bool enable)
 {
-    if (!enable) return;
+    if (!enable || !engine) return;
 
     _COM_SMARTPTR_TYPEDEF(IObjectSafety, IID_IObjectSafety);
     IObjectSafetyPtr psafe;
 
-    if (SUCCEEDED(m_script_engine->QueryInterface(&psafe)))
+    if (SUCCEEDED(engine->QueryInterface(&psafe)))
     {
         psafe->SetInterfaceSafetyOptions(IID_IDispatch, 
             INTERFACE_USES_SECURITY_MANAGER, INTERFACE_USES_SECURITY_MANAGER);
