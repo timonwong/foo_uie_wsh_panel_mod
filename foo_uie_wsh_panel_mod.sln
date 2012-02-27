@@ -10,13 +10,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "columns_ui_sdk", "..\vc9\columns_ui-sdk.vcxproj", "{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "foo_uie_wsh_panel_mod", "foo_uie_wsh_panel_mod\foo_uie_wsh_panel_mod.vcxproj", "{43DF6037-DBE4-4468-9A50-4311495F3C86}"
-	ProjectSection(ProjectDependencies) = postProject
-		{EA0E52B0-6BCE-4DBC-83E7-007052E52759} = {EA0E52B0-6BCE-4DBC-83E7-007052E52759}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextDesigner", "TextDesinger\TextDesigner.vcxproj", "{F21CE92F-240D-48FE-8B73-56A63D4536B0}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SciLexer", "scintilla\vcbuild\SciLexer.vcxproj", "{EA0E52B0-6BCE-4DBC-83E7-007052E52759}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,10 +43,6 @@ Global
 		{F21CE92F-240D-48FE-8B73-56A63D4536B0}.Debug|Win32.Build.0 = Debug|Win32
 		{F21CE92F-240D-48FE-8B73-56A63D4536B0}.Release|Win32.ActiveCfg = Release|Win32
 		{F21CE92F-240D-48FE-8B73-56A63D4536B0}.Release|Win32.Build.0 = Release|Win32
-		{EA0E52B0-6BCE-4DBC-83E7-007052E52759}.Debug|Win32.ActiveCfg = Debug|Win32
-		{EA0E52B0-6BCE-4DBC-83E7-007052E52759}.Debug|Win32.Build.0 = Debug|Win32
-		{EA0E52B0-6BCE-4DBC-83E7-007052E52759}.Release|Win32.ActiveCfg = Release|Win32
-		{EA0E52B0-6BCE-4DBC-83E7-007052E52759}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
