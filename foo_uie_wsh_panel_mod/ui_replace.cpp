@@ -93,47 +93,36 @@ LRESULT CDialogReplace::OnReplace(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 
 	// Find Next
 	OnFindNext(0, 0, 0);
-
 	return 0;
 }
 
 LRESULT CDialogReplace::OnReplaceall(WORD wNotifyCode, WORD wID, HWND hWndCtl)
 {
-	// Reset Pos
-	SendMessage(m_hedit, SCI_SETSEL, 0, 0);
+	// Reset target position
 	SendMessage(m_hedit, SCI_BEGINUNDOACTION, 0, 0);
+    SendMessage(m_hedit, SCI_SETTARGETSTART, 0, 0);
+    SendMessage(m_hedit, SCI_SETTARGETEND, 0, 0);
 
 	while (true)
 	{
-		int start_pos = SendMessage(m_hedit, SCI_GETSELECTIONEND, 0, 0);
-		int end_pos = SendMessage(m_hedit, SCI_GETLENGTH, 0, 0);
+        int start_pos = SendMessage(m_hedit, SCI_GETTARGETEND, 0, 0);
+        int end_pos = SendMessage(m_hedit, SCI_GETLENGTH, 0, 0);
 
-		SendMessage(m_hedit, SCI_SETTARGETSTART, start_pos, 0);
-		SendMessage(m_hedit, SCI_SETTARGETEND, end_pos, 0);
-		SendMessage(m_hedit, SCI_SETSEARCHFLAGS, m_flags, 0);
+        SendMessage(m_hedit, SCI_SETTARGETSTART, start_pos, 0);
+        SendMessage(m_hedit, SCI_SETTARGETEND, end_pos, 0);
+        SendMessage(m_hedit, SCI_SETSEARCHFLAGS, m_flags, 0);
 
-		int pos_find = SendMessage(m_hedit, SCI_SEARCHINTARGET, m_text.get_length(), (LPARAM)m_text.get_ptr());
+		int occurance = SendMessage(m_hedit, SCI_SEARCHINTARGET, m_text.get_length(), (LPARAM)m_text.get_ptr());
 
-		if (pos_find == -1)
+		if (occurance == -1)
 		{
-			MessageBeep(MB_ICONASTERISK);
+			MessageBeep(MB_ICONINFORMATION);
 			break;
 		}
-		else
-		{
-			int start = SendMessage(m_hedit, SCI_GETTARGETSTART, 0, 0);
-			int end = SendMessage(m_hedit, SCI_GETTARGETEND, 0, 0);
 
-			SendMessage(m_hedit, SCI_SETSEL, start, end);
-		}
+        SendMessage(m_hedit, SCI_REPLACETARGET, m_reptext.get_length(), (LPARAM)m_reptext.get_ptr());
+        SendMessage(m_hedit, SCI_SETSEL, occurance + m_reptext.get_length(), occurance);
 	}
-
-	CHARRANGE cr = GetSelection();
-
-	SendMessage(m_hedit, SCI_SETTARGETSTART, cr.cpMin, 0);
-	SendMessage(m_hedit, SCI_SETTARGETEND, cr.cpMax, 0);
-	SendMessage(m_hedit, SCI_REPLACETARGET, m_reptext.get_length(), (LPARAM)m_reptext.get_ptr());
-	SendMessage(m_hedit, SCI_SETSEL, cr.cpMin + m_reptext.get_length(), cr.cpMin);
 
 	SendMessage(m_hedit, SCI_ENDUNDOACTION, 0, 0);
 	return 0;
