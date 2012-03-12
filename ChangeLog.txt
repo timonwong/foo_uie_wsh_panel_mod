@@ -1,3 +1,7 @@
+v1.5.3
+- FIX: Fix a bug that "Replace All" doesn't function any more.
+- UPD: Updated scintilla control to version 3.0.4.
+
 v1.5.2
 - FIX: Fix a bug that change the "Parsable" property of IDropAction had no effect.
 - FIX: Runtime overflow error while passing literal number to color is now fixed.

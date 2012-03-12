@@ -3305,6 +3305,18 @@ STDMETHODIMP WSHUtils::FileTest(BSTR path, BSTR mode, VARIANT * p)
         p->vt = VT_UI4;
         p->ulVal = helpers::detect_charset(pfc::stringcvt::string_utf8_from_wide(path));
     }
+    //{
+    //    p->vt = VT_BSTR;
+    //    const char * codepage = helpers::detect_charset_moz_chardet(pfc::stringcvt::string_utf8_from_wide(path));
+    //    if (!codepage)
+    //    {
+    //        p->bstrVal = NULL;
+    //    }
+    //    else
+    //    {
+    //        p->bstrVal = SysAllocString(pfc::stringcvt::string_wide_from_ansi(codepage));
+    //    }
+    //}
     else
     {
         return E_INVALIDARG;
