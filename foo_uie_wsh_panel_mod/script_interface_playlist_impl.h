@@ -43,6 +43,8 @@ public:
     static STDMETHODIMP FlushPlaybackQueue();
     static STDMETHODIMP IsPlaybackQueueActive(VARIANT_BOOL * outIsActive);
 
+    static STDMETHODIMP SortByFormat(UINT playlistIndex, BSTR pattern, VARIANT_BOOL selOnly, VARIANT_BOOL * outSuccess);
+
     // Properties
     static STDMETHODIMP get_PlaybackOrder(UINT * outOrder);
     static STDMETHODIMP put_PlaybackOrder(UINT order);
@@ -102,6 +104,8 @@ public:
     STDMETHODIMP FindPlaybackQueueItemIndex(IFbMetadbHandle * handle, UINT playlistIndex, UINT playlistItemIndex, INT * outIndex);
     STDMETHODIMP FlushPlaybackQueue();
     STDMETHODIMP IsPlaybackQueueActive(VARIANT_BOOL * outIsActive);
+
+    STDMETHODIMP SortByFormat(UINT playlistIndex, BSTR pattern, VARIANT_BOOL selOnly, VARIANT_BOOL * outSuccess);
 
     // Properties
     STDMETHODIMP get_PlaybackOrder(UINT * outOrder);

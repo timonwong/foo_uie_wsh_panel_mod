@@ -49,6 +49,8 @@ __interface IFbPlaylistManager : IDispatch
     STDMETHOD(FlushPlaybackQueue)();
     STDMETHOD(IsPlaybackQueueActive)([out,retval] VARIANT_BOOL * outIsActive);
 
+    STDMETHOD(SortByFormat)(UINT playlistIndex, BSTR pattern, [defaultvalue(0)] VARIANT_BOOL selOnly, [out,retval] VARIANT_BOOL * outSuccess);
+
     // Properties
     [propget] STDMETHOD(PlaybackOrder)([out,retval] UINT * outOrder);
     [propput] STDMETHOD(PlaybackOrder)(UINT order);

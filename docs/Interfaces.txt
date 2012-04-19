@@ -256,7 +256,7 @@ Methods:
     // [1.5.0 Preview 4]: New:
     // titleformatObject: an instance of IFbTitleFormat.
     // direction: integer, ascending while >0.
-    void OrderByOrderByFormat(titleformatObject, direction);
+    void OrderByFormat(titleformatObject, direction);
     // [1.5.0 Preview 4]: New:
     void OrderByPath();
     // [1.5.0 Preview 4]: New:
@@ -828,6 +828,14 @@ Methods:
     void FlushPlaybackQueue();
     // This is actually the same as GetPlaybackQueueCount() > 0
     boolean IsPlaybackQueueActive();
+
+    // [1.5.3] New:
+    // Sorts specified playlist - entire playlist or selection only - by specified title formatting pattern, or randomizes the order.
+    // playlistIndex: Index of playlist to alter.
+    // pattern: Title formatting pattern to sort by. Set to "" to randomize the order of items.
+    // selOnly: Set to false to sort/randomize whole playlist, or to true to sort/randomize only selection on the playlist.
+    // returns true on success, false on failure (playlist locked etc).
+    boolean SortByFormat(playlistIndex, pattern, selOnly = true);
 
 Properties:
     // Known playback orders:

@@ -482,6 +482,26 @@ STDMETHODIMP FbPlaylistMangerTemplate::IsPlaybackQueueActive(VARIANT_BOOL * outI
     return S_OK;
 }
 
+STDMETHODIMP FbPlaylistMangerTemplate::SortByFormat(UINT playlistIndex, BSTR pattern, VARIANT_BOOL selOnly, VARIANT_BOOL * outSuccess)
+{
+    TRACK_FUNCTION();
+
+    if (!pattern) return E_INVALIDARG;
+    if (!outSuccess) return E_POINTER;
+
+    bool sel_only = (selOnly == VARIANT_TRUE);
+    pfc::stringcvt::string_ansi_from_wide string_conv;
+    const char * pattern_ptr = NULL;
+
+    if (*pattern) {
+        string_conv.convert(pattern);
+        pattern_ptr = string_conv.get_ptr();
+    }
+
+    *outSuccess = static_api_ptr_t<playlist_manager>()->playlist_sort_by_format(playlistIndex, pattern_ptr, sel_only);
+    return S_OK;
+}
+
 STDMETHODIMP FbPlaylistMangerTemplate::EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex)
 {
     TRACK_FUNCTION();
@@ -727,6 +747,11 @@ STDMETHODIMP FbPlaylistManager::FlushPlaybackQueue()
 STDMETHODIMP FbPlaylistManager::IsPlaybackQueueActive(VARIANT_BOOL * outIsActive)
 {
     return FbPlaylistMangerTemplate::IsPlaybackQueueActive(outIsActive);
+}
+
+STDMETHODIMP FbPlaylistManager::SortByFormat(UINT playlistIndex, BSTR pattern, VARIANT_BOOL selOnly, VARIANT_BOOL * outSuccess)
+{
+    return FbPlaylistMangerTemplate::SortByFormat(playlistIndex, pattern, selOnly, outSuccess);
 }
 
 STDMETHODIMP FbPlaylistManager::EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex)
