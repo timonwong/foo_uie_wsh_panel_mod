@@ -1,7 +1,11 @@
+v1.5.3.1
+- FIX: Fix a bug that the editor dialog won't open since v1.5.3.
+- UPD: Update scintilla control to version 3.1.0
+
 v1.5.3
 - ADD: plman.SortByFormat() is added to sort specified playlist.
 - FIX: Fix a bug that "Replace All" doesn't function any more.
-- UPD: Updated scintilla control to version 3.0.4.
+- UPD: Update scintilla control to version 3.0.4.
 
 v1.5.2
 - FIX: Fix a bug that change the "Parsable" property of IDropAction had no effect.
