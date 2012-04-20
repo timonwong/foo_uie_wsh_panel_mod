@@ -835,7 +835,7 @@ Methods:
     // pattern: Title formatting pattern to sort by. Set to "" to randomize the order of items.
     // selOnly: Set to false to sort/randomize whole playlist, or to true to sort/randomize only selection on the playlist.
     // returns true on success, false on failure (playlist locked etc).
-    boolean SortByFormat(playlistIndex, pattern, selOnly = true);
+    boolean SortByFormat(playlistIndex, pattern, selOnly = false);
 
 Properties:
     // Known playback orders:

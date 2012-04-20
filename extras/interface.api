@@ -156,6 +156,7 @@ plman.FindPlaybackQueueItemIndex(handle, playlistIndex, playlistItemIndex)
 plman.FlushPlaybackQueue()
 plman.IsPlaybackQueueActive()
 plman.IsPlaylistItemSelected(playlistIndex, itemIndex)
+plman.SortByFormat(playlistIndex, pattern[, selOnly])
 
 
 # Callback function prototypes
