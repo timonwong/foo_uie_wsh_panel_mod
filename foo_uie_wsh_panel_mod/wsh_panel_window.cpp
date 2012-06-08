@@ -163,7 +163,7 @@ ui_helpers::container_window::class_data & wsh_panel_window::get_class_data() co
 {
     static ui_helpers::container_window::class_data my_class_data =
     {
-        _T("uie_wsh_panel_mod_class"), 
+        _T(WSPM_WINDOW_CLASS_NAME),
         _T(""), 
         0, 
         false, 
@@ -351,17 +351,28 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
     case WM_KEYDOWN:
         {
-            static_api_ptr_t<keyboard_shortcut_manager_v2>  ksm;
-
-            if (ksm->process_keydown_simple(wp))
-                return 0;
-
             VARIANTARG args[1];
+            _variant_t result;
 
             args[0].vt = VT_UI4;
             args[0].ulVal = (ULONG)wp;
 
-            script_invoke_v(CallbackIds::on_key_down, args, _countof(args));
+            if (SUCCEEDED(script_invoke_v(CallbackIds::on_key_down, args, _countof(args), &result)))
+            {
+                result.ChangeType(VT_BOOL);
+                if (result.boolVal != VARIANT_FALSE) 
+                {
+                    // If user return true in the callback, bypass keyboard shortcut processing.
+                    return 0;
+                }
+            }
+
+            static_api_ptr_t<keyboard_shortcut_manager_v2> ksm;
+
+            if (ksm->process_keydown_simple(wp)) 
+            {
+                return 0;
+            }
         }
         return 0;
 
@@ -829,7 +840,7 @@ bool wsh_panel_window::on_mouse_button_up(UINT msg, WPARAM wp, LPARAM lp)
             if (SUCCEEDED(script_invoke_v(CallbackIds::on_mouse_rbtn_up, args, _countof(args), &result)))
             {
                 result.ChangeType(VT_BOOL);
-                if ((result.boolVal != VARIANT_FALSE))
+                if (result.boolVal != VARIANT_FALSE)
                     ret = true;
             }
         }

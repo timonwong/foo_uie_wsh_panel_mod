@@ -7,6 +7,7 @@
  */
 
 #define WSPM_NAME "WSH Panel Mod"
+#define WSPM_WINDOW_CLASS_NAME "uie_wsh_panel_mod_class"
 #define WSPM_DLL_NAME "foo_uie_wsh_panel_mod.dll"
 
 // {1624E0E0-049E-4927-B4DD-2DAF7FC2415F}
