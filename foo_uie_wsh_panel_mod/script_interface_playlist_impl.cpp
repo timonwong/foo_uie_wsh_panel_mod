@@ -490,7 +490,7 @@ STDMETHODIMP FbPlaylistMangerTemplate::SortByFormat(UINT playlistIndex, BSTR pat
     if (!outSuccess) return E_POINTER;
 
     bool sel_only = (selOnly == VARIANT_TRUE);
-    pfc::stringcvt::string_ansi_from_wide string_conv;
+    pfc::stringcvt::string_utf8_from_wide string_conv;
     const char * pattern_ptr = NULL;
 
     if (*pattern) {
@@ -498,7 +498,37 @@ STDMETHODIMP FbPlaylistMangerTemplate::SortByFormat(UINT playlistIndex, BSTR pat
         pattern_ptr = string_conv.get_ptr();
     }
 
-    *outSuccess = static_api_ptr_t<playlist_manager>()->playlist_sort_by_format(playlistIndex, pattern_ptr, sel_only);
+
+    *outSuccess = TO_VARIANT_BOOL(static_api_ptr_t<playlist_manager>()->playlist_sort_by_format(playlistIndex, pattern_ptr, sel_only));
+    return S_OK;
+}
+
+STDMETHODIMP FbPlaylistMangerTemplate::SortByFormatV2(UINT playlistIndex, BSTR pattern, INT direction, VARIANT_BOOL * outSuccess)
+{
+    TRACK_FUNCTION();
+
+    if (!pattern) return E_INVALIDARG;
+    if (!outSuccess) return E_POINTER;
+
+    pfc::stringcvt::string_utf8_from_wide spec(pattern);
+    service_ptr_t<titleformat_object> script;
+    metadb_handle_list metadb_handles;
+    pfc::array_t<size_t> order;
+
+    if (static_api_ptr_t<titleformat_compiler>()->compile(script, spec)) {
+        static_api_ptr_t<playlist_manager> api;
+
+        // Get metadb_handle_list for playlist specified.
+        api->playlist_get_all_items(playlistIndex, metadb_handles);
+        order.set_count(metadb_handles.get_count());
+        // Reorder metadb handles
+        metadb_handle_list_helper::sort_by_format_get_order(metadb_handles, order.get_ptr(), script, NULL, direction);
+        // Reorder the playlist
+        *outSuccess = TO_VARIANT_BOOL(api->playlist_reorder_items(playlistIndex, order.get_ptr(), order.get_count()));
+    } else {
+        *outSuccess = VARIANT_FALSE;
+    }
+
     return S_OK;
 }
 
@@ -529,8 +559,7 @@ STDMETHODIMP FbPlaylistMangerTemplate::ExecutePlaylistDefaultAction(UINT playlis
 
     if (!outSuccess) return E_POINTER;
 
-    (*outSuccess) = TO_VARIANT_BOOL(
-        static_api_ptr_t<playlist_manager>()->playlist_execute_default_action(playlistIndex, playlistItemIndex));
+    (*outSuccess) = TO_VARIANT_BOOL(static_api_ptr_t<playlist_manager>()->playlist_execute_default_action(playlistIndex, playlistItemIndex));
     return S_OK;
 }
 
@@ -568,7 +597,6 @@ STDMETHODIMP FbPlaylistMangerTemplate::SetActivePlaylistContext()
     static_api_ptr_t<ui_edit_context_manager>()->set_context_active_playlist();
     return S_OK;
 }
-
 
 STDMETHODIMP FbPlaylistManager::InsertPlaylistItems(UINT playlistIndex, UINT base, __interface IFbMetadbHandleList * handles, VARIANT_BOOL select, UINT * outSize)
 {
@@ -754,6 +782,11 @@ STDMETHODIMP FbPlaylistManager::SortByFormat(UINT playlistIndex, BSTR pattern, V
     return FbPlaylistMangerTemplate::SortByFormat(playlistIndex, pattern, selOnly, outSuccess);
 }
 
+STDMETHODIMP FbPlaylistManager::SortByFormatV2(UINT playlistIndex, BSTR pattern, INT direction, VARIANT_BOOL * outSuccess)
+{
+    return FbPlaylistMangerTemplate::SortByFormatV2(playlistIndex, pattern, direction, outSuccess);
+}
+
 STDMETHODIMP FbPlaylistManager::EnsurePlaylistItemVisible(UINT playlistIndex, UINT itemIndex)
 {
     return FbPlaylistMangerTemplate::EnsurePlaylistItemVisible(playlistIndex, itemIndex);
@@ -810,7 +843,6 @@ STDMETHODIMP FbPlaylistManager::get_PlaylistRecyclerManager(__interface IFbPlayl
 
     return S_OK;
 }
-
 
 FbPlaybackQueueItem::FbPlaybackQueueItem(const t_playback_queue_item & playbackQueueItem)
 {

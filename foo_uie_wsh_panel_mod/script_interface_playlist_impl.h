@@ -44,6 +44,7 @@ public:
     static STDMETHODIMP IsPlaybackQueueActive(VARIANT_BOOL * outIsActive);
 
     static STDMETHODIMP SortByFormat(UINT playlistIndex, BSTR pattern, VARIANT_BOOL selOnly, VARIANT_BOOL * outSuccess);
+    static STDMETHODIMP SortByFormatV2(UINT playlistIndex, BSTR pattern, INT direction, VARIANT_BOOL * outSuccess);
 
     // Properties
     static STDMETHODIMP get_PlaybackOrder(UINT * outOrder);
@@ -106,6 +107,7 @@ public:
     STDMETHODIMP IsPlaybackQueueActive(VARIANT_BOOL * outIsActive);
 
     STDMETHODIMP SortByFormat(UINT playlistIndex, BSTR pattern, VARIANT_BOOL selOnly, VARIANT_BOOL * outSuccess);
+    STDMETHODIMP SortByFormatV2(UINT playlistIndex, BSTR pattern, INT direction, VARIANT_BOOL * outSuccess);
 
     // Properties
     STDMETHODIMP get_PlaybackOrder(UINT * outOrder);

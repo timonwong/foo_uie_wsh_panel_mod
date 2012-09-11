@@ -349,6 +349,7 @@ LRESULT wsh_panel_window::on_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     case WM_SETCURSOR:
         return 1;
 
+    case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
         {
             VARIANTARG args[1];

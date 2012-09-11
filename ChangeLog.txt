@@ -1,3 +1,6 @@
+v1.5.4
+- ADD: plman.SortByFormatV2() that can sort descendingly as well as ascendingly.
+
 v1.5.3.1
 - FIX: Fix a bug that the editor dialog won't open since v1.5.3.
 - UPD: Update scintilla control to version 3.1.0

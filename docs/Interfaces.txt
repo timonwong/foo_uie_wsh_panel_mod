@@ -837,6 +837,10 @@ Methods:
     // returns true on success, false on failure (playlist locked etc).
     boolean SortByFormat(playlistIndex, pattern, selOnly = false);
 
+    // [1.5.4] New:
+    // direction: 1= Sort ascendingly, -1= Sort descendingly
+    boolean SortByFormatV2(playlistIndex, pattern, direction = 1);
+
 Properties:
     // Known playback orders:
     //      Default: 0,
