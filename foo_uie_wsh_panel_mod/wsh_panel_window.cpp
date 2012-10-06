@@ -888,7 +888,9 @@ void wsh_panel_window::on_mouse_button_down(UINT msg, WPARAM wp, LPARAM lp)
 
 bool wsh_panel_window::on_notify(LPARAM lp, LRESULT *pResult)
 {
-    if (!PanelTooltipParam())
+    const auto& tooltip_param = PanelTooltipParam();
+
+    if (!tooltip_param)
         return false;
 
     LPNMHDR lpnmhdr = (LPNMHDR)lp;
@@ -904,9 +906,9 @@ bool wsh_panel_window::on_notify(LPARAM lp, LRESULT *pResult)
             return false;
 
         // Check tooltip
-        if (PanelTooltipParam()->tooltip_hwnd)
+        if (!tooltip_param->tooltip_hwnd)
             return false;
-        if (lpnmhdr->hwndFrom != PanelTooltipParam()->tooltip_hwnd)
+        if (lpnmhdr->hwndFrom != tooltip_param->tooltip_hwnd)
             return false;
         return on_tooltip_custom_draw(lpnmcd, mask, pResult);
     }
@@ -916,7 +918,9 @@ bool wsh_panel_window::on_notify(LPARAM lp, LRESULT *pResult)
 
 bool wsh_panel_window::on_tooltip_custom_draw(LPNMTTCUSTOMDRAW lpnmcd, t_uint32 mask, LRESULT * &pResult)
 {
-    if (!PanelTooltipParam()) 
+    const auto& tooltip_param = PanelTooltipParam();
+
+    if (!tooltip_param) 
         return false;
 
     // From emule source code:
@@ -937,12 +941,7 @@ bool wsh_panel_window::on_tooltip_custom_draw(LPNMTTCUSTOMDRAW lpnmcd, t_uint32 
         if (lpnmcd->uDrawFlags & DT_CALCRECT)
         {
             SIZE sz;
-
-            try
-            {
-                sz = PanelTooltipParam()->tooltip_size;
-            }
-            catch (...) {}
+            memcpy(&sz, &tooltip_param->tooltip_size, sizeof(SIZE));
 
             if (sz.cx > 0 || sz.cy > 0) 
             {

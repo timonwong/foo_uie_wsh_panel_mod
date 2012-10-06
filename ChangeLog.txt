@@ -1,3 +1,7 @@
+v1.5.5
+- FIX: Fix a bug that preprocessor "tooltip" didn't work at all.
+- ADD:
+
 v1.5.4
 - ADD: plman.SortByFormatV2() that can sort descendingly as well as ascendingly.
 

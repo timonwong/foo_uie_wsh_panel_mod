@@ -14,7 +14,7 @@ protected:
     TOOLINFO m_ti;
     panel_tooltip_param_ptr m_panel_tooltip_param_ptr;
 
-    FbTooltip(HWND p_wndparent, const panel_tooltip_param_ptr & p_param_ptr);
+    FbTooltip(HWND p_wndparent, bool p_no_background, const panel_tooltip_param_ptr & p_param_ptr);
     virtual ~FbTooltip() { }
     virtual void FinalRelease();
 

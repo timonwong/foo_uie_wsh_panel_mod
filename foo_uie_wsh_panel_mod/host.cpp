@@ -21,7 +21,7 @@ HostComm::HostComm()
 	, m_instance_type(KInstanceTypeCUI)
 	, m_dlg_code(0)
 	, m_script_info(get_config_guid())
-    , m_panel_tooltip_param_ptr(NULL)
+    , m_panel_tooltip_param_ptr(new panel_tooltip_param)
 {
 	m_max_size.x = INT_MAX;
 	m_max_size.y = INT_MAX;
@@ -504,7 +504,10 @@ STDMETHODIMP FbWindow::CreateTooltip(IFbTooltip ** pp)
 	TRACK_FUNCTION();
 
 	if (!pp) return E_POINTER;
-    (*pp) = new com_object_impl_t<FbTooltip>(m_host->GetHWND(), m_host->PanelTooltipParam());
+
+    auto no_background = (m_host->ScriptInfo().tooltip_mask & t_script_info::kTooltipCustomPaintNoBackground) != 0;
+    const auto& tooltip_param = m_host->PanelTooltipParam();
+    (*pp) = new com_object_impl_t<FbTooltip>(m_host->GetHWND(), no_background, tooltip_param);
 	return S_OK;
 }
 
