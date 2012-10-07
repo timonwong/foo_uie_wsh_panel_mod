@@ -83,6 +83,7 @@ __interface IGdiBitmap: IGdiObj
 	STDMETHOD(ReleaseGraphics)(__interface IGdiGraphics * p);
 	STDMETHOD(BoxBlur)([range(1,20)] int radius, [range(1,20),defaultvalue(1)] int iteration);
 	STDMETHOD(Resize)(UINT w, UINT h, [range(Gdiplus::InterpolationModeInvalid, Gdiplus::InterpolationModeHighQualityBicubic), defaultvalue(0)] INT interpolationMode, [out,retval] IGdiBitmap ** pp);
+    STDMETHOD(GetColorScheme)(UINT count, [out,retval] VARIANT * outArray);
 };
 
 [

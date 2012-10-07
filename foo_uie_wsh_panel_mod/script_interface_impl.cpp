@@ -11,6 +11,9 @@
 #include "obsolete.h"
 #include "../TextDesinger/OutlineText.h"
 #include "../TextDesinger/PngOutlineText.h"
+#include <map>
+#include <vector>
+#include <algorithm>
 
 
 // Helper functions
@@ -328,6 +331,72 @@ STDMETHODIMP GdiBitmap::Resize(UINT w, UINT h, INT interpolationMode, IGdiBitmap
     g.DrawImage(m_ptr, 0, 0, w, h);
 
     (*pp) = new com_object_impl_t<GdiBitmap>(bitmap);
+    return S_OK;
+}
+
+STDMETHODIMP GdiBitmap::GetColorScheme(UINT count, VARIANT * outArray)
+{
+    TRACK_FUNCTION();
+
+    if (!m_ptr) return E_POINTER;
+    if (!count) return E_INVALIDARG;
+
+    Gdiplus::BitmapData bmpdata;
+    Gdiplus::Rect rect(0, 0, m_ptr->GetWidth(), m_ptr->GetHeight());
+
+    if (m_ptr->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &bmpdata) != Gdiplus::Ok)
+        return E_POINTER;
+
+    std::map<unsigned, int> color_counters;
+    const unsigned colors_length = bmpdata.Width * bmpdata.Height;
+    const t_uint32 *colors = (const t_uint32 *)bmpdata.Scan0;
+
+    for (unsigned i = 0; i < colors_length; i++)
+    {
+        int color = colors[i];
+        int r = GetRValue(color);
+        int g = GetGValue(color);
+        int b = GetBValue(color);
+
+        // Round colors
+        r = (r + 15) & 0xf0;
+        g = (g + 15) & 0xf0;
+        b = (b + 15) & 0xf0;
+
+        ++color_counters[Gdiplus::Color::MakeARGB(0xff, r, g, b)];
+    }
+
+    m_ptr->UnlockBits(&bmpdata);
+
+    // Sorting
+    typedef std::pair<unsigned, int> sort_vec_pair_t;
+    std::vector<sort_vec_pair_t> sort_vec(color_counters.begin(), color_counters.end());
+    color_counters.clear();
+    count = min(count, sort_vec.size());
+    std::partial_sort(sort_vec.begin(), sort_vec.begin() + count, sort_vec.end(), 
+        [](const sort_vec_pair_t &a, const sort_vec_pair_t &b)
+        {
+            return a.second > b.second;
+        });
+
+    helpers::com_array_writer<> helper;
+    if (!helper.create(count)) 
+        return E_OUTOFMEMORY;
+    for (long i = 0; i < helper.get_count(); ++i)
+    {
+        _variant_t var;
+        var.vt = VT_UI4;
+        var.ulVal = sort_vec[i].first;
+
+        if (FAILED(helper.put(i, var)))
+        {
+            helper.reset();
+            return E_OUTOFMEMORY;
+        }
+    }
+
+    outArray->vt = VT_ARRAY | VT_VARIANT;
+    outArray->parray = helper.get_ptr();
     return S_OK;
 }
 
