@@ -353,10 +353,11 @@ STDMETHODIMP GdiBitmap::GetColorScheme(UINT count, VARIANT * outArray)
 
     for (unsigned i = 0; i < colors_length; i++)
     {
+        // format: 0xaarrggbb
         int color = colors[i];
-        int r = GetRValue(color);
-        int g = GetGValue(color);
-        int b = GetBValue(color);
+        int r = (color >> 16) & 0xff;
+        int g = (color >> 8) & 0xff;
+        int b = (color) & 0xff;
 
         // Round colors
         r = (r + 15) & 0xf0;
