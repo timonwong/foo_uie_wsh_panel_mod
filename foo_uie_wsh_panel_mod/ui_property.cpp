@@ -73,7 +73,7 @@ LRESULT CDialogProperty::OnClearallBnClicked(WORD wNotifyCode, WORD wID, HWND hW
 void CDialogProperty::Apply()
 {
 	// Copy back
-	m_parent->get_config_prop().get_val().overwrite(m_dup_prop_map);
+	m_parent->get_config_prop().get_val() = m_dup_prop_map;
 	m_parent->update_script();
 	LoadProperties();
 }

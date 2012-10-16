@@ -354,15 +354,19 @@ STDMETHODIMP GdiBitmap::GetColorScheme(UINT count, VARIANT * outArray)
     for (unsigned i = 0; i < colors_length; i++)
     {
         // format: 0xaarrggbb
-        int color = colors[i];
-        int r = (color >> 16) & 0xff;
-        int g = (color >> 8) & 0xff;
-        int b = (color) & 0xff;
+        unsigned color = colors[i];
+        unsigned r = (color >> 16) & 0xff;
+        unsigned g = (color >> 8) & 0xff;
+        unsigned b = (color) & 0xff;
 
         // Round colors
-        r = (r + 15) & 0xf0;
-        g = (g + 15) & 0xf0;
-        b = (b + 15) & 0xf0;
+        r = (r + 15) & 0xffffffe0;
+        g = (g + 15) & 0xffffffe0;
+        b = (b + 15) & 0xffffffe0;
+
+        if (r > 0xff) r = 0xf0;
+        if (g > 0xff) g = 0xf0;
+        if (b > 0xff) b = 0xf0;
 
         ++color_counters[Gdiplus::Color::MakeARGB(0xff, r, g, b)];
     }
